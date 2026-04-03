@@ -200,6 +200,7 @@ app = FastAPI(
     swagger_ui_parameters={
         "displayRequestDuration": True,
         "tryItOutEnabled": True,
+        "persistAuthorization": True,
     },
 )
 
