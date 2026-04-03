@@ -1,31 +1,88 @@
-from typing import Annotated, Any
+from collections.abc import Generator
+from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends, HTTPException, Request, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from jose import JWTError, jwt
+from sqlalchemy.orm import Session
+
+from config import settings
+from database import SessionLocal
+from models.models import User
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
+bearer = HTTPBearer(auto_error=False)
 
 
-async def get_current_user(token: Annotated[str | None, Depends(oauth2_scheme)]) -> dict[str, Any]:
+def get_db() -> Generator[Session, None, None]:
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+def get_current_user(
+    request: Request,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)],
+    db: Annotated[Session, Depends(get_db)],
+) -> User:
+    token: str | None = None
+
+    if credentials:
+        if credentials.scheme.lower() != "bearer":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication credentials were not provided.",
+            )
+        token = credentials.credentials
+    else:
+        token = request.cookies.get("access_token")
+
     if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication credentials were not provided.",
         )
 
-    # Stub user for Chunk 01. JWT decoding and DB lookup are implemented in Chunk 03.
-    return {
-        "id": "stub-user",
-        "email": "student@example.com",
-        "role": "student",
-    }
+    try:
+        payload = jwt.decode(
+            token,
+            settings.JWT_SECRET,
+            algorithms=[settings.JWT_ALGORITHM],
+        )
+    except JWTError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token expired or invalid.",
+        ) from exc
+
+    user_id = payload.get("sub")
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload.",
+        )
+
+    user = db.query(User).filter(User.id == user_id, User.is_active.is_(True)).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found or inactive.",
+        )
+
+    return user
 
 
-def require_admin(user: Annotated[dict[str, Any], Depends(get_current_user)]) -> dict[str, Any]:
-    if user.get("role") != "admin":
+def require_admin(user: Annotated[User, Depends(get_current_user)]) -> User:
+    role_value = getattr(user.role, "value", user.role)
+    if role_value != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin privileges are required.",
+            detail="Admin access required.",
         )
+    return user
+
+
+def require_student(user: Annotated[User, Depends(get_current_user)]) -> User:
     return user
