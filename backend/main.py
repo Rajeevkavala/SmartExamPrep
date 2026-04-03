@@ -24,8 +24,14 @@ from routers import (
 )
 
 
+from ml.weakness_detector import WeaknessDetector
+
+weakness_detector: WeaknessDetector | None = None
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    global weakness_detector
+    
     # Ensure core tables exist for local/dev bootstrapping.
     Base.metadata.create_all(bind=engine)
 
@@ -36,8 +42,12 @@ async def lifespan(_: FastAPI):
     # Warm NLP singletons once at startup for low-latency first use.
     try:
         load_nlp_models()
+        print("✅ NLP models loaded (spaCy + sentence-transformers)")
     except Exception:
         pass
+        
+    weakness_detector = WeaknessDetector(use_ml_model=True)
+    print("✅ WeaknessDetector loaded")
 
     yield
 

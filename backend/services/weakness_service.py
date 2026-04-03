@@ -55,7 +55,16 @@ def update_topic_mastery(
     mastery.last_attempted_at = datetime.utcnow()
 
     features = WeaknessDetector.extract_features_from_db(user_id, topic_id, db)
-    result = detector.compute(features)
+    
+    from main import weakness_detector
+    
+    if weakness_detector is not None:
+        result = weakness_detector.compute(features)
+    else:
+        # Fallback if accessed outside lifespan (e.g. testing)
+        fallback_detector = WeaknessDetector(use_ml_model=False)
+        result = fallback_detector.compute(features)
+        
     mastery.weakness_score = result["weakness_score"]
     mastery.mastery_level = _as_mastery_enum(result["mastery_level"])
 

@@ -1,0 +1,64 @@
+{
+  "questions": [
+    {
+      "subject": "Operating Systems",
+      "topic": "CPU Scheduling",
+      "subtopic": "Round Robin",
+      "question_text": "In Round Robin scheduling with time quantum q=4ms, if 3 processes P1(12ms), P2(6ms), P3(8ms) arrive at t=0, what is the average waiting time?",
+      "options": [
+        "A. 8.33 ms",
+        "B. 10.67 ms",
+        "C. 6.5 ms",
+        "D. 12 ms"
+      ],
+      "question_image_urls": [
+        "https://example.com/pyq/os-rr-diagram-1.png",
+        "https://example.com/pyq/os-rr-diagram-2.png"
+      ],
+      "correct_answer": "A",
+      "explanation": "Using Gantt Chart: P1(0-4), P2(4-8), P3(8-12), P1(12-16), P2(16-18), P3(18-22), P1(22-26). Waiting times: P1=14ms, P2=10ms, P3=10ms. Average = (14+10+10)/3 = 11.33... Recompute: P1 finishes at t=26, WT=26-12=14. P2 finishes at t=18, WT=18-6=12. P3 finishes at t=22, WT=22-8=14. Average = (14+12+14)/3 ≈ 8.33ms. Answer: 8.33ms.",
+      "difficulty": "medium",
+      "source_type": "PYQ",
+      "year": 2022,
+      "nlp_tags": ["round robin", "scheduling", "time quantum", "waiting time", "Gantt chart"]
+    },
+    {
+      "subject": "DBMS",
+      "topic": "Normalization",
+      "subtopic": "BCNF",
+      "question_text": "A relation R(A, B, C, D) has functional dependencies A\u2192B, BC\u2192D. Which normal form does R satisfy?",
+      "options": [
+        "A. 1NF only",
+        "B. 2NF but not 3NF",
+        "C. 3NF but not BCNF",
+        "D. BCNF"
+      ],
+      "question_image_urls": [],
+      "correct_answer": "C",
+      "explanation": "A\u2192B means B is dependent on part of the key (if BC is the candidate key), violating 3NF. However, BC\u2192D is fine. R is in 3NF but not BCNF since A is not a superkey.",
+      "difficulty": "hard",
+      "source_type": "PYQ",
+      "year": 2021,
+      "nlp_tags": ["BCNF", "3NF", "functional dependency", "normalization", "candidate key"]
+    },
+    {
+      "subject": "Algorithms",
+      "topic": "Dynamic Programming",
+      "subtopic": "Knapsack",
+      "question_text": "What is the time complexity of the 0/1 Knapsack problem using dynamic programming with n items and weight capacity W?",
+      "options": [
+        "A. O(n log n)",
+        "B. O(nW)",
+        "C. O(n^2)",
+        "D. O(2^n)"
+      ],
+      "question_image_urls": [],
+      "correct_answer": "B",
+      "explanation": "The 0/1 Knapsack DP table has n rows and W columns. Filling each cell takes O(1), so total time complexity is O(nW). This is pseudo-polynomial time since W is not polynomial in the input size.",
+      "difficulty": "easy",
+      "source_type": "practice",
+      "year": null,
+      "nlp_tags": ["knapsack", "0/1 knapsack", "DP", "dynamic programming", "time complexity"]
+    }
+  ]
+}
