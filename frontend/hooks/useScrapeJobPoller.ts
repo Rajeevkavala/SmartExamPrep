@@ -1,0 +1,149 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+
+import { adminApi } from "@/lib/api";
+
+export type ScrapeJobStatus = "pending" | "processing" | "done" | "failed";
+
+export type ExtractedScrapedQuestion = {
+  subject?: string | null;
+  topic?: string | null;
+  subtopic?: string | null;
+  question_text?: string;
+  question_image_urls?: string[];
+  options?: string[];
+  correct_answer?: string | null;
+  explanation?: string | null;
+};
+
+export type ScrapeJob = {
+  job_id: string;
+  url: string;
+  status: ScrapeJobStatus;
+  notes?: string | null;
+  extracted_questions: ExtractedScrapedQuestion[];
+  questions_imported: number;
+  error_message?: string | null;
+  created_at: string;
+};
+
+type UseScrapeJobPollerResult = {
+  job: ScrapeJob | null;
+  isPolling: boolean;
+  pollingError: string | null;
+  refreshJob: () => Promise<void>;
+};
+
+const TERMINAL_STATUSES: ReadonlySet<ScrapeJobStatus> = new Set(["done", "failed"]);
+const POLL_INTERVAL_MS = 3000;
+
+const getErrorMessage = (error: unknown): string => {
+  const detail = (error as { response?: { data?: { detail?: string } } })?.response
+    ?.data?.detail;
+
+  if (typeof detail === "string" && detail.trim()) {
+    return detail;
+  }
+
+  return "Unable to refresh scrape job status.";
+};
+
+export function useScrapeJobPoller(jobId: string | null): UseScrapeJobPollerResult {
+  const [job, setJob] = useState<ScrapeJob | null>(null);
+  const [pollingError, setPollingError] = useState<string | null>(null);
+  const [isPolling, setIsPolling] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const activeJobIdRef = useRef<string | null>(jobId);
+
+  const stopPolling = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    setIsPolling(false);
+  }, []);
+
+  const fetchJob = useCallback(async (targetJobId: string): Promise<ScrapeJob | null> => {
+    const response = await adminApi.get<ScrapeJob>(`/scraper/jobs/${targetJobId}`);
+    return response.data;
+  }, []);
+
+  const refreshJob = useCallback(async () => {
+    const targetJobId = activeJobIdRef.current;
+    if (!targetJobId) {
+      setJob(null);
+      setPollingError(null);
+      stopPolling();
+      return;
+    }
+
+    try {
+      const latest = await fetchJob(targetJobId);
+      setJob(latest);
+      setPollingError(null);
+
+      if (latest && TERMINAL_STATUSES.has(latest.status)) {
+        stopPolling();
+      }
+    } catch (error) {
+      setPollingError(getErrorMessage(error));
+    }
+  }, [fetchJob, stopPolling]);
+
+  useEffect(() => {
+    activeJobIdRef.current = jobId;
+    stopPolling();
+    setJob(null);
+    setPollingError(null);
+
+    if (!jobId) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    const poll = async () => {
+      if (isCancelled || activeJobIdRef.current !== jobId) {
+        return;
+      }
+
+      try {
+        const latest = await fetchJob(jobId);
+        if (isCancelled || activeJobIdRef.current !== jobId) {
+          return;
+        }
+
+        setJob(latest);
+        setPollingError(null);
+
+        if (latest && TERMINAL_STATUSES.has(latest.status)) {
+          stopPolling();
+        }
+      } catch (error) {
+        if (!isCancelled) {
+          setPollingError(getErrorMessage(error));
+        }
+      }
+    };
+
+    setIsPolling(true);
+    void poll();
+
+    intervalRef.current = setInterval(() => {
+      void poll();
+    }, POLL_INTERVAL_MS);
+
+    return () => {
+      isCancelled = true;
+      stopPolling();
+    };
+  }, [fetchJob, jobId, stopPolling]);
+
+  return {
+    job,
+    isPolling,
+    pollingError,
+    refreshJob,
+  };
+}
