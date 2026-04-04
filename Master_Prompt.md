@@ -2,6 +2,17 @@ You are a senior full-stack engineer, product architect, and AI/ML systems desig
 
 I want you to help me build an end-to-end MVP called **SmartExamPrep**.
 
+**Required Agent Skills**: When building this, please utilize the following installed skills:
+- `@vercel-react-best-practices`
+- `@nextjs-app-router-patterns`
+- `@python-executor`
+- `@fastapi-templates`
+- `@tailwind-design-system`
+- `@shadcn`
+- `@zustand-state-management`
+- `@frontend-design`
+- `@web-design-guidelines`
+
 This MVP is ONLY for **GATE CSE** preparation and should focus only on the most important research-worthy features:
 
 1. **Weakness Detection** (ML-powered)

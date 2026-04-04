@@ -6,12 +6,24 @@
 >
 > **Recommended Models:** GitHub Copilot (GPT-4o / Claude Sonnet 4.5) | Claude Sonnet 4.6 | Gemini 1.5 Pro
 > **Workspace root:** `d:\New folder (2)\SmartExamPrep\`
+>
+> **Required Agent Skills (installed):**
+> - [backend-architect](C:/Users/rajee/.agents/skills/backend-architect/SKILL.md) (backend architecture and API design)
+> - [python-executor](C:/Users/rajee/.agents/skills/python-executor/SKILL.md) (ML scripts and Python workflows)
+> - [nextjs-developer](C:/Users/rajee/.agents/skills/nextjs-developer/SKILL.md) (Next.js App Router implementation)
+> - [vercel-react-best-practices](C:/Users/rajee/.agents/skills/vercel-react-best-practices/SKILL.md) (React/Next.js performance and patterns)
+> - [tailwind-design-system](C:/Users/rajee/.agents/skills/tailwind-design-system/SKILL.md) (Tailwind structure and component patterns)
+> - [frontend-design](C:/Users/rajee/.agents/skills/frontend-design/SKILL.md) (premium UI design quality)
+> - [vercel-services](C:/Users/rajee/.agents/skills/vercel-services/SKILL.md) (multi-service deployment guidance)
+> - [github-actions](C:/Users/rajee/.agents/skills/github-actions/SKILL.md) (CI/CD automation where needed)
 
 > **Global rule (mandatory):** PYQ questions may contain one or more images. In every chunk where Question models/schemas/APIs/UI are implemented, include `question_image_urls` (array, default empty), support scraper extraction of image URLs, and render images in admin/student question views.
 
 ---
 
 ## CHUNK 01 — Project Scaffold & Monorepo Setup
+
+**Required Skills:** [backend-architect](C:/Users/rajee/.agents/skills/backend-architect/SKILL.md), [nextjs-developer](C:/Users/rajee/.agents/skills/nextjs-developer/SKILL.md), [tailwind-design-system](C:/Users/rajee/.agents/skills/tailwind-design-system/SKILL.md), [python-executor](C:/Users/rajee/.agents/skills/python-executor/SKILL.md)
 
 ```
 You are setting up a new full-stack monorepo project called SmartExamPrep.
@@ -56,6 +68,8 @@ OUTPUT: All files created. Confirm the structure matches phase-01-product-archit
 
 ## CHUNK 02 — Database Models & Alembic
 
+**Required Skills:** [backend-architect](C:/Users/rajee/.agents/skills/backend-architect/SKILL.md)
+
 ```
 You are building the PostgreSQL database schema for SmartExamPrep.
 
@@ -95,6 +109,8 @@ OUTPUT: models.py, all schema files, and alembic/versions/ first migration file.
 
 ## CHUNK 03 — Backend Auth + Config + Dependencies
 
+**Required Skills:** [backend-architect](C:/Users/rajee/.agents/skills/backend-architect/SKILL.md)
+
 ```
 You are implementing JWT authentication for SmartExamPrep FastAPI backend.
 
@@ -133,6 +149,8 @@ OUTPUT: config.py, dependencies.py, auth_service.py, auth.py router, updated mai
 ---
 
 ## CHUNK 04 — ML Models: Weakness Detector + Spaced Revision + NLP Pipeline
+
+**Required Skills:** [python-executor](C:/Users/rajee/.agents/skills/python-executor/SKILL.md)
 
 ```
 You are implementing the ML intelligence layer for SmartExamPrep.
@@ -184,6 +202,8 @@ OUTPUT: weakness_detector.py, spaced_revision.py, nlp_pipeline.py, adaptive_reco
 
 ## CHUNK 05 — Student-Facing Backend APIs
 
+**Required Skills:** [backend-architect](C:/Users/rajee/.agents/skills/backend-architect/SKILL.md), [python-executor](C:/Users/rajee/.agents/skills/python-executor/SKILL.md)
+
 ```
 You are implementing the student API routes for SmartExamPrep FastAPI backend.
 
@@ -230,6 +250,8 @@ OUTPUT: All service files + router files + updated main.py
 
 ## CHUNK 06 — Gemini AI Service
 
+**Required Skills:** [backend-architect](C:/Users/rajee/.agents/skills/backend-architect/SKILL.md), [python-executor](C:/Users/rajee/.agents/skills/python-executor/SKILL.md)
+
 ```
 You are implementing the Gemini AI integration for SmartExamPrep.
 
@@ -267,6 +289,8 @@ OUTPUT: backend/services/gemini_service.py (complete, production-safe)
 ---
 
 ## CHUNK 07 — Admin CRUD APIs (Subjects, Topics, Questions)
+
+**Required Skills:** [backend-architect](C:/Users/rajee/.agents/skills/backend-architect/SKILL.md)
 
 ```
 You are implementing all admin CRUD API routes for SmartExamPrep.
@@ -308,6 +332,8 @@ OUTPUT: admin_content.py, admin_questions.py, updated main.py
 ---
 
 ## CHUNK 08 — Scraper Service + Syllabus Service + Their Routers
+
+**Required Skills:** [backend-architect](C:/Users/rajee/.agents/skills/backend-architect/SKILL.md), [python-executor](C:/Users/rajee/.agents/skills/python-executor/SKILL.md)
 
 ```
 You are implementing the web scraper and PDF syllabus extraction pipelines for SmartExamPrep admin.
@@ -363,6 +389,8 @@ OUTPUT: scraper_service.py, scraper.py, syllabus_service.py, syllabus.py, update
 
 ## CHUNK 09 — ML Training Pipeline + Seed Data
 
+**Required Skills:** [python-executor](C:/Users/rajee/.agents/skills/python-executor/SKILL.md)
+
 ```
 You are implementing the offline ML training pipeline and database seeding for SmartExamPrep.
 
@@ -408,6 +436,8 @@ OUTPUT: All ml/ scripts + backend/seed.py + seed_data/ JSON files
 ---
 
 ## CHUNK 10 — Frontend: Setup, API Client, Auth Store, Middleware
+
+**Required Skills:** [nextjs-developer](C:/Users/rajee/.agents/skills/nextjs-developer/SKILL.md), [vercel-react-best-practices](C:/Users/rajee/.agents/skills/vercel-react-best-practices/SKILL.md), [tailwind-design-system](C:/Users/rajee/.agents/skills/tailwind-design-system/SKILL.md)
 
 ```
 You are setting up the Next.js 14 frontend foundation for SmartExamPrep.
@@ -455,6 +485,8 @@ OUTPUT: api.ts, adminApi.ts, authStore.ts, dashboardStore.ts, middleware.ts, val
 
 ## CHUNK 11 — Student Pages: Landing, Auth, Onboarding, Dashboard
 
+**Required Skills:** [nextjs-developer](C:/Users/rajee/.agents/skills/nextjs-developer/SKILL.md), [frontend-design](C:/Users/rajee/.agents/skills/frontend-design/SKILL.md), [vercel-react-best-practices](C:/Users/rajee/.agents/skills/vercel-react-best-practices/SKILL.md), [tailwind-design-system](C:/Users/rajee/.agents/skills/tailwind-design-system/SKILL.md)
+
 ```
 You are building the student-facing pages for SmartExamPrep Next.js frontend.
 
@@ -500,6 +532,8 @@ OUTPUT: All page files + 5 component files
 ---
 
 ## CHUNK 12 — Student Quiz Pages + Revision Page
+
+**Required Skills:** [nextjs-developer](C:/Users/rajee/.agents/skills/nextjs-developer/SKILL.md), [frontend-design](C:/Users/rajee/.agents/skills/frontend-design/SKILL.md), [vercel-react-best-practices](C:/Users/rajee/.agents/skills/vercel-react-best-practices/SKILL.md), [tailwind-design-system](C:/Users/rajee/.agents/skills/tailwind-design-system/SKILL.md)
 
 ```
 You are building the quiz and revision pages for SmartExamPrep student frontend.
@@ -548,6 +582,8 @@ OUTPUT: diagnostic quiz, adaptive quiz, result, revision pages + QuizCard + Revi
 ---
 
 ## CHUNK 13 — Admin Layout + Dashboard + Subjects Manager
+
+**Required Skills:** [nextjs-developer](C:/Users/rajee/.agents/skills/nextjs-developer/SKILL.md), [frontend-design](C:/Users/rajee/.agents/skills/frontend-design/SKILL.md), [vercel-react-best-practices](C:/Users/rajee/.agents/skills/vercel-react-best-practices/SKILL.md), [tailwind-design-system](C:/Users/rajee/.agents/skills/tailwind-design-system/SKILL.md)
 
 ```
 You are building the admin panel pages for SmartExamPrep.
@@ -598,6 +634,8 @@ OUTPUT: layout.tsx, AdminGuard, AdminSidebar, admin page, subjects page, Subtopi
 
 ## CHUNK 14 — Admin Questions Manager + Question Form
 
+**Required Skills:** [nextjs-developer](C:/Users/rajee/.agents/skills/nextjs-developer/SKILL.md), [frontend-design](C:/Users/rajee/.agents/skills/frontend-design/SKILL.md), [vercel-react-best-practices](C:/Users/rajee/.agents/skills/vercel-react-best-practices/SKILL.md), [tailwind-design-system](C:/Users/rajee/.agents/skills/tailwind-design-system/SKILL.md)
+
 ```
 You are building the Questions Manager admin page for SmartExamPrep.
 
@@ -639,6 +677,8 @@ OUTPUT: questions/page.tsx, QuestionFormModal.tsx, questions/[id]/page.tsx
 
 ## CHUNK 15 — Admin Scraper Page
 
+**Required Skills:** [nextjs-developer](C:/Users/rajee/.agents/skills/nextjs-developer/SKILL.md), [frontend-design](C:/Users/rajee/.agents/skills/frontend-design/SKILL.md), [vercel-react-best-practices](C:/Users/rajee/.agents/skills/vercel-react-best-practices/SKILL.md), [tailwind-design-system](C:/Users/rajee/.agents/skills/tailwind-design-system/SKILL.md)
+
 ```
 You are building the URL Scraper admin page for SmartExamPrep.
 
@@ -678,6 +718,8 @@ OUTPUT: useScrapeJobPoller.ts, scraper/page.tsx, ScrapeJobCard.tsx
 
 ## CHUNK 16 — Admin Syllabus Upload Page
 
+**Required Skills:** [nextjs-developer](C:/Users/rajee/.agents/skills/nextjs-developer/SKILL.md), [frontend-design](C:/Users/rajee/.agents/skills/frontend-design/SKILL.md), [vercel-react-best-practices](C:/Users/rajee/.agents/skills/vercel-react-best-practices/SKILL.md), [tailwind-design-system](C:/Users/rajee/.agents/skills/tailwind-design-system/SKILL.md)
+
 ```
 You are building the PDF Syllabus Upload admin page for SmartExamPrep.
 
@@ -711,6 +753,8 @@ OUTPUT: syllabus/page.tsx, SyllabusTreeViewer.tsx
 ---
 
 ## CHUNK 17 — MVP Polish: Error Handling, Loading States, Validation
+
+**Required Skills:** [backend-architect](C:/Users/rajee/.agents/skills/backend-architect/SKILL.md), [nextjs-developer](C:/Users/rajee/.agents/skills/nextjs-developer/SKILL.md), [vercel-react-best-practices](C:/Users/rajee/.agents/skills/vercel-react-best-practices/SKILL.md), [frontend-design](C:/Users/rajee/.agents/skills/frontend-design/SKILL.md)
 
 ```
 You are adding production-quality polish to SmartExamPrep.
@@ -754,6 +798,8 @@ OUTPUT: Updated api.ts, main.py, layout.tsx + LoadingSpinner + EmptyState compon
 ---
 
 ## CHUNK 18 — Deployment Configuration
+
+**Required Skills:** [backend-architect](C:/Users/rajee/.agents/skills/backend-architect/SKILL.md), [vercel-services](C:/Users/rajee/.agents/skills/vercel-services/SKILL.md), [github-actions](C:/Users/rajee/.agents/skills/github-actions/SKILL.md)
 
 ```
 You are finalizing deployment configuration for SmartExamPrep.

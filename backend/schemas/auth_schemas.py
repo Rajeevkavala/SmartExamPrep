@@ -38,6 +38,20 @@ class LoginRequest(BaseModel):
     }
 
 
+class UpdateProfileRequest(BaseModel):
+    daily_study_minutes: int = Field(ge=30, le=180, example=90)
+    experience_level: str = Field(example="beginner")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "daily_study_minutes": 90,
+                "experience_level": "intermediate",
+            }
+        }
+    }
+
+
 class TokenResponse(BaseModel):
     access_token: str = Field(example="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
     token_type: str = "bearer"

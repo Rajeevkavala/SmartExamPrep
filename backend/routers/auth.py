@@ -6,7 +6,13 @@ from sqlalchemy.orm import Session
 
 from dependencies import get_current_user, get_db
 from models.models import User
-from schemas.auth_schemas import LoginRequest, RegisterRequest, TokenResponse, UserResponse
+from schemas.auth_schemas import (
+	LoginRequest,
+	RegisterRequest,
+	TokenResponse,
+	UpdateProfileRequest,
+	UserResponse,
+)
 from services.auth_service import authenticate_user, create_token, create_user
 
 
@@ -119,4 +125,23 @@ def login(
 	},
 )
 def me(user: Annotated[User, Depends(get_current_user)]) -> UserResponse:
+	return user
+
+
+@router.put(
+	"/me",
+	response_model=UserResponse,
+	summary="Update current authenticated user profile",
+	description="Update onboarding preferences such as daily study time and experience level.",
+)
+def update_me(
+	req: UpdateProfileRequest,
+	db: Annotated[Session, Depends(get_db)],
+	user: Annotated[User, Depends(get_current_user)],
+) -> UserResponse:
+	user.daily_study_minutes = req.daily_study_minutes
+	user.experience_level = req.experience_level
+	db.add(user)
+	db.commit()
+	db.refresh(user)
 	return user

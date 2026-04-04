@@ -57,6 +57,7 @@ class TopicUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=255, example="Memory Management")
     subtopics: list[str] | None = Field(default=None, example=["Paging", "Segmentation"])
     nlp_keyword_tags: list[str] | None = Field(default=None, example=["paging", "tlb", "virtual memory"])
+    display_order: int | None = Field(default=None, ge=0, example=2)
     difficulty_weight: float | None = Field(default=None, ge=0.5, le=2.0, example=1.4)
 
     model_config = {
@@ -65,6 +66,7 @@ class TopicUpdate(BaseModel):
                 "name": "Memory Management",
                 "subtopics": ["Paging", "Segmentation"],
                 "nlp_keyword_tags": ["paging", "tlb", "virtual memory"],
+                "display_order": 2,
                 "difficulty_weight": 1.4,
             }
         }
