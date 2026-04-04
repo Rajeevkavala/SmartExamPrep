@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 
 export type QuizQuestion = {
   id: string;
@@ -53,6 +54,41 @@ const difficultyPalette: Record<string, string> = {
   hard: "bg-rose-500/20 text-rose-200 border-rose-400/30",
 };
 
+function QuestionImage({ src, alt }: { src: string; alt: string }) {
+  const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  if (failed) {
+    return (
+      <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-100">
+        Unable to load image preview for this question.
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative overflow-hidden rounded-xl border border-slate-700 bg-slate-950">
+      {!loaded ? (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-900/75 text-xs text-slate-300 animate-pulse">
+          Loading image...
+        </div>
+      ) : null}
+      <Image
+        src={src}
+        alt={alt}
+        width={1200}
+        height={675}
+        unoptimized
+        className={`h-auto w-full object-contain transition-opacity ${
+          loaded ? "opacity-100" : "opacity-0"
+        }`}
+        onLoad={() => setLoaded(true)}
+        onError={() => setFailed(true)}
+      />
+    </div>
+  );
+}
+
 export default function QuizCard({
   question,
   selectedAnswer,
@@ -62,9 +98,13 @@ export default function QuizCard({
     parseOption(option, index)
   );
 
-  const safeImageUrls = (question.question_image_urls ?? []).filter(
-    (url) => typeof url === "string" && url.trim().length > 0
-  );
+  const safeImageUrls = Array.from(
+    new Set(
+      (question.question_image_urls ?? [])
+        .filter((url) => typeof url === "string" && url.trim().length > 0)
+        .map((url) => url.trim())
+    )
+  ).slice(0, 6);
 
   const difficulty = (question.difficulty || "").toLowerCase();
   const difficultyClass = difficultyPalette[difficulty] ??
@@ -92,19 +132,11 @@ export default function QuizCard({
       {safeImageUrls.length > 0 ? (
         <div className="mt-4 grid gap-3">
           {safeImageUrls.map((url, index) => (
-            <div
+            <QuestionImage
               key={`${question.id}-img-${index}`}
-              className="overflow-hidden rounded-xl border border-slate-700 bg-slate-950"
-            >
-              <Image
-                src={url}
-                alt={`Question visual ${index + 1}`}
-                width={1200}
-                height={675}
-                unoptimized
-                className="h-auto w-full object-contain"
-              />
-            </div>
+              src={url}
+              alt={`Question visual ${index + 1}`}
+            />
           ))}
         </div>
       ) : null}

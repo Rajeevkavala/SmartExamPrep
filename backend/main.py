@@ -1,10 +1,14 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
+import sys
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from config import settings
 from database import engine
@@ -58,6 +62,15 @@ def _mock_from_schema(
     seen: set[str] | None = None,
 ) -> Any:
     seen = seen or set()
+
+    if "example" in schema:
+        return schema["example"]
+
+    if "examples" in schema and isinstance(schema["examples"], dict):
+        for example_value in schema["examples"].values():
+            if isinstance(example_value, dict) and "value" in example_value:
+                return example_value["value"]
+            return example_value
 
     ref = schema.get("$ref")
     if isinstance(ref, str):
@@ -239,6 +252,60 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def log_request_middleware(request: Request, call_next):
+    status_code = 500
+    try:
+        response = await call_next(request)
+        status_code = response.status_code
+        return response
+    finally:
+        print(f"{request.method} {request.url.path} -> {status_code}", file=sys.stderr)
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(_: Request, exc: StarletteHTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail, "status_code": exc.status_code},
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(_: Request, exc: RequestValidationError):
+    errors: list[dict[str, str]] = []
+
+    for validation_error in exc.errors():
+        loc = [str(part) for part in validation_error.get("loc", [])]
+        # Remove transport prefixes so the field is clean in frontend toasts/forms.
+        loc = [part for part in loc if part not in {"body", "query", "path", "header", "cookie"}]
+        field = ".".join(loc) if loc else "body"
+
+        errors.append(
+            {
+                "field": field,
+                "message": str(validation_error.get("msg", "Invalid value")),
+            }
+        )
+
+    return JSONResponse(
+        status_code=422,
+        content={"detail": "Validation error", "errors": errors},
+    )
+
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    print(
+        f"Unhandled exception on {request.method} {request.url.path}: {exc}",
+        file=sys.stderr,
+    )
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error. Please try again."},
+    )
 
 
 @app.get("/health", tags=["System"])

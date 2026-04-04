@@ -261,6 +261,48 @@ def update_question(
 	question = _get_question_or_404(db, question_id)
 	updates = req.model_dump(exclude_unset=True)
 
+	if "subject_id" in updates:
+		if updates["subject_id"] is None:
+			raise HTTPException(
+				status_code=status.HTTP_400_BAD_REQUEST,
+				detail="subject_id cannot be null.",
+			)
+		updates["subject_id"] = _require_uuid(updates["subject_id"], "subject_id")
+
+	if "topic_id" in updates:
+		if updates["topic_id"] is None:
+			raise HTTPException(
+				status_code=status.HTTP_400_BAD_REQUEST,
+				detail="topic_id cannot be null.",
+			)
+		updates["topic_id"] = _require_uuid(updates["topic_id"], "topic_id")
+
+	if "subject_id" in updates or "topic_id" in updates:
+		target_subject_id = updates.get("subject_id") or str(question.subject_id)
+		target_topic_id = updates.get("topic_id") or str(question.topic_id)
+
+		subject = db.query(Subject).filter(Subject.id == target_subject_id).first()
+		if subject is None:
+			raise HTTPException(
+				status_code=status.HTTP_404_NOT_FOUND,
+				detail="Subject not found.",
+			)
+
+		topic = db.query(Topic).filter(Topic.id == target_topic_id).first()
+		if topic is None:
+			raise HTTPException(
+				status_code=status.HTTP_404_NOT_FOUND,
+				detail="Topic not found.",
+			)
+		if str(topic.subject_id) != str(target_subject_id):
+			raise HTTPException(
+				status_code=status.HTTP_400_BAD_REQUEST,
+				detail="Topic does not belong to the provided subject.",
+			)
+
+		updates["subject_id"] = target_subject_id
+		updates["topic_id"] = target_topic_id
+
 	if "options" in updates and updates["options"] is not None:
 		_validate_options(updates["options"])
 

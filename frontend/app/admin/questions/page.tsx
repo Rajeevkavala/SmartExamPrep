@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "@/components/ui/use-toast";
 import { adminApi } from "@/lib/api";
 
 type QuestionsResponse = {
@@ -231,22 +232,37 @@ export default function AdminQuestionsPage() {
     }
 
     setActiveVerifyId(questionId);
+    let previousVerified = false;
     setQuestions((previous) =>
       previous.map((question) =>
-        question.id === questionId ? { ...question, is_verified: true } : question
+        question.id === questionId
+          ? (() => {
+              previousVerified = question.is_verified;
+              return { ...question, is_verified: true };
+            })()
+          : question
       )
     );
 
     try {
       await adminApi.post(`/questions/${questionId}/verify`);
-    } catch {
+      toast({
+        title: "Status updated",
+        description: "Question approval status updated successfully.",
+      });
+    } catch (error) {
       setQuestions((previous) =>
         previous.map((question) =>
           question.id === questionId
-            ? { ...question, is_verified: false }
+            ? { ...question, is_verified: previousVerified }
             : question
         )
       );
+      toast({
+        variant: "destructive",
+        title: "Verify failed",
+        description: getErrorMessage(error),
+      });
     } finally {
       setActiveVerifyId(null);
     }
@@ -273,8 +289,17 @@ export default function AdminQuestionsPage() {
         question_ids: idsToVerify,
       });
       setSelectedQuestionIds([]);
-    } catch {
+      toast({
+        title: "Bulk verify completed",
+        description: `${idsToVerify.length} question(s) verified.`,
+      });
+    } catch (error) {
       await fetchQuestions(false);
+      toast({
+        variant: "destructive",
+        title: "Bulk verify failed",
+        description: getErrorMessage(error),
+      });
     } finally {
       setIsBulkVerifying(false);
     }
@@ -301,6 +326,16 @@ export default function AdminQuestionsPage() {
       } else {
         await fetchQuestions(false);
       }
+      toast({
+        title: "Question deleted",
+        description: "The question has been removed.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Delete failed",
+        description: getErrorMessage(error),
+      });
     } finally {
       setIsDeleting(false);
     }

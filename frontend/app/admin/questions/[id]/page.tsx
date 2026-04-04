@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { adminApi } from "@/lib/api";
 import { questionSchema } from "@/lib/validations";
+import { toast } from "@/components/ui/use-toast";
 
 type SubjectOption = {
   id: string;
@@ -379,8 +380,17 @@ export default function AdminQuestionDetailPage() {
       );
       setQuestion(data);
       reset(buildDefaultValues(data));
+      toast({
+        title: "Question updated",
+        description: "Changes were saved successfully.",
+      });
     } catch (error) {
       setActionError(getErrorMessage(error));
+      toast({
+        variant: "destructive",
+        title: "Update failed",
+        description: getErrorMessage(error),
+      });
     } finally {
       setIsSaving(false);
     }
@@ -393,12 +403,23 @@ export default function AdminQuestionDetailPage() {
 
     setIsVerifying(true);
     setActionError(null);
+    const previousQuestion = question;
+    setQuestion({ ...question, is_verified: true });
 
     try {
       await adminApi.post(`/questions/${questionId}/verify`);
-      setQuestion({ ...question, is_verified: true });
+      toast({
+        title: "Status updated",
+        description: "This question is now marked as approved.",
+      });
     } catch (error) {
+      setQuestion(previousQuestion);
       setActionError(getErrorMessage(error));
+      toast({
+        variant: "destructive",
+        title: "Verify failed",
+        description: getErrorMessage(error),
+      });
     } finally {
       setIsVerifying(false);
     }

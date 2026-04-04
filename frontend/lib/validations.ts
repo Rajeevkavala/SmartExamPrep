@@ -11,6 +11,8 @@ const optionalUrl = z
   .optional()
   .transform((value) => (value ? value : undefined));
 
+const MAX_QUESTION_IMAGE_URLS = 6;
+
 export const loginSchema = z.object({
   email: z.string().trim().email("Enter a valid email address."),
   password: z.string().min(8, "Password must be at least 8 characters."),
@@ -44,7 +46,12 @@ export const questionSchema = z.object({
     .length(4, "Exactly 4 options (A-D) are required."),
   question_image_urls: z
     .array(z.string().trim().url("Enter valid image URLs."))
-    .default([]),
+    .max(
+      MAX_QUESTION_IMAGE_URLS,
+      `Maximum ${MAX_QUESTION_IMAGE_URLS} question images are allowed.`
+    )
+    .default([])
+    .transform((urls) => Array.from(new Set(urls))),
   correct_answer: z.enum(["A", "B", "C", "D"]),
   explanation: optionalTrimmedString,
   difficulty: z.enum(["easy", "medium", "hard"]),

@@ -12,7 +12,7 @@ const AUTH_STORE_KEY = "auth-store";
 const AUTH_COOKIE_KEY = "token";
 
 type RetryableConfig = InternalAxiosRequestConfig & {
-  _retry?: boolean;
+  _retried?: boolean;
 };
 
 const clearClientAuth = () => {
@@ -41,6 +41,17 @@ const getErrorDescription = (error: AxiosError): string => {
     const detail = (responseData as { detail?: unknown }).detail;
     if (typeof detail === "string" && detail.trim()) {
       return detail;
+    }
+
+    const structuredErrors = (responseData as {
+      errors?: Array<{ field?: string; message?: string }>;
+    }).errors;
+    if (Array.isArray(structuredErrors) && structuredErrors.length > 0) {
+      const firstError = structuredErrors[0];
+      const fieldPrefix = firstError?.field ? `${firstError.field}: ` : "";
+      if (typeof firstError?.message === "string" && firstError.message.trim()) {
+        return `${fieldPrefix}${firstError.message}`;
+      }
     }
   }
 
@@ -93,9 +104,9 @@ export function addAuthInterceptors(instance: AxiosInstance) {
         status >= 500 &&
         status < 600 &&
         requestConfig &&
-        !requestConfig._retry
+        !requestConfig._retried
       ) {
-        requestConfig._retry = true;
+        requestConfig._retried = true;
         await wait(1000);
         return instance.request(requestConfig);
       }

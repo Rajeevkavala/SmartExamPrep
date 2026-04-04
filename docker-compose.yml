@@ -26,16 +26,12 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    env_file:
+      - .env
     environment:
       DATABASE_URL: postgresql://postgres:password@postgres:5432/smartexamprep
-      JWT_SECRET: ${JWT_SECRET:-change-this-to-a-strong-random-secret}
-      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
-      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
-      UPLOAD_DIR: ${UPLOAD_DIR:-uploads}
     ports:
       - "8000:8000"
-    volumes:
-      - ./backend:/app
 
 volumes:
   postgres_data:

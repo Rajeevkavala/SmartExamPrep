@@ -7,6 +7,7 @@ import type { z, ZodIssue } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "@/components/ui/use-toast";
 import { adminApi } from "@/lib/api";
 import { questionSchema } from "@/lib/validations";
 
@@ -340,10 +341,22 @@ export default function QuestionFormModal({
         await adminApi.post("/questions/", parsed.data);
       }
 
+      toast({
+        title: question?.id ? "Question updated" : "Question created",
+        description: question?.id
+          ? "The question has been updated successfully."
+          : "The question has been created successfully.",
+      });
+
       await onSaved();
       onClose();
     } catch (error) {
       setActionError(getErrorMessage(error));
+      toast({
+        variant: "destructive",
+        title: "Save failed",
+        description: getErrorMessage(error),
+      });
     } finally {
       setIsSubmitting(false);
     }

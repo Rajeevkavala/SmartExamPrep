@@ -8,6 +8,7 @@ class SyllabusUploadResponse(BaseModel):
     extracted_structure: dict | None
     subjects_imported: int
     topics_imported: int
+    error_message: str | None = None
     created_at: str
 
     model_config = {
@@ -31,6 +32,7 @@ class SyllabusUploadResponse(BaseModel):
                 },
                 "subjects_imported": 1,
                 "topics_imported": 1,
+                "error_message": None,
                 "created_at": "2026-04-03T12:00:00",
             }
         }

@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { adminApi } from "@/lib/api";
+import { toast } from "@/components/ui/use-toast";
 
 type SubjectRecord = {
   id: string;
@@ -234,6 +235,10 @@ export default function AdminSubjectsPage() {
       setSubjectDialogOpen(false);
       resetSubjectDialog();
       await loadSubjects(false);
+      toast({
+        title: "Subject created",
+        description: `${name} has been added.`,
+      });
     } catch (createError) {
       setActionError(getErrorMessage(createError));
     } finally {
@@ -273,6 +278,10 @@ export default function AdminSubjectsPage() {
       );
 
       cancelSubjectInlineEdit();
+      toast({
+        title: "Subject updated",
+        description: "Subject name updated successfully.",
+      });
     } catch (updateError) {
       setActionError(getErrorMessage(updateError));
     } finally {
@@ -300,6 +309,10 @@ export default function AdminSubjectsPage() {
       });
 
       setConfirmDeleteSubjectId(null);
+      toast({
+        title: "Subject deleted",
+        description: "The subject and its nested data were removed.",
+      });
     } catch (deleteError) {
       setActionError(getErrorMessage(deleteError));
     } finally {
@@ -390,6 +403,13 @@ export default function AdminSubjectsPage() {
       await loadTopics(activeSubjectId, true);
       await loadSubjects(false);
       forceCloseTopicDialog();
+      toast({
+        title: topicDialogMode === "create" ? "Topic created" : "Topic updated",
+        description:
+          topicDialogMode === "create"
+            ? "New topic added successfully."
+            : "Topic changes saved successfully.",
+      });
     } catch (topicError) {
       setActionError(getErrorMessage(topicError));
     } finally {
@@ -406,6 +426,10 @@ export default function AdminSubjectsPage() {
       await loadTopics(subjectId, true);
       await loadSubjects(false);
       setConfirmDeleteTopic(null);
+      toast({
+        title: "Topic deleted",
+        description: "The topic has been removed.",
+      });
     } catch (topicError) {
       setActionError(getErrorMessage(topicError));
     } finally {

@@ -1,4 +1,35 @@
-from pydantic import BaseModel, Field
+from pydantic import AnyHttpUrl, BaseModel, Field, TypeAdapter, field_validator
+
+
+MAX_QUESTION_IMAGE_URLS = 6
+_http_url_adapter = TypeAdapter(AnyHttpUrl)
+
+
+def _normalize_question_image_urls(raw_urls: list[str]) -> list[str]:
+    normalized_urls: list[str] = []
+    seen_urls: set[str] = set()
+
+    for raw_url in raw_urls:
+        if not isinstance(raw_url, str):
+            raise ValueError("question_image_urls must contain only strings")
+
+        cleaned_url = raw_url.strip()
+        if not cleaned_url:
+            continue
+
+        validated_url = str(_http_url_adapter.validate_python(cleaned_url))
+        if validated_url in seen_urls:
+            continue
+
+        seen_urls.add(validated_url)
+        normalized_urls.append(validated_url)
+
+    if len(normalized_urls) > MAX_QUESTION_IMAGE_URLS:
+        raise ValueError(
+            f"At most {MAX_QUESTION_IMAGE_URLS} question image URLs are allowed"
+        )
+
+    return normalized_urls
 
 
 class SubjectCreate(BaseModel):
@@ -120,8 +151,19 @@ class QuestionCreate(BaseModel):
         }
     }
 
+    @field_validator("question_image_urls", mode="before")
+    @classmethod
+    def validate_question_image_urls(cls, value: object) -> list[str]:
+        if value is None:
+            return []
+        if not isinstance(value, list):
+            raise ValueError("question_image_urls must be a list")
+        return _normalize_question_image_urls(value)
+
 
 class QuestionUpdate(BaseModel):
+    subject_id: str | None = Field(default=None, example="3f54d88f-6342-421b-b2f8-2755ee9f66c7")
+    topic_id: str | None = Field(default=None, example="e636dc53-0e6d-4f69-a367-7198d5a7e3c8")
     subtopic: str | None = Field(default=None, example="Priority Scheduling")
     question_text: str | None = Field(default=None, min_length=10, example="Updated question statement")
     options: list[str] | None = Field(default=None, min_length=4, max_length=4, example=["A. Option 1", "B. Option 2", "C. Option 3", "D. Option 4"])
@@ -130,12 +172,15 @@ class QuestionUpdate(BaseModel):
     explanation: str | None = Field(default=None, example="Updated explanation text")
     difficulty: str | None = Field(default=None, example="hard")
     source_type: str | None = Field(default=None, example="scraped")
+    source_url: str | None = Field(default=None, example="https://gateoverflow.in/updated-example-question")
     year: int | None = Field(default=None, ge=1991, le=2100, example=2023)
     is_verified: bool | None = Field(default=None, example=True)
 
     model_config = {
         "json_schema_extra": {
             "example": {
+                "subject_id": "3f54d88f-6342-421b-b2f8-2755ee9f66c7",
+                "topic_id": "e636dc53-0e6d-4f69-a367-7198d5a7e3c8",
                 "question_text": "Updated question statement",
                 "options": ["A. Option 1", "B. Option 2", "C. Option 3", "D. Option 4"],
                 "correct_answer": "C",
@@ -144,6 +189,15 @@ class QuestionUpdate(BaseModel):
             }
         }
     }
+
+    @field_validator("question_image_urls", mode="before")
+    @classmethod
+    def validate_question_image_urls(cls, value: object) -> list[str] | None:
+        if value is None:
+            return None
+        if not isinstance(value, list):
+            raise ValueError("question_image_urls must be a list")
+        return _normalize_question_image_urls(value)
 
 
 class BulkVerifyRequest(BaseModel):

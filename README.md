@@ -1,71 +1,33 @@
 # SmartExamPrep
 
-SmartExamPrep is a full-stack learning platform with a FastAPI backend, a Next.js frontend, and an ML pipeline for adaptive learning.
+SmartExamPrep is a full-stack learning platform with a FastAPI backend, Next.js frontend, and ML pipeline.
 
-## Monorepo Structure
+## Quick Start
 
-- `frontend/` - Next.js 14 App Router application
-- `backend/` - FastAPI + SQLAlchemy backend
-- `ml/` - Offline ML training scripts and model artifacts
+### Backend
+1. cp .env.example .env && fill in values
+2. docker-compose up -d postgres
+3. cd backend && pip install -r requirements.txt
+4. python -m spacy download en_core_web_sm
+5. alembic upgrade head
+6. python seed.py
+7. uvicorn main:app --reload
 
-## Prerequisites
+### ML Training (optional)
+1. cd ml && pip install -r requirements.txt
+2. python generate_synthetic_data.py
+3. python train_weakness_model.py
+4. python export_model.py
 
-- Python 3.11+
-- Node.js 20+
-- npm 10+
-- Docker Desktop (for PostgreSQL via Docker Compose)
+### Frontend
+1. cd frontend && npm install
+2. cp .env.example .env.local && set NEXT_PUBLIC_API_URL
+3. npm run dev -> http://localhost:3000
 
-## 1. Environment Setup
+### Admin Login
+Email: admin@smartexamprep.com
+Password: Admin@1234
 
-1. Copy environment template:
-   - Windows PowerShell:
-     ```powershell
-     Copy-Item .env.example .env
-     ```
-2. Update `.env` values as needed.
-
-## 2. Start PostgreSQL (Docker)
-
-```powershell
-docker-compose up -d postgres
-```
-
-## 3. Backend Setup
-
-```powershell
-Set-Location backend
-py -3.11 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-alembic upgrade head
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-```
-
-Backend API health check:
-- http://localhost:8000/health
-
-## 4. Frontend Setup
-
-```powershell
-Set-Location frontend
-npm install
-npm run dev
-```
-
-Frontend URL:
-- http://localhost:3000
-
-## 5. ML Setup (Optional for initial development)
-
-```powershell
-Set-Location ml
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-```
-
-## Notes
-
-- Frontend calls backend using `NEXT_PUBLIC_API_URL`.
-- Backend service in Docker Compose is exposed on port `8000`.
-- PostgreSQL service is exposed on port `5432`.
+## Deployment Notes
+- frontend/vercel.json contains a rewrite with a placeholder backend URL.
+- Replace YOUR_BACKEND_URL in frontend/vercel.json with your deployed backend host.

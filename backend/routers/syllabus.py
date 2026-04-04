@@ -20,6 +20,7 @@ def _serialize_upload(upload: SyllabusUpload) -> dict:
 		"extracted_structure": upload.extracted_structure,
 		"subjects_imported": int(upload.subjects_imported or 0),
 		"topics_imported": int(upload.topics_imported or 0),
+		"error_message": upload.error_message,
 		"created_at": upload.created_at.isoformat() if upload.created_at else "",
 	}
 
