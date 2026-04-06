@@ -1,0 +1,19 @@
+{
+  "email": "phase3-smoke-155605@example.com",
+  "password": "Password123",
+  "user_id": "96386610-370d-4f22-9a0b-28de6b133ab7",
+  "results": {
+    "register": 201,
+    "login": 200,
+    "profile_onboarding_version": 2,
+    "roadmap_generated_weeks": 4,
+    "planner_initial_task_types": [
+      "learn",
+      "practice"
+    ],
+    "planner_completed_tasks_after_patch": 1,
+    "dashboard_minutes_today_after_patch": 47,
+    "adaptive_submit_context_source": "daily_planner",
+    "planner_completed_tasks_after_quiz": 2
+  }
+}

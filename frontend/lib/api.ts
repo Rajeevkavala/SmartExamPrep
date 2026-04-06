@@ -1,15 +1,18 @@
 import axios, {
   AxiosError,
+  AxiosHeaders,
   AxiosInstance,
   InternalAxiosRequestConfig,
 } from "axios";
 
+import { readAuthToken } from "@/lib/authToken";
 import { toast } from "@/components/ui/use-toast";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-const TOKEN_KEY = "token";
+const REQUEST_TIMEOUT_MS = 60_000;
+const TOKEN_KEY = "access_token";
 const AUTH_STORE_KEY = "auth-store";
-const AUTH_COOKIE_KEY = "token";
+const AUTH_COOKIE_KEY = "access_token";
 
 type RetryableConfig = InternalAxiosRequestConfig & {
   _retried?: boolean;
@@ -30,7 +33,21 @@ const wait = (ms: number) =>
     setTimeout(resolve, ms);
   });
 
+const getMutableHeaders = (config: InternalAxiosRequestConfig): AxiosHeaders => {
+  if (config.headers instanceof AxiosHeaders) {
+    return config.headers;
+  }
+
+  const headers = new AxiosHeaders(config.headers ?? {});
+  config.headers = headers;
+  return headers;
+};
+
 const getErrorDescription = (error: AxiosError): string => {
+  if (error.code === "ECONNABORTED") {
+    return "The request timed out. Please try again.";
+  }
+
   const responseData = error.response?.data;
 
   if (typeof responseData === "string" && responseData.trim()) {
@@ -60,33 +77,38 @@ const getErrorDescription = (error: AxiosError): string => {
 
 export const api = axios.create({
   baseURL: `${BASE_URL}/api`,
+  timeout: REQUEST_TIMEOUT_MS,
   headers: { "Content-Type": "application/json" },
 });
 
 export const adminApi = axios.create({
   baseURL: `${BASE_URL}/api/admin`,
+  timeout: REQUEST_TIMEOUT_MS,
   headers: { "Content-Type": "application/json" },
 });
+
+export const isRequestCanceled = (error: unknown): boolean =>
+  axios.isCancel(error) ||
+  ((error as { code?: string } | undefined)?.code ?? "") === "ERR_CANCELED";
 
 export function addAuthInterceptors(instance: AxiosInstance) {
   instance.interceptors.request.use((config) => {
     if (typeof window !== "undefined") {
-      const token = localStorage.getItem(TOKEN_KEY);
+      const headers = getMutableHeaders(config);
+      const requestId =
+        typeof window.crypto?.randomUUID === "function"
+          ? window.crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+      headers.set("X-Request-Id", requestId);
+
+      if (config.data instanceof FormData) {
+        headers.delete("Content-Type");
+      }
+
+      const token = readAuthToken();
       if (token) {
-        if (
-          config.headers &&
-          typeof (config.headers as { set?: unknown }).set === "function"
-        ) {
-          (config.headers as { set: (name: string, value: string) => void }).set(
-            "Authorization",
-            `Bearer ${token}`
-          );
-        } else {
-          config.headers = {
-            ...(config.headers ?? {}),
-            Authorization: `Bearer ${token}`,
-          } as InternalAxiosRequestConfig["headers"];
-        }
+        headers.set("Authorization", `Bearer ${token}`);
       }
     }
 
@@ -96,6 +118,10 @@ export function addAuthInterceptors(instance: AxiosInstance) {
   instance.interceptors.response.use(
     (response) => response,
     async (error: AxiosError) => {
+      if (isRequestCanceled(error)) {
+        return Promise.reject(error);
+      }
+
       const status = error.response?.status;
       const requestConfig = error.config as RetryableConfig | undefined;
 

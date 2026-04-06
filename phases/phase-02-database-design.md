@@ -1,4 +1,4 @@
-# PHASE 2 — DATABASE DESIGN
+﻿# PHASE 2 â€” DATABASE DESIGN
 
 > **Goal:** Design the complete PostgreSQL schema using SQLAlchemy ORM, Alembic migrations, and Pydantic schemas for all entities in SmartExamPrep.
 
@@ -22,7 +22,7 @@ Base = declarative_base()
 def gen_uuid():
     return str(uuid.uuid4())
 
-# ─── Enums ────────────────────────────────────────────────────────────────────
+# â”€â”€â”€ Enums â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class RoleEnum(str, enum.Enum):
     student = "student"
@@ -49,7 +49,7 @@ class JobStatusEnum(str, enum.Enum):
     done = "done"
     failed = "failed"
 
-# ─── User ─────────────────────────────────────────────────────────────────────
+# â”€â”€â”€ User â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class User(Base):
     """
@@ -76,7 +76,7 @@ class User(Base):
     scrape_jobs = relationship("ScrapeJob", back_populates="initiated_by_user")
     syllabus_uploads = relationship("SyllabusUpload", back_populates="uploaded_by_user")
 
-# ─── Subject ──────────────────────────────────────────────────────────────────
+# â”€â”€â”€ Subject â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class Subject(Base):
     """
@@ -95,7 +95,7 @@ class Subject(Base):
     topics = relationship("Topic", back_populates="subject", cascade="all, delete-orphan")
     questions = relationship("Question", back_populates="subject")
 
-# ─── Topic ────────────────────────────────────────────────────────────────────
+# â”€â”€â”€ Topic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class Topic(Base):
     """
@@ -120,7 +120,7 @@ class Topic(Base):
     masteries = relationship("TopicMastery", back_populates="topic")
     revision_schedules = relationship("RevisionSchedule", back_populates="topic")
 
-# ─── Question ─────────────────────────────────────────────────────────────────
+# â”€â”€â”€ Question â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class Question(Base):
     """
@@ -155,7 +155,7 @@ class Question(Base):
     topic = relationship("Topic", back_populates="questions")
     creator = relationship("User", foreign_keys=[created_by])
 
-# ─── QuizAttempt ──────────────────────────────────────────────────────────────
+# â”€â”€â”€ QuizAttempt â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class QuizAttempt(Base):
     """
@@ -167,7 +167,7 @@ class QuizAttempt(Base):
     id = Column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
     user_id = Column(UUID(as_uuid=False), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     quiz_type = Column(String(50), nullable=False)   # "diagnostic" | "adaptive"
-    score = Column(Float, nullable=True)             # Percentage (0–100)
+    score = Column(Float, nullable=True)             # Percentage (0â€“100)
     total_questions = Column(Integer, nullable=False)
     correct_count = Column(Integer, default=0)
     answers = Column(JSON, nullable=False)           # [{question_id, selected, correct, time_taken_s}]
@@ -176,7 +176,7 @@ class QuizAttempt(Base):
 
     user = relationship("User", back_populates="quiz_attempts")
 
-# ─── TopicMastery ─────────────────────────────────────────────────────────────
+# â”€â”€â”€ TopicMastery â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class TopicMastery(Base):
     """
@@ -189,8 +189,8 @@ class TopicMastery(Base):
     id = Column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
     user_id = Column(UUID(as_uuid=False), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     topic_id = Column(UUID(as_uuid=False), ForeignKey("topics.id"), nullable=False)
-    accuracy = Column(Float, default=0.0)           # 0.0–1.0
-    weakness_score = Column(Float, default=50.0)    # 0–100 (ML output)
+    accuracy = Column(Float, default=0.0)           # 0.0â€“1.0
+    weakness_score = Column(Float, default=50.0)    # 0â€“100 (ML output)
     mastery_level = Column(SAEnum(MasteryLevelEnum), default=MasteryLevelEnum.moderate)
     total_attempts = Column(Integer, default=0)
     correct_attempts = Column(Integer, default=0)
@@ -202,7 +202,7 @@ class TopicMastery(Base):
     user = relationship("User", back_populates="topic_masteries")
     topic = relationship("Topic", back_populates="masteries")
 
-# ─── RevisionSchedule ─────────────────────────────────────────────────────────
+# â”€â”€â”€ RevisionSchedule â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class RevisionSchedule(Base):
     """
@@ -226,12 +226,12 @@ class RevisionSchedule(Base):
     user = relationship("User", back_populates="revision_schedules")
     topic = relationship("Topic", back_populates="revision_schedules")
 
-# ─── ScrapeJob ────────────────────────────────────────────────────────────────
+# â”€â”€â”€ ScrapeJob â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class ScrapeJob(Base):
     """
     Tracks an admin-initiated web scraping job.
-    raw_html is stored for reprocessing if Gemini classification fails.
+    raw_html is stored for reprocessing if AI classification fails.
     extracted_questions holds unverified question JSON before admin approval.
     """
     __tablename__ = "scrape_jobs"
@@ -242,7 +242,7 @@ class ScrapeJob(Base):
     status = Column(SAEnum(JobStatusEnum), default=JobStatusEnum.pending)
     notes = Column(Text, nullable=True)
     raw_html = Column(Text, nullable=True)          # Stored for re-processing
-    extracted_questions = Column(JSON, default=list) # Raw Gemini output before verify
+    extracted_questions = Column(JSON, default=list) # Raw AI output before verify
     questions_imported = Column(Integer, default=0)
     error_message = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -250,7 +250,7 @@ class ScrapeJob(Base):
 
     initiated_by_user = relationship("User", back_populates="scrape_jobs")
 
-# ─── SyllabusUpload ───────────────────────────────────────────────────────────
+# â”€â”€â”€ SyllabusUpload â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class SyllabusUpload(Base):
     """
@@ -296,12 +296,12 @@ alembic upgrade head
 ```
 
 ### Key relationships that Alembic must handle:
-- `questions.subject_id` → `subjects.id`
-- `questions.topic_id` → `topics.id`
-- `questions.created_by` → `users.id`
-- `questions.scrape_job_id` → `scrape_jobs.id`
-- `topic_masteries.user_id + topic_id` → unique constraint
-- `revision_schedules.user_id + topic_id` → composite index
+- `questions.subject_id` â†’ `subjects.id`
+- `questions.topic_id` â†’ `topics.id`
+- `questions.created_by` â†’ `users.id`
+- `questions.scrape_job_id` â†’ `scrape_jobs.id`
+- `topic_masteries.user_id + topic_id` â†’ unique constraint
+- `revision_schedules.user_id + topic_id` â†’ composite index
 
 ---
 
@@ -370,7 +370,7 @@ class QuizResultResponse(BaseModel):
     score: float
     correct_count: int
     total_questions: int
-    topic_scores: dict[str, float]  # topic_name → accuracy
+    topic_scores: dict[str, float]  # topic_name â†’ accuracy
 ```
 
 ### analysis_schemas.py
@@ -381,7 +381,7 @@ class TopicWeaknessItem(BaseModel):
     topic_id: str
     topic_name: str
     subject_name: str
-    weakness_score: float        # 0–100
+    weakness_score: float        # 0â€“100
     mastery_level: str           # Weak / Moderate / Strong
     accuracy: float
     total_attempts: int
@@ -500,7 +500,7 @@ class ImportSyllabusRequest(BaseModel):
 |---|---|
 | `User` | Single user table for both roles. Role field controls backend access. |
 | `Subject` | Created from PDF syllabus. Top-level curriculum unit. |
-| `Topic` | Sub-unit with subtopics JSON — avoids a separate Subtopic table for MVP. |
+| `Topic` | Sub-unit with subtopics JSON â€” avoids a separate Subtopic table for MVP. |
 | `Question` | Core content entity. `is_verified` ensures scraped questions need admin approval. |
 | `QuizAttempt` | Source of truth for all ML features (accuracy, time, patterns). |
 | `TopicMastery` | ML output store. Updated after each quiz. Drives recommendations + revision. |
@@ -518,3 +518,4 @@ Update Question-related schema definitions with multi-image support:
 - Pydantic schemas (`QuestionCreate`, `QuestionUpdate`, `QuestionOut`): add `question_image_urls: list[str] = []`.
 - ScrapeJob extracted question object: include `question_image_urls` in each extracted payload.
 - Migration note: create one Alembic revision adding the new JSON column with `[]` default for existing rows.
+

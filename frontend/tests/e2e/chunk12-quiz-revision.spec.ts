@@ -1,5 +1,9 @@
 import { expect, test } from "@playwright/test";
 
+const futureExamDate = new Date(Date.now() + 180 * 24 * 60 * 60 * 1000)
+  .toISOString()
+  .slice(0, 10);
+
 const setStudentAuth = async (
   page: import("@playwright/test").Page,
   context: import("@playwright/test").BrowserContext,
@@ -9,28 +13,41 @@ const setStudentAuth = async (
 
   await context.addCookies([
     {
-      name: "token",
+      name: "access_token",
       value: "playwright-token",
       url: appUrl,
     },
   ]);
 
-  await page.addInitScript(() => {
-    localStorage.setItem("token", "playwright-token");
+  await page.addInitScript((profile) => {
+    localStorage.setItem("access_token", "playwright-token");
     localStorage.setItem(
       "auth-store",
       JSON.stringify({
         state: {
           token: "playwright-token",
           role: "student",
-          user: {
-            id: "playwright-user",
-            email: "student@example.com",
-          },
+          user: profile,
         },
         version: 0,
       })
     );
+  }, {
+    id: "playwright-user",
+    email: "student@example.com",
+    role: "student",
+    daily_study_minutes: 90,
+    experience_level: "intermediate",
+    exam_target_date: futureExamDate,
+    onboarding_version: 2,
+    onboarding_completed_at: "2026-04-04T12:00:00Z",
+    subject_confidences: [
+      {
+        subject_id: "subject-os",
+        confidence_pct: 75,
+      },
+    ],
+    known_topic_ids: ["topic-cpu"],
   });
 };
 
@@ -166,8 +183,10 @@ test.describe("Chunk 12 quiz and revision flows", () => {
 
       expect(payload.quiz_type).toBe("diagnostic");
       expect(payload.answers).toHaveLength(2);
-      expect(payload.answers[0].question_id).toBe("q-1");
-      expect(payload.answers[1].question_id).toBe("q-2");
+      const submittedQuestionIds = payload.answers
+        .map((answer) => answer.question_id)
+        .sort();
+      expect(submittedQuestionIds).toEqual(["q-1", "q-2"]);
 
       await route.fulfill({
         status: 200,
@@ -197,8 +216,8 @@ test.describe("Chunk 12 quiz and revision flows", () => {
     await expect(page.getByRole("heading", { name: "Quiz Result" })).toBeVisible();
     await expect(page.getByText("78.5%").first()).toBeVisible();
     await expect(page.getByText("CPU Scheduling").first()).toBeVisible();
-    await expect(page.getByText("Before Quiz").first()).toBeVisible();
-    await expect(page.getByText("After Quiz").first()).toBeVisible();
+    await expect(page.getByText("Per-Topic Performance")).toBeVisible();
+    await expect(page.getByText("Weakness Change (Before vs After)")).toBeVisible();
   });
 
   test("adaptive quiz shows weak topic badges", async ({

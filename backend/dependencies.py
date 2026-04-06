@@ -85,4 +85,10 @@ def require_admin(user: Annotated[User, Depends(get_current_user)]) -> User:
 
 
 def require_student(user: Annotated[User, Depends(get_current_user)]) -> User:
+    role_value = getattr(user.role, "value", user.role)
+    if role_value != "student":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Student access required.",
+        )
     return user

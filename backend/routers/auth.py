@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from config import settings
 from dependencies import get_current_user, get_db
 from models.models import User
 from schemas.auth_schemas import (
@@ -14,6 +15,7 @@ from schemas.auth_schemas import (
 	UserResponse,
 )
 from services.auth_service import authenticate_user, create_token, create_user
+from services.profile_service import serialize_user_profile, update_profile
 
 
 router = APIRouter()
@@ -55,7 +57,7 @@ def register(
 			detail="Email already registered.",
 		) from exc
 
-	return user
+	return serialize_user_profile(user)
 
 
 @router.post(
@@ -91,12 +93,26 @@ def login(
 		key="access_token",
 		value=token,
 		httponly=True,
-		samesite="lax",
-		secure=False,
+		samesite=settings.cookie_samesite,
+		secure=settings.cookie_secure,
 		max_age=60 * 60 * 24,
 		path="/",
 	)
 	return TokenResponse(access_token=token, role=role_value)
+
+
+@router.post(
+	"/logout",
+	summary="Clear the active auth cookie",
+)
+def logout(response: Response) -> dict:
+	response.delete_cookie(
+		key="access_token",
+		path="/",
+		samesite=settings.cookie_samesite,
+		secure=settings.cookie_secure,
+	)
+	return {"logged_out": True}
 
 
 @router.get(
@@ -125,7 +141,7 @@ def login(
 	},
 )
 def me(user: Annotated[User, Depends(get_current_user)]) -> UserResponse:
-	return user
+	return serialize_user_profile(user)
 
 
 @router.put(
@@ -139,9 +155,5 @@ def update_me(
 	db: Annotated[Session, Depends(get_db)],
 	user: Annotated[User, Depends(get_current_user)],
 ) -> UserResponse:
-	user.daily_study_minutes = req.daily_study_minutes
-	user.experience_level = req.experience_level
-	db.add(user)
-	db.commit()
-	db.refresh(user)
-	return user
+	updated_user = update_profile(db, user, req)
+	return serialize_user_profile(updated_user)

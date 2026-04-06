@@ -1,110 +1,43 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import EmptyState from "@/components/shared/EmptyState";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
-import QuizCard, { type QuizQuestion } from "@/components/student/QuizCard";
+import {
+  fireButtonClass,
+  ghostButtonClass,
+  MetricCard,
+  PageHeader,
+  panelClass,
+  ProgressBar,
+  SectionLabel,
+  StatusBadge,
+} from "@/components/shared/brand-ui";
+import QuizCard from "@/components/student/QuizCard";
 import { api } from "@/lib/api";
 import {
-  type MasteryLevel,
-  type TopicComparison,
-  type TopicWeaknessSnapshot,
-  useQuizStore,
-} from "@/store/quizStore";
-
-type QuizQuestionsResponse = {
-  questions: QuizQuestion[];
-  total: number;
-};
-
-type WeaknessItem = {
-  topic_id: string;
-  topic_name: string;
-  subject_name: string;
-  weakness_score: number;
-  mastery_level: string;
-  accuracy: number;
-};
-
-type SubmitQuizResponse = {
-  attempt_id: string;
-  score: number;
-  correct_count: number;
-  total_questions: number;
-  topic_scores: Record<string, number>;
-};
-
-type AnswerState = {
-  selected_answer: string;
-  time_taken_s: number;
-};
-
-const normalizeTopic = (topicName: string) => topicName.trim().toLowerCase();
-
-const toMasteryLevel = (value: string): MasteryLevel => {
-  if (value === "Weak" || value === "Strong" || value === "Moderate") {
-    return value;
-  }
-
-  const normalized = value.toLowerCase();
-  if (normalized === "weak") {
-    return "Weak";
-  }
-  if (normalized === "strong") {
-    return "Strong";
-  }
-  return "Moderate";
-};
-
-const toWeaknessSnapshot = (item: WeaknessItem): TopicWeaknessSnapshot => ({
-  topic_id: item.topic_id,
-  topic_name: item.topic_name,
-  subject_name: item.subject_name,
-  weakness_score: item.weakness_score,
-  mastery_level: toMasteryLevel(item.mastery_level),
-  accuracy: item.accuracy,
-});
-
-const buildTopicComparisons = (
-  topicScores: Record<string, number>,
-  beforeWeakness: WeaknessItem[],
-  afterWeakness: WeaknessItem[]
-): TopicComparison[] => {
-  const beforeMap = new Map(
-    beforeWeakness.map((item) => [normalizeTopic(item.topic_name), item])
-  );
-  const afterMap = new Map(
-    afterWeakness.map((item) => [normalizeTopic(item.topic_name), item])
-  );
-
-  return Object.entries(topicScores).map(([topicName, score]) => {
-    const normalized = normalizeTopic(topicName);
-    const before = beforeMap.get(normalized);
-    const after = afterMap.get(normalized);
-
-    return {
-      topic_id: after?.topic_id ?? before?.topic_id ?? topicName,
-      topic_name: topicName,
-      subject_name: after?.subject_name ?? before?.subject_name ?? "General",
-      topic_score_pct: score,
-      before: before ? toWeaknessSnapshot(before) : undefined,
-      after: after ? toWeaknessSnapshot(after) : undefined,
-    };
-  });
-};
+  type AnswerState,
+  buildStoredQuizResult,
+  buildTopicComparisons,
+  type QuizQuestionsResponse,
+  type SubmitQuizResponse,
+  type WeaknessItem,
+} from "@/lib/quiz-session";
+import { cn } from "@/lib/utils";
+import { useQuizStore } from "@/store/quizStore";
 
 export default function DiagnosticQuizPage() {
   const router = useRouter();
   const setLatestResult = useQuizStore((state) => state.setLatestResult);
 
-  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
+  const [questions, setQuestions] = useState<QuizQuestionsResponse["questions"]>([]);
   const [weaknessBefore, setWeaknessBefore] = useState<WeaknessItem[]>([]);
   const [answers, setAnswers] = useState<Record<string, AnswerState>>({});
   const [currentIndex, setCurrentIndex] = useState(0);
   const [questionStartedAt, setQuestionStartedAt] = useState(Date.now());
-
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -171,6 +104,12 @@ export default function DiagnosticQuizPage() {
     return Math.round(((currentIndex + 1) / questions.length) * 100);
   }, [currentIndex, questions.length]);
 
+  const answeredCount = useMemo(
+    () =>
+      questions.filter((question) => Boolean(answers[question.id]?.selected_answer)).length,
+    [answers, questions]
+  );
+
   const handleSelectAnswer = (optionLetter: string) => {
     if (!currentQuestion) {
       return;
@@ -178,8 +117,8 @@ export default function DiagnosticQuizPage() {
 
     const elapsedSeconds = Math.max((Date.now() - questionStartedAt) / 1000, 1);
 
-    setAnswers((prev) => ({
-      ...prev,
+    setAnswers((previous) => ({
+      ...previous,
       [currentQuestion.id]: {
         selected_answer: optionLetter,
         time_taken_s: Number(elapsedSeconds.toFixed(2)),
@@ -214,10 +153,7 @@ export default function DiagnosticQuizPage() {
         })),
       };
 
-      const submitResponse = await api.post<SubmitQuizResponse>(
-        "/quiz/submit",
-        payload
-      );
+      const { data } = await api.post<SubmitQuizResponse>("/quiz/submit", payload);
 
       let weaknessAfter: WeaknessItem[] = [];
       try {
@@ -228,23 +164,16 @@ export default function DiagnosticQuizPage() {
       }
 
       const topicComparisons = buildTopicComparisons(
-        submitResponse.data.topic_scores ?? {},
+        data.topic_scores ?? {},
         weaknessBefore,
         weaknessAfter
       );
 
-      setLatestResult({
-        attempt_id: submitResponse.data.attempt_id,
-        quiz_type: "diagnostic",
-        score: submitResponse.data.score,
-        correct_count: submitResponse.data.correct_count,
-        total_questions: submitResponse.data.total_questions,
-        topic_scores: submitResponse.data.topic_scores,
-        topic_comparisons: topicComparisons,
-        submitted_at: new Date().toISOString(),
-      });
+      setLatestResult(
+        buildStoredQuizResult(data, "diagnostic", topicComparisons, null)
+      );
 
-      router.push(`/quiz/result/${submitResponse.data.attempt_id}`);
+      router.push(`/quiz/result/${data.attempt_id}`);
     } catch (error) {
       const message =
         (error as { response?: { data?: { detail?: string } } }).response?.data
@@ -261,9 +190,9 @@ export default function DiagnosticQuizPage() {
 
   if (loadError) {
     return (
-      <main className="mx-auto w-full max-w-4xl px-4 py-8">
+      <main>
         <EmptyState
-          icon="⚠"
+          icon="!"
           title="Diagnostic quiz unavailable"
           description={loadError}
           ctaLabel="Retry"
@@ -275,9 +204,9 @@ export default function DiagnosticQuizPage() {
 
   if (!currentQuestion) {
     return (
-      <main className="mx-auto w-full max-w-4xl px-4 py-8">
+      <main>
         <EmptyState
-          icon="🧠"
+          icon="?"
           title="No diagnostic questions available"
           description="Please ask an admin to verify question data and try again."
           ctaLabel="Go to Dashboard"
@@ -290,48 +219,91 @@ export default function DiagnosticQuizPage() {
   const isLastQuestion = currentIndex === questions.length - 1;
 
   return (
-    <main className="mx-auto w-full max-w-4xl space-y-5 px-4 py-8">
-      <header className="rounded-2xl border border-slate-800 bg-linear-to-r from-slate-900 to-indigo-950 p-5">
-        <h1 className="text-2xl font-bold text-white">Diagnostic Quiz</h1>
-        <p className="mt-2 text-sm text-slate-300">
-          Baseline assessment across your core GATE CSE topics.
-        </p>
-
-        <div className="mt-4 space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-300">
-            <span>
-              Question {currentIndex + 1} of {questions.length}
-            </span>
-            <span>{progressPercent}% complete</span>
+    <main className="space-y-6">
+      <PageHeader
+        eyebrow="Diagnostic mode"
+        title="Diagnostic Quiz"
+        description="Establish your baseline across core GATE CSE topics before the adaptive loop starts narrowing the pressure."
+        badge={
+          <div className="flex flex-wrap gap-2">
+            <StatusBadge tone="fire">Baseline assessment</StatusBadge>
+            <StatusBadge tone="ice">{questions.length} questions</StatusBadge>
           </div>
-          <div className="h-2 rounded-full bg-slate-700">
-            <div
-              className="h-2 rounded-full bg-indigo-500 transition-all duration-300"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-        </div>
-      </header>
-
-      <QuizCard
-        question={currentQuestion}
-        selectedAnswer={selectedAnswer}
-        onSelect={handleSelectAnswer}
+        }
+        actions={
+          <Link href="/quiz" className={ghostButtonClass}>
+            Back to Quiz Console
+          </Link>
+        }
       />
 
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <QuizCard
+          question={currentQuestion}
+          selectedAnswer={selectedAnswer}
+          onSelect={handleSelectAnswer}
+        />
+
+        <aside className={cn(panelClass, "space-y-6 p-6")}>
+          <div className="space-y-3">
+            <SectionLabel>Attempt progress</SectionLabel>
+            <div>
+              <p className="font-display text-5xl leading-none tracking-[0.08em] text-[var(--cream)]">
+                {progressPercent}%
+              </p>
+              <p className="mt-2 text-sm text-[rgba(194,186,176,0.72)]">
+                Question {currentIndex + 1} of {questions.length}
+              </p>
+            </div>
+            <ProgressBar value={progressPercent} tone="fire" />
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+            <MetricCard
+              label="Answered"
+              value={answeredCount}
+              helper={`${questions.length - answeredCount} remaining`}
+              tone="fire"
+            />
+            <MetricCard
+              label="Weak topics tracked"
+              value={weaknessBefore.length}
+              helper="Pre-quiz weakness snapshot loaded"
+              tone="warning"
+            />
+          </div>
+
+          <div className="rounded-[24px] border border-white/8 bg-white/4 p-4">
+            <p className="font-mono text-[0.6rem] uppercase tracking-[0.28em] text-[rgba(194,186,176,0.6)]">
+              Current question
+            </p>
+            <p className="mt-3 text-lg font-medium text-[var(--cream)]">
+              {currentQuestion.topic_name}
+            </p>
+            <p className="mt-2 text-sm leading-7 text-[rgba(194,186,176,0.74)]">
+              Stay deliberate. The diagnostic is meant to map truth, not chase a perfect score.
+            </p>
+          </div>
+        </aside>
+      </section>
+
       {submitError ? (
-        <p className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-2 text-sm text-rose-200">
+        <p className="rounded-[22px] border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
           {submitError}
         </p>
       ) : null}
 
-      <div className="flex items-center justify-end">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Link href="/dashboard" className={ghostButtonClass}>
+          Back to Dashboard
+        </Link>
+
         {isLastQuestion ? (
           <button
             type="button"
             disabled={isSubmitting || !selectedAnswer}
             onClick={handleSubmit}
-            className="rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-70"
+            className={fireButtonClass}
           >
             {isSubmitting ? "Submitting..." : "Submit Quiz"}
           </button>
@@ -340,7 +312,7 @@ export default function DiagnosticQuizPage() {
             type="button"
             disabled={!selectedAnswer}
             onClick={handleNext}
-            className="rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-70"
+            className={fireButtonClass}
           >
             Next
           </button>

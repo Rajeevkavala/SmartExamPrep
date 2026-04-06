@@ -1,0 +1,122 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  legacy-symbol-scan:
+    name: Legacy Symbol Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Block legacy provider symbols
+        shell: bash
+        run: |
+          set -euo pipefail
+          if rg -n -S "OPENROUTER_|AIProviderName\.OPENROUTER|YOUR_BACKEND_URL" \
+            backend/ai \
+            backend/routers \
+            backend/services \
+            backend/main.py \
+            backend/config.py \
+            frontend/app \
+            frontend/lib \
+            frontend/store \
+            .env.example \
+            README.md \
+            docs/DEPLOYMENT_CHECKLIST.md; then
+            echo "Legacy migration symbols detected in active runtime/config files."
+            exit 1
+          fi
+
+  backend-tests:
+    name: Backend Tests + AI Validation
+    runs-on: ubuntu-latest
+    needs: legacy-symbol-scan
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install backend dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run backend unit tests
+        run: pytest tests -q
+
+      - name: Run AI validation harness
+        run: python run_ai_validation.py
+
+  frontend-build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    needs: legacy-symbol-scan
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Validate deploy config
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+        run: npm run predeploy:check
+
+      - name: Build frontend
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+        run: npm run build
+
+  frontend-e2e-smoke:
+    name: Frontend E2E Smoke
+    runs-on: ubuntu-latest
+    needs: frontend-build
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run targeted E2E smoke tests
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+        run: npx playwright test tests/e2e/frontend-foundation.spec.ts tests/e2e/chunk20-chat.spec.ts --project=chromium

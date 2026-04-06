@@ -39,7 +39,7 @@ test("non-admin token gets redirected from /admin to /dashboard", async ({
   const response = await request.get("/admin", {
     maxRedirects: 0,
     headers: {
-      Cookie: `token=${createUnsignedToken("student")}`,
+      Cookie: `access_token=${createUnsignedToken("student")}`,
     },
   });
 
@@ -57,7 +57,7 @@ test("admin token can stay on /admin route", async ({
 
   await context.addCookies([
     {
-      name: "token",
+      name: "access_token",
       value: createUnsignedToken("admin"),
       url: appUrl,
     },

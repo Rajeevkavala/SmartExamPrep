@@ -1,4 +1,4 @@
-# PHASE 7 — DASHBOARD DESIGN
+﻿# PHASE 7 â€” DASHBOARD DESIGN
 
 > **Goal:** Design and build the student dashboard with ML-driven widgets, data shapes, Zustand state, and the admin dashboard with system stats.
 
@@ -8,14 +8,14 @@
 
 | Widget | Data Source | Description |
 |---|---|---|
-| Overall Readiness Score | `GET /api/analysis/dashboard` | Circular gauge 0–100 |
+| Overall Readiness Score | `GET /api/analysis/dashboard` | Circular gauge 0â€“100 |
 | Weakest 3 Topics | ML weakness_score | Horizontal bars with label |
 | Strongest Topics | accuracy > 80% | Green badge list |
-| Today's Quiz CTA | recommendation engine | Button → `/quiz/adaptive` |
+| Today's Quiz CTA | recommendation engine | Button â†’ `/quiz/adaptive` |
 | Today's Revision | `GET /api/revision/plan` | List of due topics |
 | Subject Progress | Per-subject accuracy | Progress bars |
 | Recent Performance | Last 5 quiz scores | Mini line chart |
-| NLP Insight Card | `POST /api/ai/explain` | Gemini-generated text block |
+| NLP Insight Card | `POST /api/ai/explain` | AI-generated text block |
 
 ---
 
@@ -157,7 +157,7 @@ export const useDashboardStore = create<DashboardState>((set) => ({
 "use client";
 
 interface Props {
-  score: number; // 0–100
+  score: number; // 0â€“100
 }
 
 export default function ReadinessGauge({ score }: Props) {
@@ -227,7 +227,7 @@ export default function WeaknessBar({ topic }: Props) {
           <span className="text-slate-500 text-xs ml-2">{topic.subject_name}</span>
         </div>
         <span className={`text-xs font-medium ${labelColor}`}>
-          {topic.mastery_level} — {(topic.accuracy * 100).toFixed(0)}% acc
+          {topic.mastery_level} â€” {(topic.accuracy * 100).toFixed(0)}% acc
         </span>
       </div>
       <div className="w-full bg-slate-700 rounded-full h-2">
@@ -257,7 +257,7 @@ export default function NLPInsightCard({ insight }: Props) {
   return (
     <div className="bg-gradient-to-r from-indigo-900/50 to-purple-900/50 border border-indigo-700 rounded-2xl p-6">
       <div className="flex items-start gap-3">
-        <span className="text-3xl">🤖</span>
+        <span className="text-3xl">ðŸ¤–</span>
         <div>
           <h3 className="text-indigo-300 font-semibold mb-2">AI Insight</h3>
           <p className="text-slate-300 text-sm leading-relaxed">{insight}</p>
@@ -362,12 +362,12 @@ export default function AdminDashboardPage() {
   }, []);
 
   const statCards = stats ? [
-    { label: "Total Questions", value: stats.total_questions, icon: "❓", color: "bg-indigo-900" },
-    { label: "Unverified", value: stats.unverified_questions, icon: "⚠️", color: "bg-red-900", alert: stats.unverified_questions > 0 },
-    { label: "Subjects", value: stats.total_subjects, icon: "📚", color: "bg-slate-800" },
-    { label: "Topics", value: stats.total_topics, icon: "🏷️", color: "bg-slate-800" },
-    { label: "Scrape Jobs", value: stats.scrape_jobs_this_week, icon: "🕷️", color: "bg-slate-800" },
-    { label: "PDF Uploads", value: stats.syllabus_uploads, icon: "📄", color: "bg-slate-800" },
+    { label: "Total Questions", value: stats.total_questions, icon: "â“", color: "bg-indigo-900" },
+    { label: "Unverified", value: stats.unverified_questions, icon: "âš ï¸", color: "bg-red-900", alert: stats.unverified_questions > 0 },
+    { label: "Subjects", value: stats.total_subjects, icon: "ðŸ“š", color: "bg-slate-800" },
+    { label: "Topics", value: stats.total_topics, icon: "ðŸ·ï¸", color: "bg-slate-800" },
+    { label: "Scrape Jobs", value: stats.scrape_jobs_this_week, icon: "ðŸ•·ï¸", color: "bg-slate-800" },
+    { label: "PDF Uploads", value: stats.syllabus_uploads, icon: "ðŸ“„", color: "bg-slate-800" },
   ] : [];
 
   return (
@@ -389,11 +389,11 @@ export default function AdminDashboardPage() {
       {stats?.unverified_questions && stats.unverified_questions > 0 ? (
         <div className="bg-red-900/30 border border-red-700 rounded-xl p-4 mb-6">
           <p className="text-red-300 font-medium">
-            ⚠️ {stats.unverified_questions} scraped questions need verification before going live.
+            âš ï¸ {stats.unverified_questions} scraped questions need verification before going live.
           </p>
           <a href="/admin/questions?is_verified=false"
             className="text-red-400 underline text-sm mt-1 inline-block">
-            Review now →
+            Review now â†’
           </a>
         </div>
       ) : null}
@@ -402,19 +402,19 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <a href="/admin/scraper"
           className="bg-slate-800 hover:bg-slate-700 rounded-xl p-6 block transition">
-          <div className="text-2xl mb-2">🕷️</div>
+          <div className="text-2xl mb-2">ðŸ•·ï¸</div>
           <h3 className="text-white font-semibold">Scrape Questions</h3>
           <p className="text-slate-400 text-sm">Import from URLs automatically</p>
         </a>
         <a href="/admin/syllabus"
           className="bg-slate-800 hover:bg-slate-700 rounded-xl p-6 block transition">
-          <div className="text-2xl mb-2">📄</div>
+          <div className="text-2xl mb-2">ðŸ“„</div>
           <h3 className="text-white font-semibold">Upload Syllabus</h3>
           <p className="text-slate-400 text-sm">Extract subjects & topics from PDF</p>
         </a>
         <a href="/admin/questions"
           className="bg-slate-800 hover:bg-slate-700 rounded-xl p-6 block transition">
-          <div className="text-2xl mb-2">❓</div>
+          <div className="text-2xl mb-2">â“</div>
           <h3 className="text-white font-semibold">Manage Questions</h3>
           <p className="text-slate-400 text-sm">CRUD for all PYQs and practice</p>
         </a>
@@ -455,12 +455,12 @@ export default function RevisionPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-8">
-      <h1 className="text-3xl font-bold text-white mb-2">📅 Revision Plan</h1>
+      <h1 className="text-3xl font-bold text-white mb-2">ðŸ“… Revision Plan</h1>
       <p className="text-slate-400 mb-8">Topics due for revision today (spaced repetition schedule)</p>
 
       {items.length === 0 ? (
         <div className="text-center py-16 bg-slate-800 rounded-2xl">
-          <div className="text-5xl mb-4">🎉</div>
+          <div className="text-5xl mb-4">ðŸŽ‰</div>
           <p className="text-white font-semibold text-xl">All caught up!</p>
           <p className="text-slate-400 mt-2">No revisions due today. Keep practicing!</p>
         </div>
@@ -473,13 +473,13 @@ export default function RevisionPage() {
                 <p className="text-white font-semibold">{item.topic_name}</p>
                 <p className="text-slate-400 text-sm">{item.subject_name}</p>
                 <p className="text-slate-500 text-xs mt-1">
-                  Last score: {item.last_score_pct?.toFixed(0)}% • Every {item.interval_days} days
+                  Last score: {item.last_score_pct?.toFixed(0)}% â€¢ Every {item.interval_days} days
                 </p>
               </div>
               <button
                 onClick={() => markDone(item.topic_id)}
                 className="bg-emerald-700 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                ✓ Done
+                âœ“ Done
               </button>
             </div>
           ))}
@@ -497,3 +497,4 @@ export default function RevisionPage() {
 - Dashboard-linked quiz cards and quick actions should assume recommended questions may include `question_image_urls`.
 - Any preview snippets in dashboard widgets should show an "Image-based PYQ" indicator when images are present.
 - Preserve image metadata end-to-end when navigating from dashboard to adaptive/diagnostic quiz pages.
+

@@ -1,136 +1,289 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Pause, Play, Send } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import EmptyState from "@/components/shared/EmptyState";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
-import QuizCard, { type QuizQuestion } from "@/components/student/QuizCard";
-import { api } from "@/lib/api";
+import { api, isRequestCanceled } from "@/lib/api";
 import {
-  type MasteryLevel,
-  type TopicComparison,
-  type TopicWeaknessSnapshot,
-  useQuizStore,
-} from "@/store/quizStore";
+  type AnswerState,
+  buildStoredQuizResult,
+  buildTopicComparisons,
+  type QuizQuestionsResponse,
+  type SubmitQuizResponse,
+  type WeaknessItem,
+} from "@/lib/quiz-session";
+import { type QuizContextPayload, useQuizStore } from "@/store/quizStore";
 
-type QuizQuestionsResponse = {
-  questions: QuizQuestion[];
-  total: number;
+const DEFAULT_DURATION_SECONDS = 60 * 60;
+
+type MockSessionResponse = {
+  session_id: string;
+  mock_type: string;
+  time_limit_seconds: number;
+  question_count: number;
+  questions: QuizQuestionsResponse["questions"];
+  context_payload: QuizContextPayload | null;
 };
 
-type WeaknessItem = {
-  topic_id: string;
-  topic_name: string;
-  subject_name: string;
-  weakness_score: number;
-  mastery_level: string;
-  accuracy: number;
-};
+const parseOption = (optionText: string, fallbackIndex: number) => {
+  const fallbackLetter = String.fromCharCode(65 + fallbackIndex);
+  const trimmed = optionText.trim();
+  const match = trimmed.match(/^([A-D])[).:\-\s]+(.*)$/i);
 
-type SubmitQuizResponse = {
-  attempt_id: string;
-  score: number;
-  correct_count: number;
-  total_questions: number;
-  topic_scores: Record<string, number>;
-};
-
-type AnswerState = {
-  selected_answer: string;
-  time_taken_s: number;
-};
-
-const normalizeTopic = (topicName: string) => topicName.trim().toLowerCase();
-
-const toMasteryLevel = (value: string): MasteryLevel => {
-  if (value === "Weak" || value === "Strong" || value === "Moderate") {
-    return value;
-  }
-
-  const normalized = value.toLowerCase();
-  if (normalized === "weak") {
-    return "Weak";
-  }
-  if (normalized === "strong") {
-    return "Strong";
-  }
-  return "Moderate";
-};
-
-const toWeaknessSnapshot = (item: WeaknessItem): TopicWeaknessSnapshot => ({
-  topic_id: item.topic_id,
-  topic_name: item.topic_name,
-  subject_name: item.subject_name,
-  weakness_score: item.weakness_score,
-  mastery_level: toMasteryLevel(item.mastery_level),
-  accuracy: item.accuracy,
-});
-
-const buildTopicComparisons = (
-  topicScores: Record<string, number>,
-  beforeWeakness: WeaknessItem[],
-  afterWeakness: WeaknessItem[]
-): TopicComparison[] => {
-  const beforeMap = new Map(
-    beforeWeakness.map((item) => [normalizeTopic(item.topic_name), item])
-  );
-  const afterMap = new Map(
-    afterWeakness.map((item) => [normalizeTopic(item.topic_name), item])
-  );
-
-  return Object.entries(topicScores).map(([topicName, score]) => {
-    const normalized = normalizeTopic(topicName);
-    const before = beforeMap.get(normalized);
-    const after = afterMap.get(normalized);
-
+  if (!match) {
     return {
-      topic_id: after?.topic_id ?? before?.topic_id ?? topicName,
-      topic_name: topicName,
-      subject_name: after?.subject_name ?? before?.subject_name ?? "General",
-      topic_score_pct: score,
-      before: before ? toWeaknessSnapshot(before) : undefined,
-      after: after ? toWeaknessSnapshot(after) : undefined,
+      letter: fallbackLetter,
+      label: trimmed,
     };
-  });
+  }
+
+  return {
+    letter: match[1].toUpperCase(),
+    label: match[2].trim() || trimmed,
+  };
+};
+
+const formatDuration = (totalSeconds: number) => {
+  const safe = Math.max(0, totalSeconds);
+  const hours = Math.floor(safe / 3600)
+    .toString()
+    .padStart(2, "0");
+  const minutes = Math.floor((safe % 3600) / 60)
+    .toString()
+    .padStart(2, "0");
+  const seconds = Math.floor(safe % 60)
+    .toString()
+    .padStart(2, "0");
+
+  return `${hours}:${minutes}:${seconds}`;
 };
 
 export default function AdaptiveQuizPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const setLatestResult = useQuizStore((state) => state.setLatestResult);
 
-  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
+  const mockSessionId = searchParams.get("mock_session_id");
+  const requestedCount = Math.max(
+    1,
+    Math.min(60, Number(searchParams.get("questionCount") ?? "30") || 30)
+  );
+  const requestedDuration = Math.max(
+    300,
+    Number(searchParams.get("timeLimitSeconds") ?? String(DEFAULT_DURATION_SECONDS)) ||
+      DEFAULT_DURATION_SECONDS
+  );
+
+  const [questions, setQuestions] = useState<QuizQuestionsResponse["questions"]>([]);
   const [weaknessBefore, setWeaknessBefore] = useState<WeaknessItem[]>([]);
   const [answers, setAnswers] = useState<Record<string, AnswerState>>({});
+  const [reviewFlags, setReviewFlags] = useState<Record<string, boolean>>({});
   const [currentIndex, setCurrentIndex] = useState(0);
   const [questionStartedAt, setQuestionStartedAt] = useState(Date.now());
-
+  const [remainingSeconds, setRemainingSeconds] = useState(requestedDuration);
+  const [isPaused, setIsPaused] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [weaknessBaselineWarning, setWeaknessBaselineWarning] = useState<string | null>(null);
+  const [sessionContextPayload, setSessionContextPayload] =
+    useState<QuizContextPayload | null>(null);
+  const loadAbortRef = useRef<AbortController | null>(null);
 
+  const fallbackContextPayload = useMemo<QuizContextPayload | null>(() => {
+    if (mockSessionId) {
+      return null;
+    }
+
+    const source = searchParams.get("source");
+    const taskId = searchParams.get("taskId");
+    const mode = searchParams.get("mode");
+
+    const payload: QuizContextPayload & {
+      mock_mode?: string;
+      mock_exam?: string;
+      mock_type?: string;
+      mock_question_count?: number;
+      mock_time_limit_seconds?: number;
+      mock_year_filter?: string;
+    } = {};
+
+    if (taskId) {
+      payload.daily_task_id = taskId;
+      payload.source = "daily_planner";
+      payload.planner_task_type = "practice";
+    } else if (mode) {
+      payload.source = "mock_test";
+      payload.mock_mode = mode;
+      payload.mock_exam = searchParams.get("exam") ?? undefined;
+      payload.mock_type = searchParams.get("mockType") ?? undefined;
+      payload.mock_question_count = requestedCount;
+      payload.mock_time_limit_seconds = requestedDuration;
+      payload.mock_year_filter = searchParams.get("yearFilter") ?? undefined;
+    } else if (source) {
+      payload.source = source === "planner" ? "daily_planner" : source;
+    }
+
+    return Object.keys(payload).length > 0 ? payload : null;
+  }, [mockSessionId, requestedCount, requestedDuration, searchParams]);
+
+  const contextPayload = sessionContextPayload ?? fallbackContextPayload;
   const currentQuestion = questions[currentIndex] ?? null;
-  const selectedAnswer = currentQuestion
-    ? (answers[currentQuestion.id]?.selected_answer ?? null)
-    : null;
+
+  const answeredCount = useMemo(
+    () => questions.filter((question) => Boolean(answers[question.id]?.selected_answer)).length,
+    [answers, questions]
+  );
+
+  const pseudoAccuracy = useMemo(() => {
+    if (questions.length === 0) {
+      return 0;
+    }
+
+    return (answeredCount / questions.length) * 100;
+  }, [answeredCount, questions.length]);
+
+  const submitQuiz = useCallback(async () => {
+    if (!questions.length) {
+      return;
+    }
+
+    const firstUnansweredIndex = questions.findIndex(
+      (question) => !answers[question.id]?.selected_answer
+    );
+    if (firstUnansweredIndex !== -1) {
+      setCurrentIndex(firstUnansweredIndex);
+      setQuestionStartedAt(Date.now());
+      setSubmitError(
+        `Please answer all questions before submitting. ${questions.length - answeredCount} unanswered question(s) remaining.`
+      );
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      const resolvedQuizType =
+        typeof contextPayload?.mock_type === "string" && contextPayload.mock_type.trim()
+          ? contextPayload.mock_type
+          : "adaptive";
+
+      const payload = {
+        quiz_type: resolvedQuizType,
+        answers: questions.map((question) => {
+          const selected = answers[question.id];
+          if (!selected?.selected_answer) {
+            throw new Error(`Missing answer for question ${question.id}`);
+          }
+
+          return {
+            question_id: question.id,
+            selected_answer: selected.selected_answer,
+            time_taken_s: selected.time_taken_s ?? 1,
+          };
+        }),
+        context_payload: contextPayload,
+      };
+
+      const { data } = await api.post<SubmitQuizResponse>("/quiz/submit", payload);
+
+      let weaknessAfter: WeaknessItem[] = [];
+      try {
+        const weaknessResponse = await api.get<WeaknessItem[]>("/analysis/weakness");
+        weaknessAfter = weaknessResponse.data ?? [];
+      } catch (error) {
+        if (!isRequestCanceled(error)) {
+          setWeaknessBaselineWarning(
+            "Weakness baseline could not be refreshed after submission. Result analytics may be partially degraded."
+          );
+        }
+        weaknessAfter = [];
+      }
+
+      const topicComparisons = buildTopicComparisons(
+        data.topic_scores ?? {},
+        weaknessBefore,
+        weaknessAfter
+      );
+
+      setLatestResult(
+        buildStoredQuizResult(data, resolvedQuizType, topicComparisons, contextPayload)
+      );
+
+      router.push(`/quiz/result/${data.attempt_id}`);
+    } catch (error) {
+      const message =
+        (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??
+        "Unable to submit your mock session.";
+      setSubmitError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [
+    answeredCount,
+    answers,
+    contextPayload,
+    questions,
+    router,
+    setLatestResult,
+    weaknessBefore,
+  ]);
 
   useEffect(() => {
     let cancelled = false;
+
+    loadAbortRef.current?.abort();
+    const controller = new AbortController();
+    loadAbortRef.current = controller;
 
     const loadAdaptiveQuiz = async () => {
       setIsLoading(true);
       setLoadError(null);
       setSubmitError(null);
+      setWeaknessBaselineWarning(null);
+      setSessionContextPayload(null);
 
       try {
-        const quizResponse = await api.get<QuizQuestionsResponse>("/quiz/adaptive");
+        let loadedQuestions: QuizQuestionsResponse["questions"] = [];
+        let nextDuration = requestedDuration;
+        let nextContextPayload: QuizContextPayload | null = null;
+
+        if (mockSessionId) {
+          const { data } = await api.get<MockSessionResponse>(
+            `/quiz/mock-session/${mockSessionId}`,
+            {
+              signal: controller.signal,
+            }
+          );
+          loadedQuestions = data.questions ?? [];
+          nextDuration = Number(data.time_limit_seconds) || requestedDuration;
+          nextContextPayload = data.context_payload ?? null;
+        } else {
+          const quizResponse = await api.get<QuizQuestionsResponse>("/quiz/adaptive", {
+            signal: controller.signal,
+          });
+          loadedQuestions = (quizResponse.data.questions ?? []).slice(0, requestedCount);
+          nextContextPayload = null;
+        }
 
         let weaknessData: WeaknessItem[] = [];
         try {
-          const weaknessResponse = await api.get<WeaknessItem[]>("/analysis/weakness");
+          const weaknessResponse = await api.get<WeaknessItem[]>("/analysis/weakness", {
+            signal: controller.signal,
+          });
           weaknessData = weaknessResponse.data ?? [];
-        } catch {
+        } catch (error) {
+          if (!isRequestCanceled(error)) {
+            setWeaknessBaselineWarning(
+              "Weakness baseline is currently unavailable. Quiz can continue, but comparisons may be limited."
+            );
+          }
           weaknessData = [];
         }
 
@@ -138,18 +291,40 @@ export default function AdaptiveQuizPage() {
           return;
         }
 
-        setQuestions(quizResponse.data.questions ?? []);
+        if (!loadedQuestions.length) {
+          setLoadError("No questions were returned for this session.");
+          setQuestions([]);
+          return;
+        }
+
+        setQuestions(loadedQuestions);
         setWeaknessBefore(weaknessData);
         setAnswers({});
+        setReviewFlags({});
         setCurrentIndex(0);
         setQuestionStartedAt(Date.now());
+        setRemainingSeconds(nextDuration);
+        setSessionContextPayload(nextContextPayload);
       } catch (error) {
-        const message =
-          (error as { response?: { data?: { detail?: string } } }).response?.data
-            ?.detail ?? "Unable to load your adaptive quiz right now.";
-        if (!cancelled) {
-          setLoadError(message);
+        if (cancelled) {
+          return;
         }
+        if (isRequestCanceled(error)) {
+          return;
+        }
+
+        const status = (error as { response?: { status?: number } })?.response?.status;
+        if (status === 404 || status === 410) {
+          setLoadError(
+            "This mock session has expired or is no longer available. Please start a new mock session."
+          );
+          return;
+        }
+
+        const message =
+          (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??
+          "Unable to load mock test session right now.";
+        setLoadError(message);
       } finally {
         if (!cancelled) {
           setIsLoading(false);
@@ -161,31 +336,43 @@ export default function AdaptiveQuizPage() {
 
     return () => {
       cancelled = true;
+      controller.abort();
+      if (loadAbortRef.current === controller) {
+        loadAbortRef.current = null;
+      }
     };
-  }, []);
+  }, [mockSessionId, requestedCount, requestedDuration]);
 
-  const weakTopicBadges = useMemo(() => {
-    return [...weaknessBefore]
-      .sort((a, b) => b.weakness_score - a.weakness_score)
-      .slice(0, 5);
-  }, [weaknessBefore]);
-
-  const progressPercent = useMemo(() => {
-    if (!questions.length) {
-      return 0;
+  useEffect(() => {
+    if (isLoading || isPaused || isSubmitting || remainingSeconds <= 0 || questions.length === 0) {
+      return;
     }
-    return Math.round(((currentIndex + 1) / questions.length) * 100);
-  }, [currentIndex, questions.length]);
 
-  const handleSelectAnswer = (optionLetter: string) => {
+    const timer = window.setInterval(() => {
+      setRemainingSeconds((current) => Math.max(0, current - 1));
+    }, 1000);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [isLoading, isPaused, isSubmitting, questions.length, remainingSeconds]);
+
+  useEffect(() => {
+    if (remainingSeconds !== 0 || isSubmitting || questions.length === 0) {
+      return;
+    }
+
+    void submitQuiz();
+  }, [isSubmitting, questions.length, remainingSeconds, submitQuiz]);
+
+  const selectAnswer = (optionLetter: string) => {
     if (!currentQuestion) {
       return;
     }
 
     const elapsedSeconds = Math.max((Date.now() - questionStartedAt) / 1000, 1);
-
-    setAnswers((prev) => ({
-      ...prev,
+    setAnswers((previous) => ({
+      ...previous,
       [currentQuestion.id]: {
         selected_answer: optionLetter,
         time_taken_s: Number(elapsedSeconds.toFixed(2)),
@@ -193,87 +380,19 @@ export default function AdaptiveQuizPage() {
     }));
   };
 
-  const handleNext = () => {
-    if (currentIndex >= questions.length - 1) {
-      return;
-    }
-
-    setCurrentIndex((index) => index + 1);
-    setQuestionStartedAt(Date.now());
-  };
-
-  const handleSubmit = async () => {
-    if (!questions.length) {
-      return;
-    }
-
-    setIsSubmitting(true);
-    setSubmitError(null);
-
-    try {
-      const payload = {
-        quiz_type: "adaptive",
-        answers: questions.map((question) => ({
-          question_id: question.id,
-          selected_answer: answers[question.id]?.selected_answer ?? "A",
-          time_taken_s: answers[question.id]?.time_taken_s ?? 1,
-        })),
-      };
-
-      const submitResponse = await api.post<SubmitQuizResponse>(
-        "/quiz/submit",
-        payload
-      );
-
-      let weaknessAfter: WeaknessItem[] = [];
-      try {
-        const weaknessResponse = await api.get<WeaknessItem[]>("/analysis/weakness");
-        weaknessAfter = weaknessResponse.data ?? [];
-      } catch {
-        weaknessAfter = [];
-      }
-
-      const topicComparisons = buildTopicComparisons(
-        submitResponse.data.topic_scores ?? {},
-        weaknessBefore,
-        weaknessAfter
-      );
-
-      setLatestResult({
-        attempt_id: submitResponse.data.attempt_id,
-        quiz_type: "adaptive",
-        score: submitResponse.data.score,
-        correct_count: submitResponse.data.correct_count,
-        total_questions: submitResponse.data.total_questions,
-        topic_scores: submitResponse.data.topic_scores,
-        topic_comparisons: topicComparisons,
-        submitted_at: new Date().toISOString(),
-      });
-
-      router.push(`/quiz/result/${submitResponse.data.attempt_id}`);
-    } catch (error) {
-      const message =
-        (error as { response?: { data?: { detail?: string } } }).response?.data
-          ?.detail ?? "Unable to submit your adaptive quiz.";
-      setSubmitError(message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   if (isLoading) {
-    return <LoadingSpinner message="Loading AI-recommended quiz..." />;
+    return <LoadingSpinner message="Starting mock session..." />;
   }
 
   if (loadError) {
     return (
-      <main className="mx-auto w-full max-w-4xl px-4 py-8">
+      <main>
         <EmptyState
-          icon="⚠"
-          title="Adaptive quiz unavailable"
+          icon="!"
+          title="Mock session unavailable"
           description={loadError}
-          ctaLabel="Retry"
-          ctaHref="/quiz/adaptive"
+          ctaLabel="Back to Mock Tests"
+          ctaHref="/mock-tests"
         />
       </main>
     );
@@ -281,94 +400,229 @@ export default function AdaptiveQuizPage() {
 
   if (!currentQuestion) {
     return (
-      <main className="mx-auto w-full max-w-4xl px-4 py-8">
+      <main>
         <EmptyState
-          icon="🎯"
-          title="No adaptive questions ready"
-          description="Take a diagnostic quiz first so recommendations can be generated."
-          ctaLabel="Take Diagnostic Quiz"
-          ctaHref="/quiz/diagnostic"
+          icon="?"
+          title="No questions ready"
+          description="No adaptive questions were returned. Please retry with another session setup."
+          ctaLabel="Back to Mock Tests"
+          ctaHref="/mock-tests"
         />
       </main>
     );
   }
 
-  const isLastQuestion = currentIndex === questions.length - 1;
+  const parsedOptions = currentQuestion.options.map((option, index) =>
+    parseOption(option, index)
+  );
 
   return (
-    <main className="mx-auto w-full max-w-4xl space-y-5 px-4 py-8">
-      <header className="rounded-2xl border border-slate-800 bg-linear-to-r from-slate-900 to-sky-950 p-5">
-        <h1 className="text-2xl font-bold text-white">Today&apos;s AI-Recommended Quiz</h1>
-        <p className="mt-2 text-sm text-slate-300">
-          Personalized practice focused on your weakest concepts.
-        </p>
+    <main className="space-y-4">
+      <section className="flex flex-wrap items-center justify-between border border-[rgba(240,232,218,0.08)] bg-[rgba(255,255,255,0.01)] px-4 py-3">
+        <div className="flex flex-wrap items-center gap-4 text-[var(--cream)]">
+          <p className="text-4xl font-semibold">Timer: {formatDuration(remainingSeconds)}</p>
+          <p className="text-2xl text-[rgba(194,186,176,0.75)]">
+            Progress: {answeredCount}/{questions.length}
+          </p>
+          <p className="text-2xl text-[rgba(194,186,176,0.75)]">
+            Accuracy: {pseudoAccuracy.toFixed(1)}%
+          </p>
+        </div>
 
-        <div className="mt-3 flex flex-wrap gap-2">
-          {weakTopicBadges.length > 0 ? (
-            weakTopicBadges.map((topic) => (
-              <span
-                key={topic.topic_id}
-                className="rounded-full border border-amber-400/30 bg-amber-500/15 px-3 py-1 text-xs font-semibold text-amber-200"
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setIsPaused((value) => !value)}
+            className="inline-flex h-11 items-center gap-2 border border-[rgba(240,232,218,0.08)] px-5 text-[var(--cream)]"
+          >
+            {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+            {isPaused ? "Resume" : "Pause"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              void submitQuiz();
+            }}
+            disabled={isSubmitting}
+            className="inline-flex h-11 items-center gap-2 bg-[#f15151] px-5 text-white disabled:opacity-60"
+          >
+            <Send className="h-4 w-4" />
+            {isSubmitting ? "Submitting" : "Submit"}
+          </button>
+        </div>
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-[280px_1fr]">
+        <aside className="space-y-4 border border-[rgba(240,232,218,0.08)] bg-[rgba(255,255,255,0.01)] p-4">
+          <div>
+            <p className="font-mono text-[0.62rem] uppercase tracking-[0.2em] text-[rgba(194,186,176,0.58)]">
+              Question Navigator
+            </p>
+            <div className="mt-3 grid grid-cols-5 gap-1">
+              {questions.map((question, index) => {
+                const answered = Boolean(answers[question.id]?.selected_answer);
+                const review = Boolean(reviewFlags[question.id]);
+                const active = index === currentIndex;
+
+                const className = active
+                  ? "border border-[rgba(232,82,10,0.55)] bg-[rgba(232,82,10,0.2)] text-[var(--cream)]"
+                  : review
+                    ? "border border-[rgba(245,158,11,0.45)] bg-[rgba(245,158,11,0.14)] text-amber-300"
+                    : answered
+                      ? "border border-[rgba(34,197,94,0.45)] bg-[rgba(34,197,94,0.14)] text-emerald-300"
+                      : "border border-[rgba(240,232,218,0.08)] text-[rgba(194,186,176,0.76)]";
+
+                return (
+                  <button
+                    key={question.id}
+                    type="button"
+                    onClick={() => {
+                      setCurrentIndex(index);
+                      setQuestionStartedAt(Date.now());
+                    }}
+                    className={`h-10 ${className}`}
+                  >
+                    {index + 1}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="text-sm text-[rgba(194,186,176,0.6)]">
+            <p>Legend: Green Answered · Orange Review · Gray Skipped</p>
+            <p className="mt-1">This session came from a validated backend question set.</p>
+          </div>
+
+          <div className="border border-[rgba(240,232,218,0.08)] p-3">
+            <p className="font-mono text-[0.58rem] uppercase tracking-[0.2em] text-[rgba(194,186,176,0.58)]">
+              Calculator
+            </p>
+            <div className="mt-2 h-10 border border-[rgba(240,232,218,0.08)] px-3 text-[rgba(194,186,176,0.62)]">
+              (12*4)+6
+            </div>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                className="h-9 border border-[rgba(240,232,218,0.08)] text-[var(--cream)]"
               >
-                {topic.topic_name}
-              </span>
-            ))
-          ) : (
-            <span className="rounded-full border border-slate-600 px-3 py-1 text-xs text-slate-300">
-              Building recommendations from your next attempts
-            </span>
-          )}
-        </div>
-
-        <div className="mt-4 space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-300">
-            <span>
-              Question {currentIndex + 1} of {questions.length}
-            </span>
-            <span>{progressPercent}% complete</span>
+                Evaluate
+              </button>
+              <button
+                type="button"
+                className="h-9 border border-[rgba(240,232,218,0.08)] text-[rgba(194,186,176,0.72)]"
+              >
+                Clear
+              </button>
+            </div>
           </div>
-          <div className="h-2 rounded-full bg-slate-700">
-            <div
-              className="h-2 rounded-full bg-sky-500 transition-all duration-300"
-              style={{ width: `${progressPercent}%` }}
+        </aside>
+
+        <section className="border border-[rgba(240,232,218,0.08)] bg-[rgba(255,255,255,0.01)] p-4">
+          {weaknessBaselineWarning ? (
+            <p className="mb-3 border border-[rgba(240,232,218,0.08)] bg-[rgba(255,255,255,0.02)] px-3 py-2 text-sm text-[rgba(194,186,176,0.86)]">
+              {weaknessBaselineWarning}
+            </p>
+          ) : null}
+
+          <p className="text-2xl text-[rgba(194,186,176,0.68)]">
+            Question {currentIndex + 1} · {currentQuestion.difficulty.toUpperCase()} ·{" "}
+            {currentQuestion.topic_name}
+          </p>
+          <h1 className="mt-3 text-[2.2rem] leading-tight text-[var(--cream)]">
+            {currentQuestion.question_text}
+          </h1>
+
+          <div className="mt-4 space-y-2">
+            {parsedOptions.map((option) => {
+              const selected = answers[currentQuestion.id]?.selected_answer === option.letter;
+              return (
+                <button
+                  key={`${currentQuestion.id}-${option.letter}`}
+                  type="button"
+                  onClick={() => selectAnswer(option.letter)}
+                  className={
+                    selected
+                      ? "flex w-full items-center gap-3 border border-[rgba(232,82,10,0.45)] bg-[rgba(232,82,10,0.12)] px-3 py-4 text-left text-[var(--cream)]"
+                      : "flex w-full items-center gap-3 border border-[rgba(240,232,218,0.08)] px-3 py-4 text-left text-[rgba(194,186,176,0.84)]"
+                  }
+                >
+                  <span className="h-3 w-3 rounded-full border border-current" />
+                  <span>
+                    {option.letter}. {option.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          <label className="mt-4 inline-flex items-center gap-3 text-[var(--cream)]">
+            <input
+              type="checkbox"
+              checked={Boolean(reviewFlags[currentQuestion.id])}
+              onChange={(event) =>
+                setReviewFlags((current) => ({
+                  ...current,
+                  [currentQuestion.id]: event.target.checked,
+                }))
+              }
+              className="h-5 w-5 border border-[rgba(240,232,218,0.2)] bg-transparent"
             />
+            Mark for review
+          </label>
+
+          {submitError ? (
+            <p className="mt-3 text-sm text-rose-300">{submitError}</p>
+          ) : null}
+
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-[rgba(240,232,218,0.08)] pt-4">
+            <button
+              type="button"
+              onClick={() => {
+                setCurrentIndex((index) => Math.max(0, index - 1));
+                setQuestionStartedAt(Date.now());
+              }}
+              disabled={currentIndex === 0}
+              className="h-11 border border-[rgba(240,232,218,0.08)] px-6 text-[var(--cream)] disabled:opacity-50"
+            >
+              Previous
+            </button>
+
+            <div className="flex gap-2">
+              {currentIndex < questions.length - 1 ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCurrentIndex((index) => Math.min(questions.length - 1, index + 1));
+                    setQuestionStartedAt(Date.now());
+                  }}
+                  className="h-11 border border-[rgba(240,232,218,0.08)] px-6 text-[var(--cream)]"
+                >
+                  Next
+                </button>
+              ) : null}
+
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={() => {
+                  void submitQuiz();
+                }}
+                className="h-11 bg-[#f15151] px-6 text-white disabled:opacity-60"
+              >
+                {isSubmitting ? "Submitting..." : "Submit"}
+              </button>
+            </div>
           </div>
-        </div>
-      </header>
 
-      <QuizCard
-        question={currentQuestion}
-        selectedAnswer={selectedAnswer}
-        onSelect={handleSelectAnswer}
-      />
-
-      {submitError ? (
-        <p className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-2 text-sm text-rose-200">
-          {submitError}
-        </p>
-      ) : null}
-
-      <div className="flex items-center justify-end">
-        {isLastQuestion ? (
-          <button
-            type="button"
-            disabled={isSubmitting || !selectedAnswer}
-            onClick={handleSubmit}
-            className="rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {isSubmitting ? "Submitting..." : "Submit Quiz"}
-          </button>
-        ) : (
-          <button
-            type="button"
-            disabled={!selectedAnswer}
-            onClick={handleNext}
-            className="rounded-xl bg-sky-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-sky-500 disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            Next
-          </button>
-        )}
-      </div>
+          <div className="mt-4 text-sm text-[rgba(194,186,176,0.62)]">
+            <Link href="/mock-tests" className="text-[var(--ice)] hover:underline">
+              Exit session
+            </Link>
+          </div>
+        </section>
+      </section>
     </main>
   );
 }

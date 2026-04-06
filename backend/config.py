@@ -6,8 +6,12 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     JWT_SECRET: str
     JWT_ALGORITHM: str = Field(default="HS256")
-    GEMINI_API_KEY: str = ""
+    GROQ_API_KEY: str = ""
+    GROQ_BASE_URL: str = "https://api.groq.com/openai/v1"
     UPLOAD_DIR: str = "uploads"
+    BACKEND_CORS_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"
+    COOKIE_SECURE: bool = False
+    COOKIE_SAMESITE: str = "lax"
 
     model_config = SettingsConfigDict(
         env_file=(".env", "../.env"),
@@ -29,12 +33,32 @@ class Settings(BaseSettings):
         return self.JWT_ALGORITHM
 
     @property
-    def gemini_api_key(self) -> str:
-        return self.GEMINI_API_KEY
+    def groq_api_key(self) -> str:
+        return self.GROQ_API_KEY
+
+    @property
+    def groq_base_url(self) -> str:
+        return self.GROQ_BASE_URL
 
     @property
     def upload_dir(self) -> str:
         return self.UPLOAD_DIR
+
+    @property
+    def cors_origins(self) -> list[str]:
+        return [
+            origin.strip()
+            for origin in self.BACKEND_CORS_ORIGINS.split(",")
+            if origin.strip()
+        ]
+
+    @property
+    def cookie_secure(self) -> bool:
+        return self.COOKIE_SECURE
+
+    @property
+    def cookie_samesite(self) -> str:
+        return self.COOKIE_SAMESITE
 
 
 settings = Settings()

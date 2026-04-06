@@ -1,6 +1,6 @@
-# PHASE 4 — ML MODEL DESIGN
+﻿# PHASE 4 â€” ML MODEL DESIGN
 
-> **Goal:** Design the complete ML + NLP intelligence layer — Weakness Detector, Adaptive Recommender, Spaced Revision Scheduler, and NLP Pipeline — with full Python implementations.
+> **Goal:** Design the complete ML + NLP intelligence layer â€” Weakness Detector, Adaptive Recommender, Spaced Revision Scheduler, and NLP Pipeline â€” with full Python implementations.
 
 ---
 
@@ -10,11 +10,11 @@
 
 | Feature | Description | Range |
 |---|---|---|
-| `accuracy` | Correct / Total attempts for this topic | 0.0 – 1.0 |
-| `repeated_mistakes` | Count of questions answered wrong 2+ times | 0 – N |
-| `avg_response_time_zscore` | Z-score of avg answer time vs all users | -3 – +3 |
-| `recent_performance_slope` | Linear slope of last 5 attempt scores | -1.0 – +1.0 |
-| `difficulty_sensitivity` | Error rate delta: hard_error_rate – easy_error_rate | 0.0 – 1.0 |
+| `accuracy` | Correct / Total attempts for this topic | 0.0 â€“ 1.0 |
+| `repeated_mistakes` | Count of questions answered wrong 2+ times | 0 â€“ N |
+| `avg_response_time_zscore` | Z-score of avg answer time vs all users | -3 â€“ +3 |
+| `recent_performance_slope` | Linear slope of last 5 attempt scores | -1.0 â€“ +1.0 |
+| `difficulty_sensitivity` | Error rate delta: hard_error_rate â€“ easy_error_rate | 0.0 â€“ 1.0 |
 
 ### Weakness Formula (MVP)
 
@@ -39,9 +39,9 @@ w5 = 0.10  # Can't handle hard questions = weak
 ### Thresholds
 | Range | Mastery Level |
 |---|---|
-| 0 – 30 | **Strong** |
-| 31 – 60 | **Moderate** |
-| 61 – 100 | **Weak** |
+| 0 â€“ 30 | **Strong** |
+| 31 â€“ 60 | **Moderate** |
+| 61 â€“ 100 | **Weak** |
 
 ### Python Implementation (`backend/ml/weakness_detector.py`)
 
@@ -55,15 +55,15 @@ MODEL_PATH = Path(__file__).parent / "models" / "weakness_model.pkl"
 
 @dataclass
 class WeaknessFeatures:
-    accuracy: float                    # 0–1
+    accuracy: float                    # 0â€“1
     repeated_mistakes: int             # count
     avg_response_time_zscore: float    # z-score
     recent_performance_slope: float    # slope of last 5 scores
-    difficulty_sensitivity: float      # error rate delta hard–easy
+    difficulty_sensitivity: float      # error rate delta hardâ€“easy
 
 class WeaknessDetector:
     """
-    Computes a weakness score (0–100) per topic per user.
+    Computes a weakness score (0â€“100) per topic per user.
     MVP uses calibrated weighted formula.
     Production upgrade: load XGBoost model from weakness_model.pkl.
     """
@@ -143,7 +143,7 @@ class WeaknessDetector:
 
         accuracy = mastery.accuracy
 
-        # Get last 5 quiz attempts — answers JSON filtering for this topic
+        # Get last 5 quiz attempts â€” answers JSON filtering for this topic
         attempts = (
             db.query(QuizAttempt)
             .filter_by(user_id=user_id)
@@ -184,7 +184,7 @@ class WeaknessDetector:
         else:
             slope = 0.0
 
-        # Difficulty sensitivity (error rate hard – error rate easy)
+        # Difficulty sensitivity (error rate hard â€“ error rate easy)
         difficulty_sensitivity = 0.0  # Needs difficulty-split attempt data
 
         return WeaknessFeatures(
@@ -204,7 +204,7 @@ class WeaknessDetector:
 
 ```
 Priority Score per Topic:
-  priority = weakness_score × (1 - mastery_pct) × recency_factor
+  priority = weakness_score Ã— (1 - mastery_pct) Ã— recency_factor
 
   recency_factor:
     - never attempted: 1.5  (boost new topics)
@@ -214,12 +214,12 @@ Priority Score per Topic:
 
   mastery_pct = (100 - weakness_score) / 100
 
-Top-K Topics → Select Questions:
+Top-K Topics â†’ Select Questions:
   1. Pick top 3 topics by priority score
-  2. From each topic: pick 2–4 questions
+  2. From each topic: pick 2â€“4 questions
   3. Filter: avoid questions attempted in last 7 days
-  4. NLP filter: if cosine_similarity(new_q, recent_q) > 0.85 → skip
-  5. Difficulty progression: start easy → medium → hard
+  4. NLP filter: if cosine_similarity(new_q, recent_q) > 0.85 â†’ skip
+  5. Difficulty progression: start easy â†’ medium â†’ hard
 ```
 
 ### Python Implementation (`backend/ml/adaptive_recommender.py`)
@@ -231,7 +231,7 @@ from ml.nlp_pipeline import compute_similarity
 
 class AdaptiveRecommender:
     """
-    Recommends 5–10 questions for today's adaptive quiz.
+    Recommends 5â€“10 questions for today's adaptive quiz.
     Prioritizes weak topics, avoids duplicate questions via NLP similarity.
     """
 
@@ -333,21 +333,21 @@ class AdaptiveRecommender:
 
 ```
 Base interval from last score:
-  score < 40%  → 1 day
-  score 40–65% → 3 days
-  score 65–85% → 7 days
-  score > 85%  → 14 days
+  score < 40%  â†’ 1 day
+  score 40â€“65% â†’ 3 days
+  score 65â€“85% â†’ 7 days
+  score > 85%  â†’ 14 days
 
 Adjust for topic difficulty_weight:
-  interval = base_interval × topic_difficulty_weight
+  interval = base_interval Ã— topic_difficulty_weight
 
-  (e.g., Turing Machines: weight=1.5 → intervals scaled up 50%)
+  (e.g., Turing Machines: weight=1.5 â†’ intervals scaled up 50%)
 
 Update ease_factor (SM-2):
-  ease_factor = max(1.3, ease_factor + 0.1 - (1 - score/100) × 0.8)
+  ease_factor = max(1.3, ease_factor + 0.1 - (1 - score/100) Ã— 0.8)
 
 Next repetition multiplier:
-  interval = previous_interval × ease_factor  (for repeated good performance)
+  interval = previous_interval Ã— ease_factor  (for repeated good performance)
 ```
 
 ### Python Implementation (`backend/ml/spaced_revision.py`)
@@ -359,7 +359,7 @@ from dataclasses import dataclass
 @dataclass
 class RevisionInput:
     topic_id: str
-    last_score_pct: float        # 0–100
+    last_score_pct: float        # 0â€“100
     previous_interval_days: int
     ease_factor: float           # SM-2 ease factor (default 2.5)
     repetition_count: int
@@ -373,8 +373,8 @@ class SpacedRevisionScheduler:
 
     BASE_INTERVALS = {
         "poor": 1,        # score < 40%
-        "average": 3,     # 40–65%
-        "good": 7,        # 65–85%
+        "average": 3,     # 40â€“65%
+        "good": 7,        # 65â€“85%
         "excellent": 14   # > 85%
     }
 
@@ -419,7 +419,7 @@ class SpacedRevisionScheduler:
     @staticmethod
     def _update_ease_factor(current_ef: float, score: float) -> float:
         """SM-2 ease factor update formula. Minimum 1.3."""
-        quality = score / 25  # Map 0-100 → 0-4 quality scale
+        quality = score / 25  # Map 0-100 â†’ 0-4 quality scale
         new_ef = current_ef + 0.1 - (4 - quality) * (0.08 + (4 - quality) * 0.02)
         return max(1.3, new_ef)
 ```
@@ -466,7 +466,7 @@ def get_embedder() -> SentenceTransformer:
         raise RuntimeError("Embedder not loaded. Call load_nlp_models() at startup.")
     return _embedder
 
-# ─── Tag Extraction ───────────────────────────────────────────────────────────
+# â”€â”€â”€ Tag Extraction â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def extract_tags(text: str) -> list[str]:
     """
@@ -489,7 +489,7 @@ def extract_tags(text: str) -> list[str]:
 
     return list(tags)[:12]
 
-# ─── Semantic Embedding ───────────────────────────────────────────────────────
+# â”€â”€â”€ Semantic Embedding â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def embed_text(text: str) -> list[float]:
     """Generate sentence embedding for a question."""
@@ -514,7 +514,7 @@ def is_near_duplicate(
         for e in existing_embeddings
     )
 
-# ─── Weakness Explanation Builder ─────────────────────────────────────────────
+# â”€â”€â”€ Weakness Explanation Builder â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def build_weakness_prompt(
     topic_name: str,
@@ -525,7 +525,7 @@ def build_weakness_prompt(
     avg_response_time_s: float
 ) -> str:
     """
-    Builds a safe, structured prompt for Gemini to generate
+    Builds a safe, structured prompt for AI to generate
     human-readable weakness explanation.
     """
     return f"""
@@ -535,7 +535,7 @@ You are a GATE CSE exam coach. A student has these statistics for {topic_name} (
 - Repeated Mistakes: {repeated_mistakes} questions answered wrong multiple times
 - Average Response Time: {avg_response_time_s:.0f} seconds per question
 
-Write a 2–3 sentence personalized insight for the student explaining:
+Write a 2â€“3 sentence personalized insight for the student explaining:
 1. Why they are struggling in this topic
 2. What specific sub-areas to focus on
 3. One actionable next step
@@ -634,3 +634,4 @@ def update_topic_mastery(
 - For NLP tagging, enrich text input with OCR/caption text derived from `question_image_urls` when available.
 - In recommendation deduplication, compare embeddings generated from combined text (`question_text + OCR/caption text`) so diagram-only duplicates are filtered.
 - Preserve `question_image_urls` in recommended question payloads returned to frontend.
+

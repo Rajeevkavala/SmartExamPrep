@@ -1,6 +1,6 @@
-# PHASE 11 — ADMIN PANEL FULL DESIGN
+﻿# PHASE 11 â€” ADMIN PANEL FULL DESIGN
 
-> **Goal:** Complete specification for the Admin Panel as a polished, production-grade internal tool — covering all screens, workflows, component behaviors, and implementation details for Subjects, Topics, Questions, Scraper, and Syllabus management.
+> **Goal:** Complete specification for the Admin Panel as a polished, production-grade internal tool â€” covering all screens, workflows, component behaviors, and implementation details for Subjects, Topics, Questions, Scraper, and Syllabus management.
 
 ---
 
@@ -11,22 +11,22 @@ The Admin Panel is a protected section of the Next.js app, accessible only to us
 ### Access Path:
 ```
 POST /api/auth/login { email, password }
-→ JWT with { sub: user_id, role: "admin" }
-→ middleware.ts checks role
-→ /admin/* routes unlocked
+â†’ JWT with { sub: user_id, role: "admin" }
+â†’ middleware.ts checks role
+â†’ /admin/* routes unlocked
 ```
 
 ### Layout:
 ```
-┌─────────────────────────────────────────────────┐
-│  AdminSidebar          │   Page Content          │
-│  ─────────────         │   ─────────────         │
-│  🏠 Dashboard          │                         │
-│  📚 Subjects           │   [Dynamic per route]   │
-│  ❓ Questions  [12]    │                         │
-│  🕷️ Scraper            │                         │
-│  📄 Syllabus           │                         │
-└─────────────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚  AdminSidebar          â”‚   Page Content          â”‚
+â”‚  â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€         â”‚   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€         â”‚
+â”‚  ðŸ  Dashboard          â”‚                         â”‚
+â”‚  ðŸ“š Subjects           â”‚   [Dynamic per route]   â”‚
+â”‚  â“ Questions  [12]    â”‚                         â”‚
+â”‚  ðŸ•·ï¸ Scraper            â”‚                         â”‚
+â”‚  ðŸ“„ Syllabus           â”‚                         â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ---
@@ -36,22 +36,22 @@ POST /api/auth/login { email, password }
 ### Stats Grid:
 | Stat | Source | Display |
 |---|---|---|
-| Total Questions | `GET /questions/?limit=1` → `total` | Large number card |
-| Unverified | `GET /questions/?is_verified=false&limit=1` → `total` | Red badge card |
-| Subjects | `GET /content/subjects` → length | Number card |
+| Total Questions | `GET /questions/?limit=1` â†’ `total` | Large number card |
+| Unverified | `GET /questions/?is_verified=false&limit=1` â†’ `total` | Red badge card |
+| Subjects | `GET /content/subjects` â†’ length | Number card |
 | Topics | Sum of `topic_count` from subjects | Number card |
-| Scrape Jobs | `GET /scraper/jobs` → length | Number card |
-| PDF Uploads | `GET /syllabus/uploads` → length | Number card |
+| Scrape Jobs | `GET /scraper/jobs` â†’ length | Number card |
+| PDF Uploads | `GET /syllabus/uploads` â†’ length | Number card |
 
 ### Alert Banner:
 - Shows if `unverified_count > 0`
-- Red warning banner: "⚠️ X scraped questions need verification before going live"
+- Red warning banner: "âš ï¸ X scraped questions need verification before going live"
 - Link to `/admin/questions?is_verified=false`
 
 ### Quick Action Cards:
-- 🕷️ Scrape Questions → `/admin/scraper`
-- 📄 Upload Syllabus → `/admin/syllabus`
-- ❓ Manage Questions → `/admin/questions`
+- ðŸ•·ï¸ Scrape Questions â†’ `/admin/scraper`
+- ðŸ“„ Upload Syllabus â†’ `/admin/syllabus`
+- â“ Manage Questions â†’ `/admin/questions`
 
 ---
 
@@ -64,17 +64,17 @@ POST /api/auth/login { email, password }
 
 ### Subject Row:
 ```
-┌────────────────────────────────────────────────┐
-│ ▸ Operating Systems          12 topics  [Edit] [Delete] │
-│   ▾ Expand → shows topic list                          │
-└────────────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ â–¸ Operating Systems          12 topics  [Edit] [Delete] â”‚
+â”‚   â–¾ Expand â†’ shows topic list                          â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ### Topic Row (inside expanded subject):
 ```
-  ├── CPU Scheduling    [5 subtopics]   [Edit] [Delete]
-  ├── Memory Management [6 subtopics]   [Edit] [Delete]
-  └── + Add Topic
+  â”œâ”€â”€ CPU Scheduling    [5 subtopics]   [Edit] [Delete]
+  â”œâ”€â”€ Memory Management [6 subtopics]   [Edit] [Delete]
+  â””â”€â”€ + Add Topic
 ```
 
 ### Add / Edit Subject Modal:
@@ -88,9 +88,9 @@ Field: Display Order (number)
 ### Add / Edit Topic Modal:
 ```
 Field: Topic Name (required)
-Field: Subtopics (SubtopicChipEditor — add/remove chips)
+Field: Subtopics (SubtopicChipEditor â€” add/remove chips)
 Field: NLP Keyword Tags (chip input)
-Field: Difficulty Weight (slider 0.5–2.0, default 1.0)
+Field: Difficulty Weight (slider 0.5â€“2.0, default 1.0)
 [Cancel]  [Save]
 ```
 
@@ -126,7 +126,7 @@ export default function SubtopicChipEditor({ value, onChange }: Props) {
           <span key={chip}
             className="bg-indigo-900 text-indigo-300 text-sm px-3 py-1 rounded-full flex items-center gap-1">
             {chip}
-            <button onClick={() => remove(chip)} className="text-indigo-500 hover:text-red-400 ml-1">×</button>
+            <button onClick={() => remove(chip)} className="text-indigo-500 hover:text-red-400 ml-1">Ã—</button>
           </span>
         ))}
       </div>
@@ -151,16 +151,16 @@ export default function SubtopicChipEditor({ value, onChange }: Props) {
 ## 4. Topics Manager (`/admin/subjects/[id]/topics`)
 
 ### Layout:
-- Breadcrumb: Admin → Subjects → OS Topics
+- Breadcrumb: Admin â†’ Subjects â†’ OS Topics
 - List of all topics for the subject
 - Sort by display_order (draggable rows in production upgrade)
 - Each topic shows: name, subtopic count, difficulty weight badge, keyword tags preview
 
 ### Topic Difficulty Weight Badge:
 ```
-1.0 → 🟢 Normal
-1.5 → 🟡 Hard
-2.0 → 🔴 Very Hard
+1.0 â†’ ðŸŸ¢ Normal
+1.5 â†’ ðŸŸ¡ Hard
+2.0 â†’ ðŸ”´ Very Hard
 ```
 
 ### Inline Subtopic Preview:
@@ -174,7 +174,7 @@ CPU Scheduling   [RR] [FCFS] [SJF] [+3 more]   Wt: 1.2   [Edit] [Delete]
 
 ### Filter Bar:
 ```
-[Search text input] [Subject ▾] [Topic ▾] [Difficulty ▾] [Source ▾] [Verified ▾]
+[Search text input] [Subject â–¾] [Topic â–¾] [Difficulty â–¾] [Source â–¾] [Verified â–¾]
                                                             [Verify Selected] [+ Add]
 ```
 
@@ -183,14 +183,14 @@ CPU Scheduling   [RR] [FCFS] [SJF] [+3 more]   Wt: 1.2   [Edit] [Delete]
 |---|---|---|
 | Checkbox | Multi-select | For bulk actions |
 | # | Row number | |
-| Question | Text (truncated 80 chars) | Click → detail page |
+| Question | Text (truncated 80 chars) | Click â†’ detail page |
 | Subject | String | |
 | Topic | String | |
 | Subtopic | String | |
 | Difficulty | Badge (easy/medium/hard) | Color-coded |
 | Source | Badge (PYQ/practice/scraped) | |
 | Year | Number | Null for practice |
-| Verified | ✓ / ⚠️ Pending | |
+| Verified | âœ“ / âš ï¸ Pending | |
 | Actions | Verify / Edit / Delete | |
 
 ### Bulk Actions:
@@ -207,16 +207,16 @@ CPU Scheduling   [RR] [FCFS] [SJF] [+3 more]   Wt: 1.2   [Edit] [Delete]
 
 ### Layout: Two-column
 ```
-┌─────────────────────────┬────────────────────────────┐
-│ Edit Form               │ Preview Panel              │
-│ ─────────────           │ ─────────────              │
-│ Question Text           │ Renders question as        │
-│ Option A–D              │ student would see it       │
-│ Correct Answer          │                            │
-│ Explanation             │ [Verify Button]            │
-│ Subject/Topic/Subtopic  │ [NLP Tags]                 │
-│ Difficulty/Source/Year  │                            │
-└─────────────────────────┴────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ Edit Form               â”‚ Preview Panel              â”‚
+â”‚ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€           â”‚ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€              â”‚
+â”‚ Question Text           â”‚ Renders question as        â”‚
+â”‚ Option Aâ€“D              â”‚ student would see it       â”‚
+â”‚ Correct Answer          â”‚                            â”‚
+â”‚ Explanation             â”‚ [Verify Button]            â”‚
+â”‚ Subject/Topic/Subtopic  â”‚ [NLP Tags]                 â”‚
+â”‚ Difficulty/Source/Year  â”‚                            â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ### QuestionFormModal Component:
@@ -328,19 +328,19 @@ export default function QuestionFormModal({
 
 ```
 Step 1: Admin enters URL
-Step 2: Click "Scrape" → POST /api/admin/scraper/start
+Step 2: Click "Scrape" â†’ POST /api/admin/scraper/start
 Step 3: Job created with status=pending
 Step 4: Background task starts:
-         httpx.get(url) → raw HTML
-         BS4.parse(html) → raw question blocks
-         Gemini API → structured JSON per question
+         httpx.get(url) â†’ raw HTML
+         BS4.parse(html) â†’ raw question blocks
+         AI API â†’ structured JSON per question
          ScrapeJob.extracted_questions = [...] 
          ScrapeJob.status = "done"
 Step 5: Frontend polls GET /scraper/jobs/{id} every 3s
-Step 6: Status updates: pending → processing → done
+Step 6: Status updates: pending â†’ processing â†’ done
 Step 7: Admin sees extracted question table
-Step 8: Per row: toggle Accept ✅ or reject ❌
-Step 9: Click "Import Accepted" → POST /scraper/jobs/{id}/import
+Step 8: Per row: toggle Accept âœ… or reject âŒ
+Step 9: Click "Import Accepted" â†’ POST /scraper/jobs/{id}/import
          { accepted_indices: [0, 1, 3] }
 Step 10: Backend creates Question records with is_verified=True
 Step 11: Success toast + job stats updated
@@ -403,20 +403,20 @@ export default function ScrapeJobCard({ job, onClick }: Props) {
 Step 1: Admin goes to /admin/syllabus
 Step 2: Drags PDF onto dropzone (or browses)
 Step 3: Click "Upload & Extract"
-         → POST /api/admin/syllabus/upload (multipart)
-         → onUploadProgress updates progress bar
+         â†’ POST /api/admin/syllabus/upload (multipart)
+         â†’ onUploadProgress updates progress bar
 Step 4: Backend spawns background task:
-         aiofiles saves PDF → pdfplumber extracts text
-         Gemini API → {subjects: [{name, topics: [{name, subtopics}]}]}
+         aiofiles saves PDF â†’ pdfplumber extracts text
+         AI API â†’ {subjects: [{name, topics: [{name, subtopics}]}]}
          SyllabusUpload.extracted_structure = {...}
          SyllabusUpload.status = "done"
 Step 5: Frontend polls GET /syllabus/uploads/{id} every 2s
-Step 6: When done → renders SyllabusTreeViewer
+Step 6: When done â†’ renders SyllabusTreeViewer
 Step 7: Admin can visually inspect the extracted tree
 Step 8: Admin clicks "Import to Database"
-         → POST /api/admin/syllabus/uploads/{id}/import
-         → Subject + Topic records created/updated
-Step 9: Success toast: "✅ 11 subjects + 65 topics imported"
+         â†’ POST /api/admin/syllabus/uploads/{id}/import
+         â†’ Subject + Topic records created/updated
+Step 9: Success toast: "âœ… 11 subjects + 65 topics imported"
 ```
 
 ### SyllabusTreeViewer Component:
@@ -438,13 +438,13 @@ export default function SyllabusTreeViewer({ structure }: Props) {
       {structure.subjects.map((subject) => (
         <details key={subject.name} className="border border-slate-700 rounded-xl overflow-hidden">
           <summary className="bg-slate-800 px-5 py-3 cursor-pointer text-indigo-400 font-semibold hover:bg-slate-700 list-none flex justify-between items-center">
-            <span>📚 {subject.name}</span>
+            <span>ðŸ“š {subject.name}</span>
             <span className="text-slate-500 text-sm font-normal">{subject.topics.length} topics</span>
           </summary>
           <div className="p-4 space-y-3">
             {subject.topics.map((topic) => (
               <div key={topic.name} className="ml-4">
-                <p className="text-slate-200 font-medium text-sm mb-1">▸ {topic.name}</p>
+                <p className="text-slate-200 font-medium text-sm mb-1">â–¸ {topic.name}</p>
                 <div className="flex flex-wrap gap-1 ml-4">
                   {topic.subtopics.map((sub) => (
                     <span key={sub}
@@ -474,7 +474,7 @@ export default function SyllabusTreeViewer({ structure }: Props) {
 | Cascade deletes are intentional | SQLAlchemy cascade="all, delete-orphan" on Subject |
 | Scraped questions default unverified | `is_verified=False` until admin approves |
 | PDF files stored with UUID prefix | Prevents filename collision / traversal |
-| Admin mutations log created_by | Questions.created_by FK → User |
+| Admin mutations log created_by | Questions.created_by FK â†’ User |
 | Raw HTML stored for re-processing | ScrapeJob.raw_html (not exposed to students) |
 | No direct SQL in admin routes | All queries via SQLAlchemy ORM |
 
@@ -486,3 +486,4 @@ export default function SyllabusTreeViewer({ structure }: Props) {
 - Question detail preview should render all attached images in order.
 - Scraper review table should show extracted image thumbnails/links per candidate question.
 - Import workflows must preserve image arrays when approving scraped PYQs.
+

@@ -73,6 +73,45 @@ export const questionSchema = z.object({
   ),
 });
 
+const experienceLevelSchema = z.enum(["beginner", "intermediate", "advanced"]);
+
+export const subjectConfidenceSchema = z.object({
+  subject_id: z.string().uuid("Subject is required."),
+  confidence_pct: z
+    .number()
+    .int("Confidence must be a whole number.")
+    .min(0, "Confidence must be at least 0.")
+    .max(100, "Confidence cannot exceed 100."),
+});
+
+export const onboardingProfileSchema = z.object({
+  exam_target_date: z
+    .string()
+    .min(1, "Exam target date is required.")
+    .refine((value) => {
+      const parsed = new Date(`${value}T00:00:00`);
+      if (Number.isNaN(parsed.getTime())) {
+        return false;
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return parsed > today;
+    }, "Exam target date must be in the future."),
+  daily_study_minutes: z
+    .number()
+    .int("Daily study minutes must be a whole number.")
+    .min(30, "Daily study minutes must be at least 30.")
+    .max(180, "Daily study minutes cannot exceed 180."),
+  experience_level: experienceLevelSchema,
+  subject_confidences: z
+    .array(subjectConfidenceSchema)
+    .min(1, "Add confidence for at least one subject."),
+  known_topic_ids: z.array(z.string().uuid("Selected topics are invalid.")).default([]),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type QuestionInput = z.infer<typeof questionSchema>;
+export type SubjectConfidenceInput = z.infer<typeof subjectConfidenceSchema>;
+export type OnboardingProfileInput = z.infer<typeof onboardingProfileSchema>;

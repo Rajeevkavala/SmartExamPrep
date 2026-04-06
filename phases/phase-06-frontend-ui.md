@@ -1,4 +1,4 @@
-# PHASE 6 — FRONTEND UI DEVELOPMENT (Next.js)
+﻿# PHASE 6 â€” FRONTEND UI DEVELOPMENT (Next.js)
 
 > **Goal:** Design and build all Next.js 14 pages for both students and admin, including the API client, Zustand store, route protection middleware, and all admin-specific components.
 
@@ -174,19 +174,19 @@ export default function LandingPage() {
           GATE CSE Prep, <span className="text-indigo-400">Powered by AI</span>
         </h1>
         <p className="text-xl text-slate-300 mb-10">
-          SmartExamPrep detects your weak topics, recommends your next quiz, and schedules revisions — all using ML.
+          SmartExamPrep detects your weak topics, recommends your next quiz, and schedules revisions â€” all using ML.
         </p>
         <Link href="/register" className="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-lg font-semibold">
-          Start Free Prep →
+          Start Free Prep â†’
         </Link>
       </section>
 
       {/* Features */}
       <section className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 px-6 pb-24">
         {[
-          { icon: "🧠", title: "Weakness Detection", desc: "ML model identifies your weak topics from quiz patterns" },
-          { icon: "📋", title: "Adaptive Quizzes", desc: "Questions ranked by priority — focus where it matters most" },
-          { icon: "📅", title: "Spaced Revision", desc: "SM-2 algorithm schedules reviews at optimal intervals" },
+          { icon: "ðŸ§ ", title: "Weakness Detection", desc: "ML model identifies your weak topics from quiz patterns" },
+          { icon: "ðŸ“‹", title: "Adaptive Quizzes", desc: "Questions ranked by priority â€” focus where it matters most" },
+          { icon: "ðŸ“…", title: "Spaced Revision", desc: "SM-2 algorithm schedules reviews at optimal intervals" },
         ].map((f) => (
           <div key={f.title} className="bg-slate-800 rounded-2xl p-8 border border-slate-700">
             <div className="text-4xl mb-4">{f.icon}</div>
@@ -312,7 +312,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="bg-slate-800 rounded-2xl p-6 col-span-2">
-          <h2 className="text-lg font-semibold text-white mb-4">🔴 Weakest Topics</h2>
+          <h2 className="text-lg font-semibold text-white mb-4">ðŸ”´ Weakest Topics</h2>
           {data.weakest_topics.slice(0, 3).map((t: any) => (
             <WeaknessBar key={t.topic_id} topic={t} />
           ))}
@@ -326,17 +326,17 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 gap-4">
         <Link href="/quiz/adaptive"
           className="bg-indigo-700 hover:bg-indigo-600 rounded-xl p-6 text-center text-white font-semibold text-lg">
-          📋 Take Today's Quiz
+          ðŸ“‹ Take Today's Quiz
         </Link>
         <Link href="/revision"
           className="bg-emerald-800 hover:bg-emerald-700 rounded-xl p-6 text-center text-white font-semibold text-lg">
-          📅 View Revision Plan
+          ðŸ“… View Revision Plan
         </Link>
       </div>
 
       {/* Subject Progress */}
       <div className="bg-slate-800 rounded-2xl p-6">
-        <h2 className="text-lg font-semibold text-white mb-4">📊 Subject Progress</h2>
+        <h2 className="text-lg font-semibold text-white mb-4">ðŸ“Š Subject Progress</h2>
         <div className="space-y-3">
           {data.subjects_progress?.map((s: any) => (
             <div key={s.subject_name} className="flex items-center gap-4">
@@ -437,11 +437,11 @@ export default function DiagnosticQuizPage() {
 
       {current < questions.length - 1 ? (
         <button onClick={next} className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold">
-          Next Question →
+          Next Question â†’
         </button>
       ) : (
         <button onClick={submit} className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold">
-          Submit Quiz ✓
+          Submit Quiz âœ“
         </button>
       )}
     </div>
@@ -481,11 +481,11 @@ import { useState, useEffect } from "react";
 import { adminApi } from "@/lib/api";
 
 const navLinks = [
-  { href: "/admin", label: "Dashboard", icon: "🏠" },
-  { href: "/admin/subjects", label: "Subjects", icon: "📚" },
-  { href: "/admin/questions", label: "Questions", icon: "❓" },
-  { href: "/admin/scraper", label: "Scraper", icon: "🕷️" },
-  { href: "/admin/syllabus", label: "Syllabus", icon: "📄" },
+  { href: "/admin", label: "Dashboard", icon: "ðŸ " },
+  { href: "/admin/subjects", label: "Subjects", icon: "ðŸ“š" },
+  { href: "/admin/questions", label: "Questions", icon: "â“" },
+  { href: "/admin/scraper", label: "Scraper", icon: "ðŸ•·ï¸" },
+  { href: "/admin/syllabus", label: "Syllabus", icon: "ðŸ“„" },
 ];
 
 export default function AdminSidebar() {
@@ -500,7 +500,7 @@ export default function AdminSidebar() {
 
   return (
     <aside className="w-64 bg-slate-900 border-r border-slate-800 p-6 flex flex-col gap-2">
-      <div className="text-xl font-bold text-indigo-400 mb-8">⚙️ Admin Panel</div>
+      <div className="text-xl font-bold text-indigo-400 mb-8">âš™ï¸ Admin Panel</div>
       {navLinks.map((link) => (
         <Link key={link.href} href={link.href}
           className={`flex items-center gap-3 px-4 py-3 rounded-xl transition ${
@@ -663,7 +663,7 @@ export default function AdminQuestionsPage() {
                 <td className="p-3 text-slate-400">{q.source_type}</td>
                 <td className="p-3">
                   <span className={`px-2 py-0.5 rounded text-xs ${q.is_verified ? "bg-green-900 text-green-300" : "bg-red-900 text-red-300"}`}>
-                    {q.is_verified ? "✓" : "Pending"}
+                    {q.is_verified ? "âœ“" : "Pending"}
                   </span>
                 </td>
                 <td className="p-3 flex gap-2">
@@ -683,10 +683,10 @@ export default function AdminQuestionsPage() {
       {/* Pagination */}
       <div className="flex gap-2 mt-4 items-center text-slate-400 text-sm">
         <button disabled={page === 0} onClick={() => setPage(p => p - 1)}
-          className="px-3 py-1 rounded bg-slate-800 disabled:opacity-40">← Prev</button>
-        <span>{page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, total)} of {total}</span>
+          className="px-3 py-1 rounded bg-slate-800 disabled:opacity-40">â† Prev</button>
+        <span>{page * PAGE_SIZE + 1}â€“{Math.min((page + 1) * PAGE_SIZE, total)} of {total}</span>
         <button disabled={(page + 1) * PAGE_SIZE >= total} onClick={() => setPage(p => p + 1)}
-          className="px-3 py-1 rounded bg-slate-800 disabled:opacity-40">Next →</button>
+          className="px-3 py-1 rounded bg-slate-800 disabled:opacity-40">Next â†’</button>
       </div>
 
       {showModal && <QuestionFormModal onClose={() => setShowModal(false)} onSave={fetchQuestions} />}
@@ -741,7 +741,7 @@ export default function ScraperPage() {
     const { data } = await adminApi.post(`/scraper/jobs/${activeJob.id}/import`, {
       accepted_indices: accepted
     });
-    alert(`✅ Imported ${data.imported} questions`);
+    alert(`âœ… Imported ${data.imported} questions`);
     setActiveJob(null);
     setAccepted([]);
     fetchJobs();
@@ -749,7 +749,7 @@ export default function ScraperPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">🕷️ URL Scraper</h1>
+      <h1 className="text-2xl font-bold mb-6">ðŸ•·ï¸ URL Scraper</h1>
 
       {/* URL Input */}
       <div className="bg-slate-900 rounded-xl p-6 mb-8 flex gap-3">
@@ -786,14 +786,14 @@ export default function ScraperPage() {
           </div>
 
           {activeJob.status === "processing" && (
-            <p className="text-slate-400 text-sm animate-pulse">⏳ Scraping and classifying with Gemini...</p>
+            <p className="text-slate-400 text-sm animate-pulse">â³ Scraping and classifying with AI...</p>
           )}
 
           {activeJob.status === "done" && activeJob.extracted_questions?.map((q: any, i: number) => (
             <div key={i} className="border border-slate-700 rounded-xl p-4 mb-3 bg-slate-800">
               <div className="flex justify-between items-start mb-2">
                 <span className="text-sm bg-indigo-900 text-indigo-300 px-2 py-0.5 rounded">
-                  {q.subject} → {q.topic} → {q.subtopic}
+                  {q.subject} â†’ {q.topic} â†’ {q.subtopic}
                 </span>
                 <div className="flex gap-2">
                   <button
@@ -805,7 +805,7 @@ export default function ScraperPage() {
                         ? "bg-green-700 text-white"
                         : "bg-slate-700 text-slate-400 hover:bg-slate-600"
                     }`}>
-                    {accepted.includes(i) ? "✓ Accepted" : "Accept"}
+                    {accepted.includes(i) ? "âœ“ Accepted" : "Accept"}
                   </button>
                 </div>
               </div>
@@ -897,16 +897,16 @@ export default function SyllabusPage() {
   const importToDB = async () => {
     if (!upload) return;
     const { data } = await adminApi.post(`/syllabus/uploads/${upload.id}/import`, {});
-    alert(`✅ Imported ${data.subjects_created} subjects + ${data.topics_created} topics`);
+    alert(`âœ… Imported ${data.subjects_created} subjects + ${data.topics_created} topics`);
   };
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">📄 Syllabus PDF Upload</h1>
+      <h1 className="text-2xl font-bold mb-6">ðŸ“„ Syllabus PDF Upload</h1>
 
       {/* Dropzone */}
       <div className="border-2 border-dashed border-slate-700 rounded-2xl p-12 text-center bg-slate-900 mb-6">
-        <p className="text-4xl mb-4">📂</p>
+        <p className="text-4xl mb-4">ðŸ“‚</p>
         <p className="text-slate-300 mb-4">Drag & drop GATE CSE syllabus PDF or click to browse</p>
         <input type="file" accept=".pdf"
           onChange={(e) => setFile(e.target.files?.[0] || null)}
@@ -929,7 +929,7 @@ export default function SyllabusPage() {
       {upload?.status === "done" && upload.extracted_structure && (
         <div className="bg-slate-900 rounded-2xl p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-white">📋 Extracted Structure</h2>
+            <h2 className="text-lg font-semibold text-white">ðŸ“‹ Extracted Structure</h2>
             <button onClick={importToDB}
               className="bg-green-700 hover:bg-green-600 text-white px-4 py-2 rounded-lg">
               Import to Database
@@ -939,11 +939,11 @@ export default function SyllabusPage() {
           <div className="space-y-4">
             {upload.extracted_structure.subjects?.map((subj: any) => (
               <div key={subj.name} className="border border-slate-700 rounded-xl p-4">
-                <h3 className="text-indigo-400 font-semibold mb-2">📚 {subj.name}</h3>
+                <h3 className="text-indigo-400 font-semibold mb-2">ðŸ“š {subj.name}</h3>
                 <div className="ml-4 space-y-2">
                   {subj.topics?.map((topic: any) => (
                     <div key={topic.name}>
-                      <p className="text-slate-300 font-medium">▸ {topic.name}</p>
+                      <p className="text-slate-300 font-medium">â–¸ {topic.name}</p>
                       <div className="ml-4 flex flex-wrap gap-1 mt-1">
                         {topic.subtopics?.map((sub: string) => (
                           <span key={sub} className="bg-slate-700 text-slate-400 text-xs px-2 py-0.5 rounded-full">
@@ -962,7 +962,7 @@ export default function SyllabusPage() {
 
       {upload?.status === "processing" && (
         <div className="bg-slate-900 rounded-xl p-6 text-center">
-          <p className="text-slate-400 animate-pulse">⏳ Extracting text and parsing with Gemini...</p>
+          <p className="text-slate-400 animate-pulse">â³ Extracting text and parsing with AI...</p>
         </div>
       )}
 
@@ -985,3 +985,4 @@ export default function SyllabusPage() {
 - Add lazy loading and fallback placeholders for broken image URLs.
 - Admin question form must support multi-image add/remove/reorder UI for `question_image_urls`.
 - Scraper review page should preview extracted images per question before import.
+

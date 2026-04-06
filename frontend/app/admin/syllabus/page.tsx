@@ -363,6 +363,17 @@ export default function AdminSyllabusPage() {
     [activeUpload?.extracted_structure]
   );
 
+  const hasImportableSubjects = useMemo(() => {
+    const subjects = activeStructure?.subjects;
+    if (!Array.isArray(subjects)) {
+      return false;
+    }
+
+    return subjects.some(
+      (subject) => typeof subject?.name === "string" && subject.name.trim().length > 0
+    );
+  }, [activeStructure]);
+
   if (isLoadingUploads) {
     return <EmptyState icon="○" title="Loading uploads" description="Fetching syllabus upload history..." />;
   }
@@ -529,7 +540,7 @@ export default function AdminSyllabusPage() {
 
           {activeUpload.status === "processing" || activeUpload.status === "pending" ? (
             <p className="mt-4 text-sm text-sky-200 animate-pulse">
-              Extracting PDF text and parsing structure with Gemini...
+              Extracting PDF text and parsing structure with the AI layer...
             </p>
           ) : null}
 
@@ -565,6 +576,12 @@ export default function AdminSyllabusPage() {
                   )}
                 </Button>
               </div>
+
+              {!hasImportableSubjects ? (
+                <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-100">
+                  No subjects were parsed from this file yet. Import will attempt a local fallback parse from the uploaded PDF.
+                </p>
+              ) : null}
 
               {activeStructure ? (
                 <SyllabusTreeViewer structure={activeStructure} />

@@ -1,12 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
-import EmptyState from "@/components/shared/EmptyState";
-import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import RevisionItem, {
   type RevisionPlanItem,
 } from "@/components/student/RevisionItem";
+import EmptyState from "@/components/shared/EmptyState";
+import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import {
+  ghostButtonClass,
+  PageHeader,
+  StatusBadge,
+} from "@/components/shared/brand-ui";
 import { api } from "@/lib/api";
 
 type RevisionPlanResponse = {
@@ -14,6 +21,12 @@ type RevisionPlanResponse = {
 };
 
 export default function RevisionPage() {
+  const searchParams = useSearchParams();
+
+  const linkedTaskId = searchParams.get("taskId");
+  const linkedTopicId = searchParams.get("topicId");
+  const linkedScheduleId = searchParams.get("scheduleId");
+
   const [items, setItems] = useState<RevisionPlanItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -47,12 +60,40 @@ export default function RevisionPage() {
     void loadPlan(true);
   }, []);
 
-  const handleMarkDone = async (topicId: string) => {
-    setActiveTopicId(topicId);
+  const dueNowCount = useMemo(
+    () =>
+      items.filter((item) => item.due_date && new Date(item.due_date).getTime() < Date.now())
+        .length,
+    [items]
+  );
+
+  const handleMarkDone = async (item: RevisionPlanItem) => {
+    setActiveTopicId(item.topic_id);
     setActionError(null);
 
+    const payload: {
+      topic_id?: string;
+      schedule_id?: string;
+      daily_task_id?: string;
+    } = {};
+
+    if (item.schedule_id) {
+      payload.schedule_id = item.schedule_id;
+    } else {
+      payload.topic_id = item.topic_id;
+    }
+
+    const isLinkedFromPlanner =
+      Boolean(linkedTaskId) &&
+      ((linkedScheduleId && item.schedule_id === linkedScheduleId) ||
+        (linkedTopicId && item.topic_id === linkedTopicId));
+
+    if (isLinkedFromPlanner && linkedTaskId) {
+      payload.daily_task_id = linkedTaskId;
+    }
+
     try {
-      await api.post("/revision/mark-done", { topic_id: topicId });
+      await api.post("/revision/mark-done", payload);
       await loadPlan(false);
     } catch (error) {
       const message =
@@ -70,9 +111,9 @@ export default function RevisionPage() {
 
   if (loadError) {
     return (
-      <main className="mx-auto w-full max-w-4xl px-4 py-8">
+      <main>
         <EmptyState
-          icon="⚠"
+          icon="!"
           title="Revision plan unavailable"
           description={loadError}
           ctaLabel="Retry"
@@ -83,24 +124,40 @@ export default function RevisionPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-4xl space-y-5 px-4 py-8">
-      <header className="rounded-2xl border border-slate-800 bg-linear-to-r from-slate-900 to-emerald-950 p-6">
-        <h1 className="text-2xl font-bold text-white">Revision Plan</h1>
-        <p className="mt-2 text-sm text-slate-300">
-          Stay consistent with spaced repetition and clear due topics daily.
+    <main className="space-y-6">
+      <PageHeader
+        eyebrow="Revision queue"
+        title="Revision Plan"
+        description="Stay consistent with spaced repetition and keep retention steady across the entire syllabus."
+        badge={
+          <div className="flex flex-wrap gap-3">
+            <StatusBadge tone="fire">{dueNowCount} due now</StatusBadge>
+            <StatusBadge tone="ice">{items.length} items</StatusBadge>
+          </div>
+        }
+        actions={
+          <Link href="/planner" className={ghostButtonClass}>
+            Open daily planner
+          </Link>
+        }
+      />
+
+      {linkedTaskId ? (
+        <p className="text-sm text-[rgba(194,186,176,0.72)]">
+          This revision was opened from your daily planner. Marking it done also updates the linked task.
         </p>
-      </header>
+      ) : null}
 
       {items.length === 0 ? (
         <EmptyState
-          icon="🎉"
+          icon="*"
           title="🎉 All caught up!"
-          description="No revisions are due right now. Keep the momentum going with an adaptive quiz."
-          ctaLabel="Take Adaptive Quiz"
+          description="No revisions are due right now. Keep momentum moving with an adaptive quiz."
+          ctaLabel="Take adaptive quiz"
           ctaHref="/quiz/adaptive"
         />
       ) : (
-        <section className="space-y-3">
+        <section className="space-y-4">
           {items.map((item) => (
             <RevisionItem
               key={item.topic_id}
@@ -112,14 +169,11 @@ export default function RevisionPage() {
         </section>
       )}
 
-      {actionError ? (
-        <p className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-2 text-sm text-rose-200">
-          {actionError}
-        </p>
-      ) : null}
-
+      {actionError ? <p className="text-sm text-rose-200">{actionError}</p> : null}
       {isRefreshing ? (
-        <p className="text-center text-xs text-slate-400">Refreshing revision plan...</p>
+        <p className="text-xs uppercase tracking-[0.22em] text-[rgba(194,186,176,0.58)]">
+          Refreshing revision plan...
+        </p>
       ) : null}
     </main>
   );

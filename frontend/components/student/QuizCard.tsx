@@ -3,6 +3,9 @@
 import Image from "next/image";
 import { useState } from "react";
 
+import { panelClass, StatusBadge } from "@/components/shared/brand-ui";
+import { cn } from "@/lib/utils";
+
 export type QuizQuestion = {
   id: string;
   question_text: string;
@@ -23,7 +26,6 @@ type QuizCardProps = {
 type ParsedOption = {
   letter: string;
   label: string;
-  fullText: string;
 };
 
 const parseOption = (optionText: string, fallbackIndex: number): ParsedOption => {
@@ -35,23 +37,13 @@ const parseOption = (optionText: string, fallbackIndex: number): ParsedOption =>
     return {
       letter: fallbackLetter,
       label: trimmed,
-      fullText: `${fallbackLetter}. ${trimmed}`,
     };
   }
 
-  const letter = match[1].toUpperCase();
-  const label = match[2].trim() || trimmed;
   return {
-    letter,
-    label,
-    fullText: `${letter}. ${label}`,
+    letter: match[1].toUpperCase(),
+    label: match[2].trim() || trimmed,
   };
-};
-
-const difficultyPalette: Record<string, string> = {
-  easy: "bg-emerald-500/20 text-emerald-200 border-emerald-400/30",
-  medium: "bg-amber-500/20 text-amber-200 border-amber-400/30",
-  hard: "bg-rose-500/20 text-rose-200 border-rose-400/30",
 };
 
 function QuestionImage({ src, alt }: { src: string; alt: string }) {
@@ -60,16 +52,16 @@ function QuestionImage({ src, alt }: { src: string; alt: string }) {
 
   if (failed) {
     return (
-      <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-100">
+      <div className="rounded-[22px] border border-amber-500/20 bg-amber-500/10 px-4 py-4 text-sm text-amber-100">
         Unable to load image preview for this question.
       </div>
     );
   }
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-slate-700 bg-slate-950">
+    <div className="relative overflow-hidden rounded-[24px] border border-white/8 bg-[rgba(6,6,10,0.86)]">
       {!loaded ? (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-900/75 text-xs text-slate-300 animate-pulse">
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/50 text-xs text-[rgba(194,186,176,0.72)]">
           Loading image...
         </div>
       ) : null}
@@ -79,9 +71,10 @@ function QuestionImage({ src, alt }: { src: string; alt: string }) {
         width={1200}
         height={675}
         unoptimized
-        className={`h-auto w-full object-contain transition-opacity ${
+        className={cn(
+          "h-auto w-full object-contain transition-opacity",
           loaded ? "opacity-100" : "opacity-0"
-        }`}
+        )}
         onLoad={() => setLoaded(true)}
         onError={() => setFailed(true)}
       />
@@ -106,31 +99,35 @@ export default function QuizCard({
     )
   ).slice(0, 6);
 
-  const difficulty = (question.difficulty || "").toLowerCase();
-  const difficultyClass = difficultyPalette[difficulty] ??
-    "bg-slate-700/50 text-slate-200 border-slate-600/40";
-
   return (
-    <article className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 shadow-lg shadow-slate-950/40">
-      <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
+    <article className={cn(panelClass, "p-6")}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-slate-100">{question.topic_name}</p>
-          <p className="text-xs text-slate-400">
+          <p className="font-display text-3xl tracking-[0.08em] text-[var(--cream)]">
+            {question.topic_name}
+          </p>
+          <p className="mt-2 text-sm text-[rgba(194,186,176,0.68)]">
             {question.subject_name}
-            {question.subtopic ? ` • ${question.subtopic}` : ""}
+            {question.subtopic ? ` · ${question.subtopic}` : ""}
           </p>
         </div>
-        <span
-          className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] ${difficultyClass}`}
+        <StatusBadge
+          tone={
+            question.difficulty.toLowerCase() === "hard"
+              ? "fire"
+              : question.difficulty.toLowerCase() === "medium"
+                ? "warning"
+                : "success"
+          }
         >
           {question.difficulty}
-        </span>
-      </header>
+        </StatusBadge>
+      </div>
 
-      <p className="text-base leading-relaxed text-slate-100">{question.question_text}</p>
+      <p className="mt-6 text-base leading-8 text-[var(--cream)]">{question.question_text}</p>
 
       {safeImageUrls.length > 0 ? (
-        <div className="mt-4 grid gap-3">
+        <div className="mt-5 grid gap-3">
           {safeImageUrls.map((url, index) => (
             <QuestionImage
               key={`${question.id}-img-${index}`}
@@ -141,7 +138,7 @@ export default function QuizCard({
         </div>
       ) : null}
 
-      <div className="mt-5 grid gap-3">
+      <div className="mt-6 grid gap-3">
         {parsedOptions.map((option) => {
           const isSelected = selectedAnswer === option.letter;
           return (
@@ -149,15 +146,19 @@ export default function QuizCard({
               key={`${question.id}-${option.letter}`}
               type="button"
               aria-pressed={isSelected}
+              aria-label={`${option.letter}. ${option.label}`}
               onClick={() => onSelect(option.letter)}
-              className={`w-full rounded-xl border px-4 py-3 text-left text-sm transition ${
+              className={cn(
+                "w-full rounded-[24px] border px-4 py-4 text-left text-sm transition",
                 isSelected
-                  ? "border-indigo-400 bg-indigo-500/20 text-indigo-50"
-                  : "border-slate-700 bg-slate-800/80 text-slate-200 hover:border-slate-500"
-              }`}
+                  ? "border-[rgba(232,82,10,0.24)] bg-[rgba(232,82,10,0.08)] text-[var(--cream)]"
+                  : "border-white/8 bg-white/3 text-[rgba(194,186,176,0.76)] hover:border-white/16 hover:bg-white/5"
+              )}
             >
-              <span className="font-semibold text-slate-100">{option.letter}.</span>{" "}
-              <span>{option.label}</span>
+              <span className="mr-3 inline-flex h-8 w-8 items-center justify-center rounded-full border border-current/30 font-mono text-[0.62rem] uppercase tracking-[0.2em]">
+                {option.letter}
+              </span>
+              {option.label}
             </button>
           );
         })}

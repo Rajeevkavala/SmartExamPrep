@@ -6,7 +6,17 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from dependencies import get_db, require_admin
-from models.models import Question, Subject, Topic, User
+from models.models import (
+	Question,
+	RevisionSchedule,
+	RoadmapWeekTopic,
+	Subject,
+	Topic,
+	TopicMastery,
+	User,
+	UserSubjectConfidence,
+	UserTopicBaseline,
+)
 from schemas.admin_schemas import SubjectCreate, SubjectUpdate, TopicCreate, TopicUpdate
 
 router = APIRouter()
@@ -172,6 +182,10 @@ def delete_subject(
 ) -> dict:
 	_ = admin
 	subject = _get_subject_or_404(db, subject_id)
+	topic_ids = [
+		topic_id
+		for topic_id, in db.query(Topic.id).filter(Topic.subject_id == subject.id).all()
+	]
 
 	# Remove dependent questions first so subject/topic deletion remains FK-safe.
 	questions_deleted = (
@@ -179,6 +193,29 @@ def delete_subject(
 		.filter(Question.subject_id == subject.id)
 		.delete(synchronize_session=False)
 	)
+
+	# Remove topic-linked rows first to avoid ORM trying to null out non-null FKs.
+	if topic_ids:
+		db.query(RevisionSchedule).filter(
+			RevisionSchedule.topic_id.in_(topic_ids)
+		).delete(synchronize_session=False)
+		db.query(TopicMastery).filter(
+			TopicMastery.topic_id.in_(topic_ids)
+		).delete(synchronize_session=False)
+		db.query(UserTopicBaseline).filter(
+			UserTopicBaseline.topic_id.in_(topic_ids)
+		).delete(synchronize_session=False)
+		db.query(RoadmapWeekTopic).filter(
+			RoadmapWeekTopic.topic_id.in_(topic_ids)
+		).delete(synchronize_session=False)
+
+	# Remove profile and roadmap rows keyed by subject_id before deleting the subject.
+	db.query(UserSubjectConfidence).filter(
+		UserSubjectConfidence.subject_id == subject.id
+	).delete(synchronize_session=False)
+	db.query(RoadmapWeekTopic).filter(
+		RoadmapWeekTopic.subject_id == subject.id
+	).delete(synchronize_session=False)
 
 	db.delete(subject)
 	db.commit()

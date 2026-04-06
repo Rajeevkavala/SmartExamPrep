@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SmartExamPrep — The Closed Loop for GATE CSE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:#06060a;color:#c2bab0;font-family:'Outfit',sans-serif;font-weight:300;overflow-x:hidden;cursor:none}
+a{text-decoration:none;color:inherit}
+::selection{background:#e8520a;color:#000}
+::-webkit-scrollbar{width:2px}
+::-webkit-scrollbar-track{background:#06060a}
+::-webkit-scrollbar-thumb{background:#e8520a}
+:root{
+  --fire:#e8520a;--fire2:#ff6b1a;--ember:#c43d00;
+  --ice:#00d4ff;--ice2:#00a8cc;
+  --cream:#f0e8da;--paper:#0d0d12;--ink:#c2bab0;
+  --muted:#5a5550;--border:#1e1c18;--bg:#06060a;
+  --mono:'IBM Plex Mono',monospace;
+  --serif:'Instrument Serif',serif;
+  --display:'Bebas Neue',sans-serif;
+  --body:'Outfit',sans-serif;
+  --green:#22c55e;--amber:#f59e0b;
+}
+
+/* CURSOR */
+#cur{position:fixed;width:8px;height:8px;border-radius:50%;background:var(--fire);pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:width .25s,height .25s}
+#cur-ring{position:fixed;width:34px;height:34px;border-radius:50%;border:1px solid rgba(232,82,10,.35);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:all .16s ease}
+
+.w{max-width:1260px;margin:0 auto;padding:0 48px}
+@media(max-width:768px){.w{padding:0 20px}}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:500;padding:20px 0;transition:all .4s}
+nav.s{background:rgba(6,6,10,.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:14px 0}
+.ni{display:flex;align-items:center;justify-content:space-between;gap:24px}
+.nl{font-family:var(--display);font-size:20px;letter-spacing:2.5px;color:var(--cream);display:flex;align-items:center;gap:10px}
+.nm{width:22px;height:22px;position:relative}
+.nm-sq{width:22px;height:22px;background:var(--fire);transform:rotate(45deg)}
+.nv{display:flex;align-items:center;gap:28px}
+.nv a{font-family:var(--mono);font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);transition:color .2s;position:relative;padding:4px 0}
+.nv a::after{content:'';position:absolute;bottom:-2px;left:0;width:0;height:1px;background:var(--fire);transition:width .3s}
+.nv a:hover{color:var(--cream)}.nv a:hover::after{width:100%}
+.na{display:flex;align-items:center;gap:14px}
+.nb{font-family:var(--mono);font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);transition:color .2s;padding:4px 0}
+.nb:hover{color:var(--cream)}
+.nc{font-family:var(--mono);font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;background:var(--fire);color:#fff;padding:10px 22px;position:relative;overflow:hidden;transition:all .3s}
+.nc::before{content:'';position:absolute;inset:0;background:var(--fire2);transform:translateX(-100%);transition:transform .3s}
+.nc span{position:relative;z-index:1}
+.nc:hover::before{transform:translateX(0)}
+.ham{display:none;flex-direction:column;gap:5px;cursor:none;padding:4px;background:none;border:none}
+.ham span{width:22px;height:1.5px;background:var(--ink);transition:all .3s;display:block}
+.ham.open span:nth-child(1){transform:rotate(45deg) translate(4.5px,4.5px)}
+.ham.open span:nth-child(2){opacity:0}
+.ham.open span:nth-child(3){transform:rotate(-45deg) translate(4.5px,-4.5px)}
+
+#mnav{display:none;position:fixed;inset:0;background:rgba(6,6,10,.98);backdrop-filter:blur(20px);z-index:400;align-items:center;justify-content:center;flex-direction:column;gap:28px}
+#mnav.open{display:flex}
+#mnav a{font-family:var(--display);font-size:38px;letter-spacing:3px;color:var(--cream);transition:color .2s}
+#mnav a:hover{color:var(--fire)}
+#mnav .mnav-cta{font-family:var(--mono);font-size:13px;letter-spacing:2px;text-transform:uppercase;background:var(--fire);color:#fff;padding:14px 36px;margin-top:16px}
+
+/* ========= HERO ========= */
+#hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;position:relative;overflow:hidden;padding:140px 20px 80px}
+
+.hero-grain{position:absolute;inset:0;pointer-events:none;z-index:1;opacity:.45;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");background-size:180px;mix-blend-mode:overlay}
+
+.hero-lines{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.hero-lines svg{width:100%;height:100%;opacity:.06}
+
+.hero-orb{position:absolute;top:44%;left:50%;transform:translate(-50%,-50%);width:900px;height:900px;border-radius:50%;background:radial-gradient(ellipse at center, rgba(232,82,10,.14) 0%, rgba(232,82,10,.04) 45%, transparent 68%);pointer-events:none;z-index:0;animation:orb-pulse 6s ease-in-out infinite}
+@keyframes orb-pulse{0%,100%{opacity:.7;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.06)}}
+
+.hero-inner{position:relative;z-index:2;max-width:960px;margin:0 auto}
+
+.hero-badge{display:inline-flex;align-items:center;gap:10px;border:1px solid rgba(232,82,10,.25);background:rgba(232,82,10,.06);padding:7px 16px;margin-bottom:44px;animation:fd .9s ease both}
+.hero-badge-dot{width:5px;height:5px;border-radius:50%;background:var(--fire);animation:bl 2s infinite}
+.hero-badge-txt{font-family:var(--mono);font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--fire)}
+@keyframes bl{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.25;transform:scale(.4)}}
+@keyframes fd{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fu{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+
+.hero-h1{font-family:var(--display);line-height:.87;letter-spacing:2px;color:var(--cream);margin-bottom:10px;animation:fu .9s ease .15s both}
+.hero-h1 .line1{display:block;font-size:clamp(68px,11vw,156px)}
+.hero-h1 .line2{display:block;font-size:clamp(68px,11vw,156px);color:transparent;-webkit-text-stroke:1.5px rgba(240,232,218,.5)}
+.hero-h1 .fire-word{color:var(--fire);-webkit-text-stroke:0}
+
+.hero-sub{font-family:var(--serif);font-size:clamp(17px,2vw,26px);font-style:italic;color:var(--ink);margin:22px 0 48px;line-height:1.45;animation:fu .9s ease .3s both;max-width:640px;margin-left:auto;margin-right:auto}
+
+.hero-ctas{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;margin-bottom:52px;animation:fu .9s ease .45s both}
+.bth{display:inline-flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:2px;text-transform:uppercase;background:var(--fire);color:#fff;padding:15px 34px;position:relative;overflow:hidden;transition:letter-spacing .3s;white-space:nowrap}
+.bth::after{content:'';position:absolute;inset:0;background:rgba(255,255,255,.1);transform:translateX(-100%) skewX(-15deg);transition:transform .5s}
+.bth:hover::after{transform:translateX(200%) skewX(-15deg)}.bth:hover{letter-spacing:2.8px}
+.bgh{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);border:1px solid var(--border);padding:15px 26px;transition:all .3s;white-space:nowrap}
+.bgh:hover{color:var(--cream);border-color:rgba(90,85,80,.6)}
+
+.hero-trust{display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;margin-bottom:60px;animation:fu .9s ease .55s both}
+.hero-trust-item{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.hero-trust-mark{width:14px;height:14px;border:1px solid rgba(34,197,94,.4);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.hero-trust-mark svg{width:8px;height:8px;stroke:var(--green);fill:none;stroke-width:2}
+.hero-trust-dot{width:3px;height:3px;border-radius:50%;background:var(--border)}
+
+.hero-stats{display:flex;align-items:stretch;border:1px solid var(--border);background:rgba(13,13,18,.8);backdrop-filter:blur(16px);animation:fu .9s ease .65s both;width:100%;max-width:760px;margin:0 auto}
+.hstat{flex:1;padding:22px 18px;text-align:center;border-right:1px solid var(--border);position:relative;overflow:hidden}
+.hstat:last-child{border-right:none}
+.hstat::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--fire);transform:scaleX(0);transition:transform .8s ease;transform-origin:left}
+.hstat.visible::after{transform:scaleX(1)}
+.hstat:nth-child(2)::after,.hstat:nth-child(4)::after{background:var(--ice)}
+.hstat-n{font-family:var(--display);font-size:clamp(26px,3.2vw,40px);letter-spacing:1px;line-height:1;margin-bottom:4px}
+.hstat:nth-child(1) .hstat-n,.hstat:nth-child(3) .hstat-n{color:var(--fire)}
+.hstat:nth-child(2) .hstat-n,.hstat:nth-child(4) .hstat-n{color:var(--ice)}
+.hstat-l{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+
+.htick{position:absolute;bottom:0;left:0;right:0;border-top:1px solid var(--border);overflow:hidden;height:38px;display:flex;align-items:center;background:rgba(6,6,10,.85);backdrop-filter:blur(8px);z-index:3}
+.ttr{display:flex;gap:0;white-space:nowrap;animation:tick 30s linear infinite}
+.ti{display:flex;align-items:center;gap:20px;padding:0 28px;font-family:var(--mono);font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.td{width:3px;height:3px;border-radius:50%;background:var(--fire);flex-shrink:0}
+@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ========= PROBLEM SECTION ========= */
+#problem{padding:100px 0;border-top:1px solid var(--border);background:var(--paper);position:relative;overflow:hidden}
+#problem::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:1px;height:100%;background:linear-gradient(to bottom,transparent,var(--border),transparent)}
+.prob-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);margin-top:64px}
+.prob-card{background:var(--paper);padding:40px;position:relative}
+.prob-card.bad{background:rgba(6,6,10,.6)}
+.prob-card.good{background:rgba(13,13,18,.8)}
+.prob-card-label{font-family:var(--mono);font-size:10px;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.prob-card.bad .prob-card-label{color:#ef4444}
+.prob-card.good .prob-card-label{color:var(--green)}
+.prob-dot-bad{width:8px;height:8px;border-radius:50%;background:#ef4444}
+.prob-dot-good{width:8px;height:8px;border-radius:50%;background:var(--green)}
+.prob-item{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px;font-size:14px;color:var(--muted);line-height:1.7;font-weight:300}
+.prob-item:last-child{margin-bottom:0}
+.prob-x{color:#ef4444;font-family:var(--mono);font-size:16px;flex-shrink:0;margin-top:1px}
+.prob-chk{color:var(--green);font-family:var(--mono);font-size:13px;flex-shrink:0;margin-top:1px}
+.prob-item strong{color:var(--cream);font-weight:500}
+
+/* ========= LOOP SECTION ========= */
+#loop{padding:120px 0;border-top:1px solid var(--border)}
+.loop-wrap{display:grid;grid-template-columns:1fr 1.3fr;gap:80px;align-items:center}
+.loop-visual{position:relative;display:flex;align-items:center;justify-content:center;min-height:420px}
+.loop-svg-wrap{width:380px;height:380px;position:relative}
+.loop-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;z-index:2}
+.loop-center-title{font-family:var(--display);font-size:22px;letter-spacing:2px;color:var(--cream)}
+.loop-center-sub{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--fire);margin-top:4px}
+.loop-node{position:absolute;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}
+.loop-node-icon{width:44px;height:44px;border:1px solid var(--border);background:var(--paper);display:flex;align-items:center;justify-content:center}
+.loop-node-icon svg{width:22px;height:22px}
+.loop-node-label{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);max-width:80px;line-height:1.4}
+
+/* ========= FEATURES ========= */
+#features{padding:120px 0;background:var(--paper);border-top:1px solid var(--border)}
+.slb{display:inline-flex;align-items:center;gap:10px;font-family:var(--mono);font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--fire);margin-bottom:16px}
+.slb::before{content:'';width:20px;height:1px;background:var(--fire)}
+.stx{font-family:var(--display);font-size:clamp(44px,6.5vw,88px);line-height:.92;color:var(--cream);letter-spacing:1px}
+.stx em{font-family:var(--serif);font-style:italic;color:var(--fire);font-size:.62em}
+.ssb{font-size:14px;color:var(--muted);line-height:1.9;max-width:420px;margin-top:18px;font-weight:300}
+.fhd{margin-bottom:64px}
+
+.feat-layout{display:grid;grid-template-columns:1fr;gap:2px;background:var(--border);border:1px solid var(--border)}
+.feat-row{display:grid;background:var(--border);gap:2px}
+.feat-row.cols2{grid-template-columns:1fr 1fr}
+.feat-row.cols3{grid-template-columns:1fr 1fr 1fr}
+.feat-row.single{grid-template-columns:1fr}
+.fc{background:var(--bg);padding:44px 40px;position:relative;overflow:hidden;transition:background .4s;cursor:none}
+.fc::before{content:'';position:absolute;top:0;left:0;width:2px;height:0;background:var(--fire);transition:height .5s ease}
+.fc:nth-child(even)::before{background:var(--ice)}
+.fc:hover{background:var(--paper)}.fc:hover::before{height:100%}
+.fn{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:28px;display:flex;align-items:center;gap:8px}
+.fn::after{content:'';flex:1;height:1px;background:var(--border)}
+.fic{width:48px;height:48px;margin-bottom:22px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(232,82,10,.15);background:rgba(232,82,10,.06)}
+.fic svg{width:24px;height:24px;stroke:var(--fire);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.fc:nth-child(even) .fic{border-color:rgba(0,212,255,.12);background:rgba(0,212,255,.05)}
+.fc:nth-child(even) .fic svg{stroke:var(--ice)}
+.ftt{font-family:var(--display);font-size:24px;letter-spacing:1px;color:var(--cream);margin-bottom:10px}
+.fdsc{font-size:13.5px;color:var(--muted);line-height:1.85;font-weight:300}
+.ftag{display:inline-block;margin-top:18px;font-family:var(--mono);font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--fire);border-bottom:1px solid rgba(232,82,10,.25);padding-bottom:2px}
+.fc:nth-child(even) .ftag{color:var(--ice);border-color:rgba(0,212,255,.25)}
+
+/* Diagnostic Visual */
+.diag-visual{background:var(--paper);border:1px solid var(--border);padding:20px;font-family:var(--mono);font-size:11.5px;line-height:1.7;height:100%}
+.diag-title{font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.diag-q{color:var(--cream);margin-bottom:12px;font-size:12px;line-height:1.6}
+.diag-opt{display:flex;align-items:center;gap:10px;padding:7px 10px;border:1px solid var(--border);margin-bottom:6px;transition:all .3s;cursor:none}
+.diag-opt.correct{border-color:rgba(34,197,94,.4);background:rgba(34,197,94,.05);color:var(--green)}
+.diag-opt.wrong{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.04);color:#ef4444}
+.diag-opt.neutral{color:var(--muted)}
+.diag-radio{width:10px;height:10px;border-radius:50%;border:1px solid currentColor;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.diag-radio-fill{width:5px;height:5px;border-radius:50%;background:currentColor}
+.diag-result-bar{margin-top:14px;padding-top:10px;border-top:1px solid var(--border)}
+.diag-bar-label{font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.diag-bar-wrap{height:3px;background:var(--border);position:relative}
+.diag-bar-fill{position:absolute;top:0;left:0;height:100%}
+.diag-bar-fill.weak{background:#ef4444;width:28%;animation:grow-bar 1.5s ease 1s both}
+.diag-bar-fill.mid{background:var(--amber);width:61%;animation:grow-bar 1.5s ease 1.2s both}
+.diag-bar-fill.strong{background:var(--green);width:85%;animation:grow-bar 1.5s ease 1.4s both}
+@keyframes grow-bar{from{width:0}to{width:var(--w,inherit)}}
+
+/* Roadmap visual */
+.road-visual{padding:0;height:100%;display:flex;flex-direction:column;gap:0}
+.road-week{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px}
+.road-week:last-child{border-bottom:none}
+.road-week-num{font-family:var(--display);font-size:20px;color:var(--muted);letter-spacing:1px;flex-shrink:0;width:36px}
+.road-week-bar-wrap{flex:1;height:2px;background:var(--border)}
+.road-week-bar{height:100%;transition:width .5s ease}
+.road-week-bar.done{background:var(--green)}
+.road-week-bar.act{background:var(--fire);animation:pulse-bar 2s ease-in-out infinite}
+.road-week-bar.future{background:var(--border)}
+@keyframes pulse-bar{0%,100%{opacity:1}50%{opacity:.4}}
+.road-week-label{font-family:var(--mono);font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;flex-shrink:0;min-width:100px}
+.road-week-label.done{color:var(--green)}
+.road-week-label.act{color:var(--fire)}
+.road-week-label.future{color:var(--muted)}
+.road-week-pct{font-family:var(--mono);font-size:10px;color:var(--muted);flex-shrink:0;width:36px;text-align:right}
+
+/* Spaced rep visual */
+.srs-cards{display:flex;flex-direction:column;gap:8px;padding:20px;background:var(--paper);border:1px solid var(--border)}
+.srs-title{font-family:var(--mono);font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.srs-card{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:1px solid var(--border);background:rgba(6,6,10,.6)}
+.srs-topic{font-family:var(--mono);font-size:11px;color:var(--cream)}
+.srs-due{font-family:var(--mono);font-size:9.5px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border:1px solid}
+.srs-due.now{color:var(--fire);border-color:rgba(232,82,10,.3);background:rgba(232,82,10,.06)}
+.srs-due.soon{color:var(--amber);border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.05)}
+.srs-due.later{color:var(--muted);border-color:var(--border)}
+.srs-interval{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:4px;padding-left:14px}
+
+/* ========= DASHBOARD PREVIEW ========= */
+#dashboard{padding:120px 0;border-top:1px solid var(--border)}
+.dash-wrap{display:grid;grid-template-columns:1.2fr 1fr;gap:64px;align-items:center}
+.dash-mockup{background:var(--paper);border:1px solid var(--border);overflow:hidden;position:relative}
+.dash-mockup::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--fire),var(--ice))}
+.dash-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);background:rgba(6,6,10,.4)}
+.dash-header-logo{font-family:var(--display);font-size:15px;letter-spacing:2px;color:var(--cream)}
+.dash-header-meta{font-family:var(--mono);font-size:9.5px;color:var(--muted);letter-spacing:1px}
+.dash-body{padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.dash-card{border:1px solid var(--border);padding:16px;background:rgba(6,6,10,.5)}
+.dash-card-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.dash-card-value{font-family:var(--display);font-size:30px;letter-spacing:1px;line-height:1}
+.dash-card-sub{font-family:var(--mono);font-size:9.5px;color:var(--muted);margin-top:4px;letter-spacing:.5px}
+.readiness-ring{width:80px;height:80px;position:relative;margin:0 auto 8px}
+.readiness-ring svg{transform:rotate(-90deg);width:80px;height:80px}
+.readiness-circle-bg{fill:none;stroke:var(--border);stroke-width:5}
+.readiness-circle-fill{fill:none;stroke:var(--fire);stroke-width:5;stroke-linecap:round;stroke-dasharray:220;stroke-dashoffset:55;animation:ring-anim 1.5s ease 0.8s both}
+@keyframes ring-anim{from{stroke-dashoffset:220}to{stroke-dashoffset:55}}
+.readiness-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:var(--display);font-size:20px;color:var(--fire);letter-spacing:1px}
+.dash-streak{display:flex;gap:4px;align-items:center;margin-top:6px}
+.dash-streak-day{width:14px;height:14px;border:1px solid var(--border);background:var(--border)}
+.dash-streak-day.done{background:var(--fire);border-color:var(--fire)}
+.dash-streak-day.today{background:var(--amber);border-color:var(--amber);animation:streak-pulse 1.5s ease-in-out infinite}
+@keyframes streak-pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.dash-focus{grid-column:span 2;border:1px solid rgba(232,82,10,.2);background:rgba(232,82,10,.04);padding:14px 16px}
+.dash-focus-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--fire);margin-bottom:6px}
+.dash-focus-text{font-size:12.5px;color:var(--cream);line-height:1.6;font-style:italic;font-family:var(--serif)}
+.dash-plan-row{display:flex;align-items:center;gap:12px;padding:7px 0;border-bottom:1px solid var(--border)}
+.dash-plan-row:last-child{border-bottom:none}
+.dash-plan-check{width:12px;height:12px;border:1px solid;flex-shrink:0}
+.dash-plan-check.done{border-color:var(--green);background:var(--green)}
+.dash-plan-check.pending{border-color:var(--muted)}
+.dash-plan-text{font-family:var(--mono);font-size:10.5px;flex:1}
+.dash-plan-text.done{color:var(--muted);text-decoration:line-through}
+.dash-plan-text.pending{color:var(--ink)}
+.dash-plan-time{font-family:var(--mono);font-size:9.5px;color:var(--muted)}
+.dash-plan-col{grid-column:span 2}
+
+/* ========= PYQ SECTION ========= */
+#pyq{padding:120px 0;background:var(--paper);border-top:1px solid var(--border)}
+.pyq-layout{display:grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--border);margin-top:64px}
+.pyq-browser{background:var(--bg);padding:0;overflow:hidden}
+.pyq-bar{display:flex;gap:8px;padding:14px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap;background:rgba(13,13,18,.8)}
+.pyq-filter{font-family:var(--mono);font-size:9.5px;letter-spacing:1px;text-transform:uppercase;padding:5px 12px;border:1px solid var(--border);color:var(--muted);transition:all .3s;cursor:none}
+.pyq-filter.active{border-color:var(--fire);color:var(--fire);background:rgba(232,82,10,.06)}
+.pyq-list{padding:0}
+.pyq-item{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);transition:background .3s;cursor:none}
+.pyq-item:hover{background:var(--paper)}
+.pyq-item:last-child{border-bottom:none}
+.pyq-year{font-family:var(--display);font-size:18px;color:var(--muted);letter-spacing:1px;flex-shrink:0;width:44px}
+.pyq-content{flex:1}
+.pyq-topic{font-family:var(--mono);font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--fire);margin-bottom:4px}
+.pyq-text{font-size:12.5px;color:var(--ink);line-height:1.6}
+.pyq-tags{display:flex;gap:6px;margin-top:8px}
+.pyq-tag{font-family:var(--mono);font-size:8.5px;letter-spacing:1.5px;text-transform:uppercase;border:1px solid var(--border);padding:2px 8px;color:var(--muted)}
+.pyq-tag.hard{border-color:rgba(239,68,68,.3);color:#ef4444;background:rgba(239,68,68,.04)}
+.pyq-tag.medium{border-color:rgba(245,158,11,.3);color:var(--amber)}
+.pyq-prob{font-family:var(--display);font-size:24px;color:var(--fire);letter-spacing:1px;flex-shrink:0}
+
+.pyq-info{background:var(--bg);padding:44px 40px;display:flex;flex-direction:column;justify-content:center}
+
+/* ========= STUDY CHAT ========= */
+#chat{padding:120px 0;border-top:1px solid var(--border)}
+.chat-layout{display:grid;grid-template-columns:1fr 1.1fr;gap:80px;align-items:center}
+.chat-window{background:var(--paper);border:1px solid var(--border);overflow:hidden}
+.chat-top{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--border)}
+.chat-dot{width:9px;height:9px;border-radius:50%}
+.chat-dot:nth-child(1){background:#ff5f57}.chat-dot:nth-child(2){background:#ffbd2e}.chat-dot:nth-child(3){background:#28c940}
+.chat-title{margin-left:4px;font-family:var(--mono);font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.chat-context-pill{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border:1px solid rgba(0,212,255,.2);color:var(--ice);background:rgba(0,212,255,.05)}
+.chat-body{padding:20px;display:flex;flex-direction:column;gap:12px;min-height:340px}
+.chat-msg{display:flex;gap:10px;align-items:flex-start}
+.chat-msg.user{flex-direction:row-reverse}
+.chat-avatar{width:28px;height:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:13px;letter-spacing:1px}
+.chat-avatar.ai{background:rgba(232,82,10,.12);border:1px solid rgba(232,82,10,.2);color:var(--fire)}
+.chat-avatar.user{background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.15);color:var(--ice)}
+.chat-bubble{padding:10px 14px;max-width:82%;font-size:12.5px;line-height:1.7;border:1px solid var(--border)}
+.chat-bubble.ai{background:rgba(6,6,10,.5);color:var(--ink);border-color:var(--border)}
+.chat-bubble.user{background:rgba(232,82,10,.06);color:var(--cream);border-color:rgba(232,82,10,.15)}
+.chat-bubble strong{color:var(--cream);font-weight:500}
+.chat-bubble .highlight{color:var(--fire)}
+.chat-inp-bar{display:flex;align-items:center;border-top:1px solid var(--border);background:rgba(6,6,10,.3)}
+.chat-inp{flex:1;background:transparent;border:none;outline:none;font-family:var(--mono);font-size:12px;color:var(--cream);padding:13px 16px;caret-color:var(--fire)}
+.chat-inp::placeholder{color:var(--muted)}
+.chat-send{padding:13px 16px;font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--muted);background:none;border-left:1px solid var(--border);cursor:none;border-top:none;border-right:none;border-bottom:none;transition:color .2s}
+.chat-send:hover{color:var(--fire)}
+
+/* ========= TESTIMONIALS ========= */
+#testimonials{padding:120px 0;background:var(--paper);border-top:1px solid var(--border)}
+.tgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);margin-top:64px}
+.tc{background:var(--bg);padding:40px;position:relative;overflow:hidden;transition:background .3s;cursor:none}
+.tc::after{content:'';position:absolute;bottom:0;left:0;width:0;height:2px;background:var(--fire);transition:width .5s ease}
+.tc:nth-child(2)::after{background:var(--ice)}
+.tc:nth-child(3)::after{background:var(--fire2)}
+.tc:hover::after{width:100%}
+.tc:hover{background:var(--paper)}
+.tc-quote{font-size:13.5px;color:var(--ink);line-height:1.85;font-weight:300;margin-bottom:28px;font-family:var(--serif);font-style:italic}
+.tc-meta{display:flex;align-items:center;gap:14px}
+.tc-av{width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:15px;letter-spacing:1px;color:#fff;flex-shrink:0}
+.tc-name{font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--cream)}
+.tc-rank{font-family:var(--mono);font-size:9.5px;color:var(--fire);letter-spacing:.5px;margin-top:2px}
+
+/* ========= COMPARE ========= */
+#compare{padding:120px 0;border-top:1px solid var(--border)}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);margin-top:64px}
+.cs{padding:44px 40px}
+.cs.us{background:var(--paper);border-top:3px solid var(--fire)}
+.cs.th{background:rgba(6,6,10,.8);border-top:3px solid var(--border)}
+.cst{font-family:var(--display);font-size:26px;letter-spacing:2px;margin-bottom:32px}
+.cs.us .cst{color:var(--fire)}
+.cs.th .cst{color:var(--muted)}
+.clist{list-style:none;display:flex;flex-direction:column;gap:12px}
+.clist li{display:flex;align-items:flex-start;gap:12px;font-size:13.5px;line-height:1.6;font-weight:300}
+.cs.us .clist li{color:var(--ink)}
+.cs.th .clist li{color:var(--muted)}
+.ci-y{color:var(--green);font-family:var(--mono);font-weight:500;flex-shrink:0;margin-top:2px}
+.ci-n{color:#ef4444;font-family:var(--mono);font-weight:500;flex-shrink:0;margin-top:2px}
+
+/* ========= PRICING ========= */
+#pricing{padding:120px 0;background:var(--paper);border-top:1px solid var(--border)}
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin-top:64px}
+.pc{background:var(--bg);padding:44px 36px;position:relative;transition:background .3s;cursor:none}
+.pc:hover{background:var(--paper)}
+.pc.feat{background:var(--paper);border-top:2px solid var(--fire)}
+.ptier{font-family:var(--mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:24px}
+.pamt{font-family:var(--display);font-size:clamp(40px,4.5vw,62px);color:var(--cream);letter-spacing:1px;line-height:1;margin-bottom:5px}
+.pamt .cur{font-size:.38em;color:var(--fire);vertical-align:super}
+.pamt .per{font-family:var(--body);font-size:13px;font-weight:300;color:var(--muted)}
+.ptag{font-size:13px;color:var(--muted);margin-bottom:32px;line-height:1.65;font-weight:300}
+.pfeats{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:32px}
+.pfeats li{display:flex;align-items:flex-start;gap:10px;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.3px;line-height:1.5}
+.pfeats li .pck{color:var(--green);flex-shrink:0}
+.pfeats li .pck-n{color:var(--border);flex-shrink:0}
+.pc.feat .pfeats li{color:var(--ink)}
+.pbtn{display:block;text-align:center;padding:12px;font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;transition:all .3s;margin-top:auto}
+.pbtn.free{border:1px solid var(--border);color:var(--muted)}
+.pbtn.free:hover{border-color:var(--muted);color:var(--cream)}
+.pbtn.main{background:var(--fire);color:#fff;position:relative;overflow:hidden}
+.pbtn.main::before{content:'';position:absolute;inset:0;background:var(--fire2);transform:translateX(-100%);transition:transform .3s}
+.pbtn.main span{position:relative;z-index:1}
+.pbtn.main:hover::before{transform:translateX(0)}
+.pbtn.prem{border:1px solid rgba(0,212,255,.3);color:var(--ice)}
+.pbtn.prem:hover{background:rgba(0,212,255,.08)}
+
+/* ========= FAQ ========= */
+#faq{padding:120px 0;border-top:1px solid var(--border)}
+.fql{display:grid;grid-template-columns:1fr 1.5fr;gap:80px;align-items:start}
+.flist{display:flex;flex-direction:column;border:1px solid var(--border)}
+.fi{border-bottom:1px solid var(--border)}
+.fi:last-child{border-bottom:none}
+.fq{display:flex;align-items:center;justify-content:space-between;padding:22px 24px;font-family:var(--mono);font-size:12px;letter-spacing:.5px;color:var(--ink);cursor:none;transition:color .2s;gap:20px;line-height:1.5}
+.fq:hover{color:var(--cream)}
+.fqi{font-size:18px;color:var(--fire);font-weight:300;flex-shrink:0;transition:transform .3s;font-family:var(--body)}
+.fi.op .fqi{transform:rotate(45deg)}
+.fa{max-height:0;overflow:hidden;transition:max-height .4s ease}
+.fai{padding:0 24px 20px;font-size:13px;color:var(--muted);line-height:1.85;font-weight:300}
+
+/* ========= CTA ========= */
+#cta{padding:100px 0;border-top:1px solid var(--border)}
+.ctai{text-align:center;position:relative;max-width:800px;margin:0 auto}
+.ctabg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:var(--display);font-size:clamp(80px,14vw,180px);color:rgba(232,82,10,.04);letter-spacing:4px;white-space:nowrap;pointer-events:none;user-select:none;line-height:1}
+.ctal{font-family:var(--mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:20px}
+.ctat{font-family:var(--display);font-size:clamp(48px,7vw,96px);line-height:.9;color:var(--cream);letter-spacing:2px;margin-bottom:20px}
+.ctat em{font-family:var(--serif);font-style:italic;color:var(--fire);display:block;font-size:.6em;line-height:1.4}
+.ctas{font-size:14px;color:var(--muted);line-height:1.8;max-width:480px;margin:0 auto 40px;font-weight:300}
+.ctact{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;margin-bottom:20px}
+.ctanote{font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+
+/* ========= FOOTER ========= */
+footer{border-top:1px solid var(--border);padding:64px 0 40px;background:var(--paper)}
+.ft{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:48px;margin-bottom:48px}
+.fbn{font-family:var(--display);font-size:22px;letter-spacing:2.5px;color:var(--cream);display:block;margin-bottom:14px}
+.fbn span{color:var(--fire)}
+.ftag2{font-size:13px;color:var(--muted);line-height:1.8;font-weight:300;margin-bottom:20px}
+.soc{display:flex;gap:10px}
+.soci{width:32px;height:32px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;color:var(--muted);transition:all .3s;cursor:none}
+.soci:hover{border-color:var(--fire);color:var(--fire)}
+.fch h5{font-family:var(--mono);font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--cream);margin-bottom:18px}
+.fch ul{list-style:none;display:flex;flex-direction:column;gap:10px}
+.fch ul li a{font-size:13px;color:var(--muted);transition:color .2s;font-weight:300}
+.fch ul li a:hover{color:var(--cream)}
+.fb{display:flex;align-items:center;justify-content:space-between;padding-top:24px;border-top:1px solid var(--border);flex-wrap:wrap;gap:12px}
+.fbc,.fbe,.fbbd{font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.fbe a{color:var(--muted);transition:color .2s}
+.fbe a:hover{color:var(--cream)}
+
+/* REVEAL */
+.rv,.rvl,.rvr{opacity:0;transition:opacity .7s ease,transform .7s ease}
+.rv{transform:translateY(24px)}
+.rvl{transform:translateX(-28px)}
+.rvr{transform:translateX(28px)}
+.rv.in,.rvl.in,.rvr.in{opacity:1;transform:none}
+
+/* ====== RESPONSIVE ====== */
+@media(max-width:900px){
+  .nv{display:none}.ham{display:flex}
+  .feat-row.cols2,.feat-row.cols3{grid-template-columns:1fr}
+  .loop-wrap,.dash-wrap,.chat-layout,.pyq-layout,.fql,.cmp,.ft{grid-template-columns:1fr}
+  .prob-grid,.tgrid,.pgrid{grid-template-columns:1fr}
+  .sr{grid-template-columns:1fr 1fr}
+  .pyq-layout{display:block}
+  .dash-body{grid-template-columns:1fr}
+  .dash-focus,.dash-plan-col{grid-column:span 1}
+  .ft{grid-template-columns:1fr 1fr}
+}
+@media(max-width:480px){
+  .hero-stats{flex-direction:column}
+  .hstat{border-right:none;border-bottom:1px solid var(--border)}
+  .hstat:last-child{border-bottom:none}
+  .sr,.ft{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-ring"></div>
+
+<div id="mnav">
+  <a href="#features" onclick="closeMNav()">Features</a>
+  <a href="#pyq" onclick="closeMNav()">PYQ Bank</a>
+  <a href="#dashboard" onclick="closeMNav()">Dashboard</a>
+  <a href="#pricing" onclick="closeMNav()">Pricing</a>
+  <a href="#faq" onclick="closeMNav()">FAQ</a>
+  <a href="/signup" target="_top" class="mnav-cta">Start Free</a>
+</div>
+
+<nav id="nav">
+  <div class="w ni">
+    <a href="#hero" class="nl">
+      <div class="nm"><div class="nm-sq"></div></div>
+      SMART<span style="color:var(--fire)">EXAM</span>PREP
+    </a>
+    <div class="nv" id="nv">
+      <a href="#features">Features</a>
+      <a href="#pyq">PYQ Bank</a>
+      <a href="#dashboard">Dashboard</a>
+      <a href="#chat">AI Chat</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <div class="na">
+      <a href="/login" target="_top" class="nb">Login</a>
+      <a href="/signup" target="_top" class="nc"><span>Start Free</span></a>
+      <button class="ham" id="ham" onclick="tNav()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-grain"></div>
+  <div class="hero-lines">
+    <svg viewBox="0 0 1400 800" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <line x1="0" y1="200" x2="1400" y2="200" stroke="#e8520a" stroke-width="1"/>
+      <line x1="0" y1="600" x2="1400" y2="600" stroke="#00d4ff" stroke-width="1"/>
+      <line x1="200" y1="0" x2="200" y2="800" stroke="#e8520a" stroke-width="1"/>
+      <line x1="700" y1="0" x2="700" y2="800" stroke="#e8520a" stroke-width="1"/>
+      <line x1="1200" y1="0" x2="1200" y2="800" stroke="#00d4ff" stroke-width="1"/>
+      <circle cx="200" cy="200" r="3" fill="#e8520a"/>
+      <circle cx="700" cy="200" r="3" fill="#e8520a"/>
+      <circle cx="1200" cy="200" r="3" fill="#00d4ff"/>
+      <circle cx="200" cy="600" r="3" fill="#e8520a"/>
+      <circle cx="700" cy="600" r="3" fill="#e8520a"/>
+      <circle cx="1200" cy="600" r="3" fill="#00d4ff"/>
+    </svg>
+  </div>
+  <div class="hero-orb"></div>
+
+  <div class="hero-inner">
+    <div class="hero-badge">
+      <div class="hero-badge-dot"></div>
+      <span class="hero-badge-txt">GATE CSE · Adaptive Intelligence · Closed Learning Loop</span>
+    </div>
+
+    <h1 class="hero-h1">
+      <span class="line1">STUDY WITH</span>
+      <span class="line2">A <span class="fire-word">PLAN.</span></span>
+    </h1>
+
+    <p class="hero-sub">Most students prepare more. Fewer prepare smarter.<br>SmartExamPrep turns your weak areas into a roadmap.</p>
+
+    <div class="hero-ctas">
+      <a href="/signup" target="_top" class="bth">Start Preparing Free <span style="font-size:15px;margin-left:4px">&#8594;</span></a>
+      <a href="#dashboard" class="bgh">See the Dashboard</a>
+    </div>
+
+    <div class="hero-trust">
+      <span class="hero-trust-item">
+        <span class="hero-trust-mark"><svg viewBox="0 0 10 8"><polyline points="1,4 3.5,6.5 9,1"/></svg></span>
+        No credit card
+      </span>
+      <span class="hero-trust-dot"></span>
+      <span class="hero-trust-item">
+        <span class="hero-trust-mark"><svg viewBox="0 0 10 8"><polyline points="1,4 3.5,6.5 9,1"/></svg></span>
+        7-day Pro trial
+      </span>
+      <span class="hero-trust-dot"></span>
+      <span class="hero-trust-item">
+        <span class="hero-trust-mark"><svg viewBox="0 0 10 8"><polyline points="1,4 3.5,6.5 9,1"/></svg></span>
+        10yr PYQ database
+      </span>
+      <span class="hero-trust-dot"></span>
+      <span class="hero-trust-item">
+        <span class="hero-trust-mark"><svg viewBox="0 0 10 8"><polyline points="1,4 3.5,6.5 9,1"/></svg></span>
+        Cancel anytime
+      </span>
+    </div>
+
+    <div class="hero-stats" id="hero-stats">
+      <div class="hstat">
+        <div class="hstat-n"><span class="counter" data-t="10">0</span>yr</div>
+        <div class="hstat-l">PYQ Data</div>
+      </div>
+      <div class="hstat">
+        <div class="hstat-n"><span class="counter" data-t="94">0</span>%</div>
+        <div class="hstat-l">Prediction Accuracy</div>
+      </div>
+      <div class="hstat">
+        <div class="hstat-n"><span class="counter" data-t="12">0</span>+</div>
+        <div class="hstat-l">GATE Subjects</div>
+      </div>
+      <div class="hstat">
+        <div class="hstat-n"><span class="counter" data-t="100">0</span>K+</div>
+        <div class="hstat-l">Aspirants Active</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="htick">
+    <div class="ttr">
+      <span class="ti"><span class="td"></span>GATE CSE 2026</span>
+      <span class="ti"><span class="td"></span>DIAGNOSTIC QUIZ</span>
+      <span class="ti"><span class="td"></span>ADAPTIVE ROADMAP</span>
+      <span class="ti"><span class="td"></span>PYQ ANALYSIS</span>
+      <span class="ti"><span class="td"></span>SPACED REPETITION</span>
+      <span class="ti"><span class="td"></span>READINESS SCORE</span>
+      <span class="ti"><span class="td"></span>DAILY PLANNER</span>
+      <span class="ti"><span class="td"></span>STUDY CHAT</span>
+      <span class="ti"><span class="td"></span>WEAKNESS DETECTION</span>
+      <span class="ti"><span class="td"></span>GATE CSE 2026</span>
+      <span class="ti"><span class="td"></span>DIAGNOSTIC QUIZ</span>
+      <span class="ti"><span class="td"></span>ADAPTIVE ROADMAP</span>
+      <span class="ti"><span class="td"></span>PYQ ANALYSIS</span>
+      <span class="ti"><span class="td"></span>SPACED REPETITION</span>
+      <span class="ti"><span class="td"></span>READINESS SCORE</span>
+      <span class="ti"><span class="td"></span>DAILY PLANNER</span>
+      <span class="ti"><span class="td"></span>STUDY CHAT</span>
+      <span class="ti"><span class="td"></span>WEAKNESS DETECTION</span>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section id="problem">
+  <div class="w">
+    <div class="rv">
+      <div class="slb">The Gap</div>
+      <div class="stx">MOST STUDENTS<br>STUDY <em>blind.</em></div>
+      <p class="ssb">Random chapters, no feedback, no plan. The platform closes that loop.</p>
+    </div>
+    <div class="prob-grid rv">
+      <div class="prob-card bad">
+        <div class="prob-card-label"><div class="prob-dot-bad"></div>Without SmartExamPrep</div>
+        <div class="prob-item"><span class="prob-x">&#x2715;</span><div><strong>No baseline.</strong> You don't know which topics are weak until the actual exam.</div></div>
+        <div class="prob-item"><span class="prob-x">&#x2715;</span><div><strong>Random practice.</strong> Equal time on easy topics and neglected hard ones.</div></div>
+        <div class="prob-item"><span class="prob-x">&#x2715;</span><div><strong>No revision system.</strong> Studied something two months ago. Gone from memory by now.</div></div>
+        <div class="prob-item"><span class="prob-x">&#x2715;</span><div><strong>No signal.</strong> Are you ready? You genuinely don't know.</div></div>
+        <div class="prob-item"><span class="prob-x">&#x2715;</span><div><strong>Static PYQs.</strong> A list of questions — zero insight on what's likely to repeat.</div></div>
+      </div>
+      <div class="prob-card good">
+        <div class="prob-card-label"><div class="prob-dot-good"></div>With SmartExamPrep</div>
+        <div class="prob-item"><span class="prob-chk">&#x2713;</span><div><strong>Diagnostic baseline</strong> on day one. Weak areas surface immediately.</div></div>
+        <div class="prob-item"><span class="prob-chk">&#x2713;</span><div><strong>Adaptive roadmap</strong> that prioritises what your exam actually tests, by week.</div></div>
+        <div class="prob-item"><span class="prob-chk">&#x2713;</span><div><strong>Spaced revision queue</strong> — the right topic, exactly when forgetting would happen.</div></div>
+        <div class="prob-item"><span class="prob-chk">&#x2713;</span><div><strong>Readiness score</strong> tracked daily so you walk in knowing where you stand.</div></div>
+        <div class="prob-item"><span class="prob-chk">&#x2713;</span><div><strong>10-year PYQ pattern</strong> with probability weights per topic, per exam.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LEARNING LOOP -->
+<section id="loop">
+  <div class="w">
+    <div class="loop-wrap">
+      <div class="rvl">
+        <div class="slb">Architecture</div>
+        <div class="stx">THE CLOSED<br>LEARNING<br><em>Loop</em></div>
+        <p class="ssb">Five interconnected systems that feed each other. Every session makes the next one more targeted. This is what separates preparation from practice.</p>
+        <div style="margin-top:40px;padding:20px 24px;background:var(--paper);border:1px solid var(--border);border-left:3px solid var(--fire)">
+          <div style="font-family:var(--mono);font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--fire);margin-bottom:6px">How it compounds</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.8;font-weight:300">Each quiz updates your weakness model. The roadmap recalculates. The revision queue reorders. The chat answers using your actual gaps. Every day is smarter than yesterday.</div>
+        </div>
+      </div>
+      <div class="loop-visual rvr">
+        <!-- SVG Loop Diagram -->
+        <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" width="100%" style="max-width:420px;display:block;margin:0 auto">
+          <!-- Outer ring -->
+          <circle cx="200" cy="200" r="155" fill="none" stroke="#1e1c18" stroke-width="1" stroke-dasharray="4 4"/>
+          <!-- Animated rotating ring -->
+          <circle cx="200" cy="200" r="155" fill="none" stroke="url(#ring-grad)" stroke-width="2" stroke-dasharray="200 780" stroke-linecap="round">
+            <animateTransform attributeName="transform" type="rotate" from="0 200 200" to="360 200 200" dur="12s" repeatCount="indefinite"/>
+          </circle>
+          <defs>
+            <radialGradient id="center-glow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#e8520a" stop-opacity="0.18"/>
+              <stop offset="100%" stop-color="#e8520a" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="ring-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#e8520a"/>
+              <stop offset="100%" stop-color="#00d4ff"/>
+            </linearGradient>
+          </defs>
+          <!-- Center glow -->
+          <circle cx="200" cy="200" r="80" fill="url(#center-glow)"/>
+          <!-- Center -->
+          <rect x="163" y="185" width="74" height="32" fill="#0d0d12" stroke="#1e1c18" stroke-width="1"/>
+          <text x="200" y="198" font-family="'Bebas Neue',sans-serif" font-size="13" fill="#f0e8da" text-anchor="middle" letter-spacing="2">SMART</text>
+          <text x="200" y="211" font-family="'Bebas Neue',sans-serif" font-size="13" fill="#e8520a" text-anchor="middle" letter-spacing="2">EXAM</text>
+
+          <!-- Node 1 — top: Diagnostic -->
+          <rect x="160" y="18" width="80" height="44" fill="#0d0d12" stroke="#1e1c18" stroke-width="1"/>
+          <rect x="160" y="18" width="80" height="2" fill="#e8520a"/>
+          <text x="200" y="36" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#e8520a" text-anchor="middle" letter-spacing="1">DIAGNOSTIC</text>
+          <text x="200" y="50" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#5a5550" text-anchor="middle" letter-spacing="1">QUIZ</text>
+          <!-- Arrow top -->
+          <line x1="200" y1="62" x2="200" y2="80" stroke="#e8520a" stroke-width="1.5" marker-end="url(#arr-fire)"/>
+
+          <!-- Node 2 — right: Roadmap -->
+          <rect x="312" y="160" width="80" height="44" fill="#0d0d12" stroke="#1e1c18" stroke-width="1"/>
+          <rect x="312" y="160" width="80" height="2" fill="#00d4ff"/>
+          <text x="352" y="178" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#00d4ff" text-anchor="middle" letter-spacing="1">ADAPTIVE</text>
+          <text x="352" y="192" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#5a5550" text-anchor="middle" letter-spacing="1">ROADMAP</text>
+          <line x1="312" y1="183" x2="298" y2="200" stroke="#00d4ff" stroke-width="1.5" marker-end="url(#arr-ice)"/>
+
+          <!-- Node 3 — bottom-right: Practice -->
+          <rect x="272" y="306" width="80" height="44" fill="#0d0d12" stroke="#1e1c18" stroke-width="1"/>
+          <rect x="272" y="306" width="80" height="2" fill="#e8520a"/>
+          <text x="312" y="324" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#e8520a" text-anchor="middle" letter-spacing="1">ADAPTIVE</text>
+          <text x="312" y="338" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#5a5550" text-anchor="middle" letter-spacing="1">PRACTICE</text>
+          <line x1="290" y1="306" x2="240" y2="275" stroke="#e8520a" stroke-width="1.5" marker-end="url(#arr-fire)"/>
+
+          <!-- Node 4 — bottom-left: Revision -->
+          <rect x="48" y="306" width="80" height="44" fill="#0d0d12" stroke="#1e1c18" stroke-width="1"/>
+          <rect x="48" y="306" width="80" height="2" fill="#00d4ff"/>
+          <text x="88" y="324" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#00d4ff" text-anchor="middle" letter-spacing="1">REVISION</text>
+          <text x="88" y="338" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#5a5550" text-anchor="middle" letter-spacing="1">QUEUE</text>
+          <line x1="128" y1="320" x2="163" y2="240" stroke="#00d4ff" stroke-width="1.5" marker-end="url(#arr-ice)"/>
+
+          <!-- Node 5 — left: Analytics -->
+          <rect x="8" y="160" width="80" height="44" fill="#0d0d12" stroke="#1e1c18" stroke-width="1"/>
+          <rect x="8" y="160" width="80" height="2" fill="#e8520a"/>
+          <text x="48" y="178" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#e8520a" text-anchor="middle" letter-spacing="1">ANALYTICS</text>
+          <text x="48" y="192" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#5a5550" text-anchor="middle" letter-spacing="1">+ SCORE</text>
+          <line x1="88" y1="183" x2="107" y2="197" stroke="#e8520a" stroke-width="1.5" marker-end="url(#arr-fire)"/>
+
+          <!-- Arrows between nodes (flow) -->
+          <!-- 1 to 2: top to right -->
+          <path d="M 240 40 Q 352 40 352 160" fill="none" stroke="#1e1c18" stroke-width="1" stroke-dasharray="3 3"/>
+          <!-- 2 to 3 -->
+          <path d="M 392 204 Q 392 312 312 312" fill="none" stroke="#1e1c18" stroke-width="1" stroke-dasharray="3 3"/>
+          <!-- 3 to 4 -->
+          <path d="M 272 328 H 128" fill="none" stroke="#1e1c18" stroke-width="1" stroke-dasharray="3 3"/>
+          <!-- 4 to 5 -->
+          <path d="M 48 306 Q 8 280 8 204" fill="none" stroke="#1e1c18" stroke-width="1" stroke-dasharray="3 3"/>
+          <!-- 5 to 1 -->
+          <path d="M 48 160 Q 48 40 160 40" fill="none" stroke="#1e1c18" stroke-width="1" stroke-dasharray="3 3"/>
+
+          <defs>
+            <marker id="arr-fire" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+              <polygon points="0,0 6,3 0,6" fill="#e8520a"/>
+            </marker>
+            <marker id="arr-ice" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+              <polygon points="0,0 6,3 0,6" fill="#00d4ff"/>
+            </marker>
+          </defs>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="w">
+    <div class="fhd rv">
+      <div class="slb">Core Features</div>
+      <div class="stx">BUILT FOR<br><em>GATE CSE</em><br>SPECIFICALLY</div>
+      <p class="ssb">Not a generic question bank. Every feature is wired into the learning loop — measure, adapt, track, repeat.</p>
+    </div>
+  </div>
+  <div class="w">
+    <div class="feat-layout rv">
+
+      <!-- Row 1: Diagnostic + Roadmap -->
+      <div class="feat-row cols2">
+        <div class="fc">
+          <div class="fn">01</div>
+          <div class="fic">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          </div>
+          <div class="ftt">DIAGNOSTIC QUIZ</div>
+          <div class="fdsc">First session maps your baseline across all GATE subjects. Adaptive difficulty calibrates to your real level in under 30 minutes — not a self-reported score.</div>
+          <div style="margin-top:24px">
+            <div class="diag-visual">
+              <div class="diag-title">OS — Virtual Memory — Q3 of 12</div>
+              <div class="diag-q">In a demand-paged system, effective access time is 200ns normally and 8ms on a page fault. With fault rate p, express effective access time.</div>
+              <div class="diag-opt neutral"><div class="diag-radio"></div>200 + 8,000,000p</div>
+              <div class="diag-opt correct"><div class="diag-radio"><div class="diag-radio-fill"></div></div>200(1-p) + 8,000,000p</div>
+              <div class="diag-opt wrong"><div class="diag-radio"></div>200p + 8,000,000(1-p)</div>
+              <div class="diag-result-bar">
+                <div class="diag-bar-label">Diagnostic progress — OS</div>
+                <div class="diag-bar-wrap"><div class="diag-bar-fill mid" style="--w:61%;width:0"></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="ftag">Baseline Detection</div>
+        </div>
+        <div class="fc">
+          <div class="fn">02</div>
+          <div class="fic">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
+          </div>
+          <div class="ftt">ADAPTIVE ROADMAP</div>
+          <div class="fdsc">Week-by-week plan generated from your diagnostic results, exam date, daily study hours, and PYQ topic weights. Regenerates when your performance shifts.</div>
+          <div style="margin-top:24px">
+            <div class="road-visual" style="background:var(--paper);border:1px solid var(--border)">
+              <div style="padding:12px 20px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">Your 8-Week GATE Roadmap</div>
+              <div class="road-week">
+                <div class="road-week-num" style="color:var(--green)">W1</div>
+                <div class="road-week-bar-wrap"><div class="road-week-bar done" style="width:100%"></div></div>
+                <div class="road-week-label done">DS + Algorithms</div>
+                <div class="road-week-pct" style="color:var(--green)">100%</div>
+              </div>
+              <div class="road-week">
+                <div class="road-week-num" style="color:var(--green)">W2</div>
+                <div class="road-week-bar-wrap"><div class="road-week-bar done" style="width:100%"></div></div>
+                <div class="road-week-label done">OS Fundamentals</div>
+                <div class="road-week-pct" style="color:var(--green)">100%</div>
+              </div>
+              <div class="road-week">
+                <div class="road-week-num" style="color:var(--fire)">W3</div>
+                <div class="road-week-bar-wrap"><div class="road-week-bar act" style="width:58%"></div></div>
+                <div class="road-week-label act">Networks + DBMS</div>
+                <div class="road-week-pct" style="color:var(--fire)">58%</div>
+              </div>
+              <div class="road-week">
+                <div class="road-week-num">W4</div>
+                <div class="road-week-bar-wrap"><div class="road-week-bar future" style="width:12%"></div></div>
+                <div class="road-week-label future">TOC + Compilers</div>
+                <div class="road-week-pct">—</div>
+              </div>
+              <div class="road-week">
+                <div class="road-week-num">W5-8</div>
+                <div class="road-week-bar-wrap"><div class="road-week-bar future" style="width:0%"></div></div>
+                <div class="road-week-label future">Mock + Revision</div>
+                <div class="road-week-pct">—</div>
+              </div>
+            </div>
+          </div>
+          <div class="ftag">Week-wise Plan</div>
+        </div>
+      </div>
+
+      <!-- Row 2: Daily Planner + Revision Queue -->
+      <div class="feat-row cols2">
+        <div class="fc">
+          <div class="fn">03</div>
+          <div class="fic">
+            <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+          </div>
+          <div class="ftt">DAILY PLANNER</div>
+          <div class="fdsc">Each morning your day is planned — sessions, topics, PYQ practice, revision blocks. Unfinished tasks carry forward automatically. Activity logged for streak tracking.</div>
+          <div style="margin-top:24px;background:var(--paper);border:1px solid var(--border);padding:16px">
+            <div style="font-family:var(--mono);font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)">Today — Day 21 of 90</div>
+            <div class="dash-plan-row">
+              <div class="dash-plan-check done"></div>
+              <div class="dash-plan-text done">OS: Scheduling Algorithms</div>
+              <div class="dash-plan-time" style="color:var(--green)">Done</div>
+            </div>
+            <div class="dash-plan-row">
+              <div class="dash-plan-check done"></div>
+              <div class="dash-plan-text done">PYQ Session — Networks (2022-23)</div>
+              <div class="dash-plan-time" style="color:var(--green)">Done</div>
+            </div>
+            <div class="dash-plan-row">
+              <div class="dash-plan-check pending"></div>
+              <div class="dash-plan-text pending">Revision: Virtual Memory</div>
+              <div class="dash-plan-time">Due now</div>
+            </div>
+            <div class="dash-plan-row" style="border-bottom:none">
+              <div class="dash-plan-check pending" style="border-color:var(--border)"></div>
+              <div class="dash-plan-text" style="color:var(--muted)">Adaptive Mock — OS + Networks</div>
+              <div class="dash-plan-time">30m left</div>
+            </div>
+          </div>
+          <div class="ftag">Carry-Forward Tasks</div>
+        </div>
+        <div class="fc">
+          <div class="fn">04</div>
+          <div class="fic">
+            <svg viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg>
+          </div>
+          <div class="ftt">REVISION QUEUE</div>
+          <div class="fdsc">Spaced repetition engine schedules topics exactly when memory decay is about to hit. Intervals adjust based on your quiz performance on that topic.</div>
+          <div style="margin-top:24px">
+            <div class="srs-cards">
+              <div class="srs-title">Revision Due Today — 4 Topics</div>
+              <div class="srs-card">
+                <div><div class="srs-topic">Virtual Memory — Paging</div><div class="srs-interval" style="font-size:9px;color:var(--muted);margin-top:3px;font-family:var(--mono)">Studied 3 days ago &bull; Accuracy 42%</div></div>
+                <div class="srs-due now">Due Now</div>
+              </div>
+              <div class="srs-card">
+                <div><div class="srs-topic">Process Synchronization</div><div class="srs-interval" style="font-size:9px;color:var(--muted);margin-top:3px;font-family:var(--mono)">Studied 7 days ago &bull; Accuracy 68%</div></div>
+                <div class="srs-due now">Due Now</div>
+              </div>
+              <div class="srs-card">
+                <div><div class="srs-topic">TCP Congestion Control</div><div class="srs-interval" style="font-size:9px;color:var(--muted);margin-top:3px;font-family:var(--mono)">Studied 2 days ago &bull; Accuracy 71%</div></div>
+                <div class="srs-due soon">Tomorrow</div>
+              </div>
+              <div class="srs-card">
+                <div><div class="srs-topic">B+ Tree Indexing</div><div class="srs-interval" style="font-size:9px;color:var(--muted);margin-top:3px;font-family:var(--mono)">Studied 1 day ago &bull; Accuracy 89%</div></div>
+                <div class="srs-due later">In 4 days</div>
+              </div>
+            </div>
+          </div>
+          <div class="ftag">Performance-Aware Intervals</div>
+        </div>
+      </div>
+
+      <!-- Row 3: Weakness Detection full width -->
+      <div class="feat-row single">
+        <div class="fc">
+          <div class="fn">05 — Intelligence Layer</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start">
+            <div>
+              <div class="fic">
+                <svg viewBox="0 0 24 24"><path d="M2 20h.01M7 20v-4"/><path d="M12 20V10M17 20V4M22 20h.01"/></svg>
+              </div>
+              <div class="ftt">WEAKNESS DETECTION ENGINE</div>
+              <div class="fdsc">Every quiz response feeds five signals: accuracy, repeated mistakes, response time, difficulty sensitivity, and topic trend. The AI builds a live weakness model — not a static score. The roadmap and revision queue both read from this model.</div>
+              <div class="ftag">5-Signal Analysis</div>
+            </div>
+            <div style="background:var(--paper);border:1px solid var(--border);padding:24px;font-family:var(--mono);font-size:11.5px">
+              <div style="font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)">Weakness Profile — Detected Today</div>
+              <div style="display:flex;flex-direction:column;gap:12px">
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="color:var(--cream)">OS — Virtual Memory</span><span style="color:#ef4444">Weak &darr;</span></div>
+                  <div style="height:3px;background:var(--border);position:relative"><div style="position:absolute;top:0;left:0;height:100%;width:28%;background:#ef4444"></div></div>
+                  <div style="font-size:9px;color:var(--muted);margin-top:4px">Accuracy: 28% &bull; Avg time: 4.2min &bull; Repeated errors: 3</div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="color:var(--cream)">Networks — IP Routing</span><span style="color:var(--amber)">Avg &#x2192;</span></div>
+                  <div style="height:3px;background:var(--border);position:relative"><div style="position:absolute;top:0;left:0;height:100%;width:55%;background:var(--amber)"></div></div>
+                  <div style="font-size:9px;color:var(--muted);margin-top:4px">Accuracy: 55% &bull; Avg time: 2.1min &bull; Improving</div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="color:var(--cream)">Algorithms — Sorting</span><span style="color:var(--green)">Strong &uarr;</span></div>
+                  <div style="height:3px;background:var(--border);position:relative"><div style="position:absolute;top:0;left:0;height:100%;width:88%;background:var(--green)"></div></div>
+                  <div style="font-size:9px;color:var(--muted);margin-top:4px">Accuracy: 88% &bull; Fast responses &bull; Consistent</div>
+                </div>
+              </div>
+              <div style="margin-top:18px;padding-top:12px;border-top:1px solid var(--border);font-size:9.5px;color:var(--fire)">AI: Prioritising Virtual Memory in next 3 sessions &rarr;</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- DASHBOARD PREVIEW -->
+<section id="dashboard">
+  <div class="w">
+    <div class="dash-wrap">
+      <div class="dash-mockup rvl">
+        <div class="dash-header">
+          <div class="dash-header-logo">SMARTEXAMPREP</div>
+          <div class="dash-header-meta">Day 21 of 90 &bull; GATE CSE 2026</div>
+        </div>
+        <div class="dash-body">
+          <!-- Readiness Score -->
+          <div class="dash-card">
+            <div class="dash-card-label">Readiness Score</div>
+            <div class="readiness-ring">
+              <svg viewBox="0 0 80 80">
+                <circle class="readiness-circle-bg" cx="40" cy="40" r="35"/>
+                <circle class="readiness-circle-fill" cx="40" cy="40" r="35"/>
+              </svg>
+              <div class="readiness-text">75</div>
+            </div>
+            <div class="dash-card-sub" style="text-align:center;font-size:9.5px">Up 4 pts this week</div>
+          </div>
+          <!-- Streak -->
+          <div class="dash-card">
+            <div class="dash-card-label">Study Streak</div>
+            <div class="dash-card-value" style="color:var(--amber);font-size:26px">21 days</div>
+            <div class="dash-streak">
+              <div class="dash-streak-day done"></div>
+              <div class="dash-streak-day done"></div>
+              <div class="dash-streak-day done"></div>
+              <div class="dash-streak-day done"></div>
+              <div class="dash-streak-day done"></div>
+              <div class="dash-streak-day done"></div>
+              <div class="dash-streak-day today"></div>
+            </div>
+            <div class="dash-card-sub">Last 7 days</div>
+          </div>
+          <!-- AI Focus Hint -->
+          <div class="dash-focus">
+            <div class="dash-focus-label">AI Focus Hint for Today</div>
+            <div class="dash-focus-text">"Your Virtual Memory accuracy dropped 14 points across last 3 sessions. Front-load it today before Networks practice — recovery window is narrow."</div>
+          </div>
+          <!-- Roadmap progress -->
+          <div class="dash-card">
+            <div class="dash-card-label">Roadmap</div>
+            <div class="dash-card-value" style="color:var(--fire)">38%</div>
+            <div class="dash-card-sub">Week 3 of 8 active</div>
+          </div>
+          <!-- Revision due -->
+          <div class="dash-card">
+            <div class="dash-card-label">Revision Due</div>
+            <div class="dash-card-value" style="color:var(--ice)">4</div>
+            <div class="dash-card-sub">Topics need review</div>
+          </div>
+          <!-- Today's Plan -->
+          <div class="dash-card dash-plan-col">
+            <div class="dash-card-label" style="margin-bottom:12px">Today's Plan</div>
+            <div class="dash-plan-row">
+              <div class="dash-plan-check done"></div>
+              <div class="dash-plan-text done">OS: Scheduling Algorithms</div>
+              <div class="dash-plan-time" style="color:var(--green)">Done</div>
+            </div>
+            <div class="dash-plan-row">
+              <div class="dash-plan-check pending"></div>
+              <div class="dash-plan-text pending">Revision: Virtual Memory</div>
+              <div class="dash-plan-time">Now</div>
+            </div>
+            <div class="dash-plan-row" style="border-bottom:none">
+              <div class="dash-plan-check pending" style="border-color:var(--border)"></div>
+              <div class="dash-plan-text" style="color:var(--muted)">Adaptive Mock — OS</div>
+              <div class="dash-plan-time">Later</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="rvr">
+        <div class="slb">Live Dashboard</div>
+        <div class="stx">YOUR EXAM<br>READINESS<br><em>Visible.</em></div>
+        <p class="ssb">The dashboard is your single source of truth. Readiness score, streak, daily plan, AI focus hint, and roadmap progress — all in one view. No guessing where you stand.</p>
+        <div style="margin-top:36px;display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:var(--paper);border:1px solid var(--border)">
+            <div style="width:2px;height:100%;background:var(--fire);align-self:stretch;min-height:40px;flex-shrink:0"></div>
+            <div>
+              <div style="font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--fire);margin-bottom:4px">Readiness Score</div>
+              <div style="font-size:13px;color:var(--muted);font-weight:300;line-height:1.7">A composite of accuracy trend, topic coverage, revision compliance, and mock performance. Updated after every session.</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:var(--paper);border:1px solid var(--border)">
+            <div style="width:2px;height:100%;background:var(--ice);align-self:stretch;min-height:40px;flex-shrink:0"></div>
+            <div>
+              <div style="font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ice);margin-bottom:4px">AI Focus Hint</div>
+              <div style="font-size:13px;color:var(--muted);font-weight:300;line-height:1.7">Each morning the AI reads your roadmap, planner, and weakness model to surface the single most important thing to work on today.</div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:32px">
+          <a href="/signup" target="_top" class="bth">Start Your Dashboard <span style="font-size:15px;margin-left:4px">&#8594;</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PYQ BANK -->
+<section id="pyq">
+  <div class="w">
+    <div class="rv" style="margin-bottom:64px">
+      <div class="slb">PYQ Bank</div>
+      <div class="stx">TEN YEARS.<br>EVERY QUESTION.<br><em>Weighted.</em></div>
+      <p class="ssb">Browse, filter by subject, topic, year, or difficulty. Every question shows its probability of appearing again — ranked by 10yr pattern analysis.</p>
+    </div>
+  </div>
+  <div class="w">
+    <div class="pyq-layout rv">
+      <div class="pyq-browser">
+        <div class="pyq-bar">
+          <span class="pyq-filter active">All Years</span>
+          <span class="pyq-filter">2024</span>
+          <span class="pyq-filter">2023</span>
+          <span class="pyq-filter">2022</span>
+          <span class="pyq-filter" style="border-color:rgba(232,82,10,.3);color:var(--fire)">OS</span>
+          <span class="pyq-filter">Networks</span>
+          <span class="pyq-filter">Algorithms</span>
+          <span class="pyq-filter">DBMS</span>
+        </div>
+        <div class="pyq-list">
+          <div class="pyq-item">
+            <div class="pyq-year">2024</div>
+            <div class="pyq-content">
+              <div class="pyq-topic">OS — Virtual Memory</div>
+              <div class="pyq-text">Which page replacement algorithm suffers from Belady's anomaly in FIFO but not in optimal?</div>
+              <div class="pyq-tags">
+                <span class="pyq-tag medium">Medium</span>
+                <span class="pyq-tag" style="border-color:rgba(232,82,10,.25);color:var(--fire)">3rd year in a row</span>
+              </div>
+            </div>
+            <div class="pyq-prob">78%</div>
+          </div>
+          <div class="pyq-item">
+            <div class="pyq-year">2023</div>
+            <div class="pyq-content">
+              <div class="pyq-topic">Networks — Transport Layer</div>
+              <div class="pyq-text">In TCP slow start, the congestion window doubles every RTT until it reaches the ssthresh. After a timeout, ssthresh is set to...</div>
+              <div class="pyq-tags">
+                <span class="pyq-tag hard">Hard</span>
+                <span class="pyq-tag">Repeated pattern</span>
+              </div>
+            </div>
+            <div class="pyq-prob" style="color:var(--ice)">65%</div>
+          </div>
+          <div class="pyq-item" style="border-bottom:none">
+            <div class="pyq-year">2022</div>
+            <div class="pyq-content">
+              <div class="pyq-topic">Algorithms — Sorting</div>
+              <div class="pyq-text">What is the minimum number of comparisons required to find the minimum and maximum of n numbers simultaneously?</div>
+              <div class="pyq-tags">
+                <span class="pyq-tag medium">Medium</span>
+                <span class="pyq-tag">Classic</span>
+              </div>
+            </div>
+            <div class="pyq-prob">51%</div>
+          </div>
+        </div>
+      </div>
+      <div class="pyq-info">
+        <div style="font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:28px">Why it matters</div>
+        <div style="display:flex;flex-direction:column;gap:20px">
+          <div style="display:flex;gap:16px;align-items:flex-start">
+            <div style="font-family:var(--display);font-size:36px;color:var(--fire);letter-spacing:1px;line-height:1;flex-shrink:0">78%</div>
+            <div style="font-size:13.5px;color:var(--muted);line-height:1.8;font-weight:300">Of questions in a typical GATE paper come from topics that have appeared at least once in the past 10 years.</div>
+          </div>
+          <div style="display:flex;gap:16px;align-items:flex-start">
+            <div style="font-family:var(--display);font-size:36px;color:var(--ice);letter-spacing:1px;line-height:1;flex-shrink:0">3x</div>
+            <div style="font-size:13.5px;color:var(--muted);line-height:1.8;font-weight:300">Students who practice PYQs with pattern awareness score 3x higher than those who only read theory.</div>
+          </div>
+          <div style="display:flex;gap:16px;align-items:flex-start">
+            <div style="font-family:var(--display);font-size:36px;color:var(--cream);letter-spacing:1px;line-height:1;flex-shrink:0">5400+</div>
+            <div style="font-size:13.5px;color:var(--muted);line-height:1.8;font-weight:300">Verified PYQs tagged by topic, subtopic, difficulty, and year — all feeding directly into the roadmap weightage model.</div>
+          </div>
+        </div>
+        <div style="margin-top:32px">
+          <a href="#" style="font-family:var(--mono);font-size:10.5px;letter-spacing:2px;text-transform:uppercase;color:var(--fire);display:inline-flex;align-items:center;gap:8px;border-bottom:1px solid rgba(232,82,10,.3);padding-bottom:2px">Browse Full PYQ Bank &#8594;</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STUDY CHAT -->
+<section id="chat">
+  <div class="w">
+    <div class="chat-layout">
+      <div class="rvl">
+        <div class="slb">Study Chat</div>
+        <div class="stx">ASK THE AI<br>THAT KNOWS<br><em>Your gaps.</em></div>
+        <p class="ssb">The study chat is grounded in your actual roadmap, planner state, and weakness model. It doesn't give generic answers — it answers for your specific situation.</p>
+        <div style="margin-top:36px;display:flex;flex-direction:column;gap:12px">
+          <div style="font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Grounded on</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <span style="font-family:var(--mono);font-size:9.5px;letter-spacing:1px;text-transform:uppercase;padding:5px 12px;border:1px solid rgba(0,212,255,.2);color:var(--ice)">Your Roadmap</span>
+            <span style="font-family:var(--mono);font-size:9.5px;letter-spacing:1px;text-transform:uppercase;padding:5px 12px;border:1px solid rgba(0,212,255,.2);color:var(--ice)">Today's Plan</span>
+            <span style="font-family:var(--mono);font-size:9.5px;letter-spacing:1px;text-transform:uppercase;padding:5px 12px;border:1px solid rgba(0,212,255,.2);color:var(--ice)">Weakness Model</span>
+            <span style="font-family:var(--mono);font-size:9.5px;letter-spacing:1px;text-transform:uppercase;padding:5px 12px;border:1px solid rgba(0,212,255,.2);color:var(--ice)">PYQ Patterns</span>
+          </div>
+        </div>
+      </div>
+      <div class="chat-window rvr">
+        <div class="chat-top">
+          <div class="chat-dot"></div><div class="chat-dot"></div><div class="chat-dot"></div>
+          <span class="chat-title">Study Chat — GATE CSE Mode</span>
+          <span class="chat-context-pill">Roadmap context active</span>
+        </div>
+        <div class="chat-body">
+          <div class="chat-msg">
+            <div class="chat-avatar ai">AI</div>
+            <div class="chat-bubble ai">Your Virtual Memory score dropped to <strong class="highlight">28%</strong> in today's diagnostic. Your roadmap shows Week 3 covers Networks — but given the drop, I'd recommend a short re-session on paging before you move forward. Want a quick explainer on Belady's anomaly?</div>
+          </div>
+          <div class="chat-msg user">
+            <div class="chat-avatar user">U</div>
+            <div class="chat-bubble user">Yes, explain Belady's anomaly. Also what's the GATE weightage for this topic?</div>
+          </div>
+          <div class="chat-msg">
+            <div class="chat-avatar ai">AI</div>
+            <div class="chat-bubble ai"><strong>Belady's Anomaly:</strong> In FIFO page replacement, adding more frames can sometimes increase page faults. It's counter-intuitive — more memory, worse performance.<br><br><strong>GATE Weightage:</strong> Virtual Memory has appeared in <span class="highlight">8 of last 10 papers</span>, with 1–2 marks per paper. Probability for 2026: <span class="highlight">78%</span>. High priority — your roadmap already flagged it.<br><br>Shall I generate 3 practice questions from this topic?</div>
+          </div>
+        </div>
+        <div class="chat-inp-bar">
+          <input class="chat-inp" placeholder="Ask about any GATE topic..." readonly/>
+          <button class="chat-send">SEND &#8594;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section id="testimonials">
+  <div class="w">
+    <div class="rv" style="margin-bottom:0">
+      <div class="slb">Results</div>
+      <div class="stx">WHAT HAPPENS<br>WHEN YOU <em>Close</em><br>THE LOOP</div>
+    </div>
+    <div class="tgrid rv">
+      <div class="tc">
+        <div class="tc-quote">"The weakness detection actually worked. It flagged my OS gaps in week two. I thought I was fine. By exam day I had 91% accuracy in OS. It knew before I did."</div>
+        <div class="tc-meta">
+          <div class="tc-av" style="background:var(--fire)">AR</div>
+          <div>
+            <div class="tc-name">Arjun Reddy</div>
+            <div class="tc-rank">GATE CSE 2024 — AIR 47</div>
+          </div>
+        </div>
+      </div>
+      <div class="tc">
+        <div class="tc-quote">"I had 3 months. The roadmap gave me exactly what to cover each week. I stopped second-guessing the plan and just executed. Readiness score went from 41 to 88."</div>
+        <div class="tc-meta">
+          <div class="tc-av" style="background:var(--ice2)">SK</div>
+          <div>
+            <div class="tc-name">Swati Kulkarni</div>
+            <div class="tc-rank">GATE CSE 2024 — AIR 112</div>
+          </div>
+        </div>
+      </div>
+      <div class="tc">
+        <div class="tc-quote">"The spaced revision queue is underrated. I stopped forgetting things I studied in month one. By the end my retention was consistent across the entire syllabus."</div>
+        <div class="tc-meta">
+          <div class="tc-av" style="background:var(--ember)">MK</div>
+          <div>
+            <div class="tc-name">Mohammed Khalid</div>
+            <div class="tc-rank">GATE CSE 2024 — AIR 234</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARE -->
+<section id="compare">
+  <div class="w">
+    <div class="rv" style="text-align:center;margin-bottom:0">
+      <div class="slb" style="justify-content:center">Comparison</div>
+      <div class="stx" style="text-align:center">WHY NOT<br>JUST COACHING?</div>
+    </div>
+    <div class="cmp rv">
+      <div class="cs us">
+        <div class="cst">SmartExamPrep</div>
+        <ul class="clist">
+          <li><span class="ci-y">&#x2713;</span>Diagnostic baseline on day one</li>
+          <li><span class="ci-y">&#x2713;</span>Adaptive roadmap — regenerates as you improve</li>
+          <li><span class="ci-y">&#x2713;</span>Spaced revision queue based on your performance</li>
+          <li><span class="ci-y">&#x2713;</span>10-year PYQ analysis with probability weights</li>
+          <li><span class="ci-y">&#x2713;</span>Study chat grounded in your actual weak areas</li>
+          <li><span class="ci-y">&#x2713;</span>Daily planner with carry-forward task tracking</li>
+          <li><span class="ci-y">&#x2713;</span>From 499/mo — transparent, cancel anytime</li>
+        </ul>
+      </div>
+      <div class="cs th">
+        <div class="cst">Traditional Coaching</div>
+        <ul class="clist">
+          <li><span class="ci-n">&#x2715;</span>Batch lectures, no personalisation</li>
+          <li><span class="ci-n">&#x2715;</span>Fixed syllabus schedule for everyone</li>
+          <li><span class="ci-n">&#x2715;</span>No revision scheduling system</li>
+          <li><span class="ci-n">&#x2715;</span>PYQs as PDFs, no pattern analysis</li>
+          <li><span class="ci-n">&#x2715;</span>Generic doubt clearing — not your gaps</li>
+          <li><span class="ci-n">&#x2715;</span>No tracking of daily completion</li>
+          <li><span class="ci-n">&#x2715;</span>10,000 – 50,000/yr with no refunds</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="w">
+    <div class="rv" style="text-align:center">
+      <div class="slb" style="justify-content:center">Pricing</div>
+      <div class="stx" style="text-align:center">FAIR PRICE.<br>FULL <em>Access.</em></div>
+      <p class="ssb" style="margin-left:auto;margin-right:auto;text-align:center">No hidden tiers. Every plan includes the core learning loop. Pro unlocks the full AI stack.</p>
+    </div>
+    <div class="pgrid">
+      <div class="pc">
+        <div class="ptier">Free</div>
+        <div class="pamt">0<span class="per">/mo</span></div>
+        <div class="ptag">Start your diagnostic and explore the platform. No time limit on free features.</div>
+        <ul class="pfeats">
+          <li><span class="pck">&#x2713;</span>Diagnostic quiz (one time)</li>
+          <li><span class="pck">&#x2713;</span>Basic roadmap view</li>
+          <li><span class="pck">&#x2713;</span>50 PYQs per month</li>
+          <li><span class="pck">&#x2713;</span>Daily planner (basic)</li>
+          <li><span class="pck-n">&#x2014;</span>Adaptive quizzes</li>
+          <li><span class="pck-n">&#x2014;</span>Spaced revision queue</li>
+          <li><span class="pck-n">&#x2014;</span>AI Study Chat</li>
+          <li><span class="pck-n">&#x2014;</span>Readiness analytics</li>
+        </ul>
+        <a href="/signup" target="_top" class="pbtn free">Get Started</a>
+      </div>
+      <div class="pc feat">
+        <div class="ptier">Pro — Most Popular</div>
+        <div class="pamt"><span class="cur">&#x20B9;</span>499<span class="per">/month</span></div>
+        <div class="ptag">Everything in the closed loop. Recommended for serious GATE aspirants.</div>
+        <ul class="pfeats">
+          <li><span class="pck">&#x2713;</span>Unlimited diagnostic quizzes</li>
+          <li><span class="pck">&#x2713;</span>Full adaptive roadmap + daily planner</li>
+          <li><span class="pck">&#x2713;</span>Unlimited PYQ access + pattern analysis</li>
+          <li><span class="pck">&#x2713;</span>Spaced revision queue</li>
+          <li><span class="pck">&#x2713;</span>Adaptive mock tests (IRT-based)</li>
+          <li><span class="pck">&#x2713;</span>AI Study Chat (grounded)</li>
+          <li><span class="pck">&#x2713;</span>Readiness score + analytics</li>
+          <li><span class="pck">&#x2713;</span>Weakness detection engine</li>
+        </ul>
+        <a href="/signup" target="_top" class="pbtn main"><span>Start 7-Day Free Trial &#8594;</span></a>
+      </div>
+      <div class="pc">
+        <div class="ptier">Annual Pro</div>
+        <div class="pamt"><span class="cur">&#x20B9;</span>3499<span class="per">/year</span></div>
+        <div class="ptag">Save 42% vs monthly. Full Pro access for your entire GATE prep cycle.</div>
+        <ul class="pfeats">
+          <li><span class="pck">&#x2713;</span>Everything in Pro</li>
+          <li><span class="pck">&#x2713;</span>Priority AI Chat responses</li>
+          <li><span class="pck">&#x2713;</span>Up to 3 exam profiles</li>
+          <li><span class="pck">&#x2713;</span>Early access to new features</li>
+          <li><span class="pck">&#x2713;</span>Export progress reports</li>
+          <li><span class="pck">&#x2713;</span>Research-grade analytics access</li>
+          <li><span class="pck-n">&#x2014;</span>Cohort benchmarking (coming)</li>
+          <li><span class="pck-n">&#x2014;</span>Mentor sessions (coming)</li>
+        </ul>
+        <a href="/signup" target="_top" class="pbtn prem">Get Annual Pro</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="w">
+    <div class="fql">
+      <div class="rvl">
+        <div class="slb">FAQ</div>
+        <div class="stx" style="font-size:clamp(40px,5vw,68px)">QUESTIONS<br>ANSWERED</div>
+        <p class="ssb">If something isn't covered here, reach out directly.</p>
+        <div style="margin-top:36px"><a href="#" style="font-family:var(--mono);font-size:10.5px;letter-spacing:2px;text-transform:uppercase;color:var(--fire);border-bottom:1px solid rgba(232,82,10,.3);padding-bottom:2px">Contact Support &#8594;</a></div>
+      </div>
+      <div class="flist rvr">
+        <div class="fi">
+          <div class="fq" onclick="tFaq(this)">How does the diagnostic quiz work?<span class="fqi">+</span></div>
+          <div class="fa"><div class="fai">On first login, you take a 30-minute adaptive quiz across all GATE CSE subjects. The engine adjusts difficulty in real time based on your responses. The result is a baseline weakness profile that seeds your roadmap. You can retake diagnostics at any point.</div></div>
+        </div>
+        <div class="fi">
+          <div class="fq" onclick="tFaq(this)">How is the roadmap generated?<span class="fqi">+</span></div>
+          <div class="fa"><div class="fai">The roadmap uses your diagnostic results, your exam date, your daily study hours (set during onboarding), and PYQ topic weightage to build a week-wise plan. It recalculates automatically when your quiz performance changes significantly — so it stays accurate throughout your prep.</div></div>
+        </div>
+        <div class="fi">
+          <div class="fq" onclick="tFaq(this)">What is the spaced revision queue?<span class="fqi">+</span></div>
+          <div class="fa"><div class="fai">Every topic you study gets scheduled for review at the optimal interval — before you'd normally forget it. The interval is performance-aware: topics where you scored low get shorter intervals, stronger topics get longer ones. You can mark topics done to let the system recalibrate.</div></div>
+        </div>
+        <div class="fi">
+          <div class="fq" onclick="tFaq(this)">Is the PYQ data verified?<span class="fqi">+</span></div>
+          <div class="fa"><div class="fai">Yes. Every question is sourced from official GATE papers and verified against original answer keys before being added to the database. Questions are tagged by subject, topic, subtopic, year, and difficulty. All metadata feeds into the probability scoring model.</div></div>
+        </div>
+        <div class="fi">
+          <div class="fq" onclick="tFaq(this)">How does the AI Study Chat differ from ChatGPT?<span class="fqi">+</span></div>
+          <div class="fa"><div class="fai">The study chat is grounded in your personal context — your roadmap, today's planner, and your weakness model. When you ask about a topic, it knows whether that topic is a current weak area, what's scheduled today, and what the GATE probability for it is. Generic AI doesn't have any of that signal.</div></div>
+        </div>
+        <div class="fi">
+          <div class="fq" onclick="tFaq(this)">Is there a free trial for Pro?<span class="fqi">+</span></div>
+          <div class="fa"><div class="fai">Yes. New accounts get a 7-day full Pro trial — no credit card required. All AI features, adaptive quizzes, study chat, spaced revision, and analytics are fully available before you decide to subscribe.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta">
+  <div class="w">
+    <div class="ctai rv">
+      <div class="ctabg">PREPARE</div>
+      <div class="ctal">— The loop starts here —</div>
+      <div class="ctat">KNOW WHERE<br>YOU STAND.<br><em>Every single day.</em></div>
+      <p class="ctas">Your diagnostic, roadmap, and first day plan are ready in under 3 minutes. No setup. No credit card.</p>
+      <div class="ctact">
+        <a href="/signup" target="_top" class="bth">Start Free — No Card Needed <span style="font-size:15px;margin-left:4px">&#8594;</span></a>
+        <a href="#dashboard" class="bgh">See the Dashboard</a>
+      </div>
+      <div class="ctanote">7-day Pro trial &bull; Cancel anytime &bull; Built for GATE CSE 2026</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="w">
+    <div class="ft">
+      <div>
+        <span class="fbn">SMART<span>EXAM</span>PREP</span>
+        <p class="ftag2">AI-powered adaptive exam preparation for GATE CSE. Built on a closed learning loop — not a question bank.</p>
+        <div class="soc">
+          <a href="#" class="soci" style="font-size:13px">X</a>
+          <a href="#" class="soci" style="font-size:11px">in</a>
+          <a href="#" class="soci" style="font-size:11px">YT</a>
+        </div>
+      </div>
+      <div class="fch">
+        <h5>Features</h5>
+        <ul>
+          <li><a href="#">Diagnostic Quiz</a></li>
+          <li><a href="#">Adaptive Roadmap</a></li>
+          <li><a href="#">Daily Planner</a></li>
+          <li><a href="#">PYQ Bank</a></li>
+          <li><a href="#">Revision Queue</a></li>
+          <li><a href="#">Study Chat</a></li>
+        </ul>
+      </div>
+      <div class="fch">
+        <h5>Platform</h5>
+        <ul>
+          <li><a href="#">Dashboard</a></li>
+          <li><a href="#">Pricing</a></li>
+          <li><a href="#">Analytics</a></li>
+          <li><a href="#">API Docs</a></li>
+        </ul>
+      </div>
+      <div class="fch">
+        <h5>Company</h5>
+        <ul>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Contact</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="fb">
+      <span class="fbc">© 2025 SmartExamPrep. All rights reserved.</span>
+      <span class="fbe"><a href="mailto:hello@smartexamprep.com">hello@smartexamprep.com</a></span>
+      <span class="fbbd">Built for India's GATE aspirants</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ── CURSOR ── */
+const cur=document.getElementById('cur'),ring=document.getElementById('cur-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px'});
+(function anim(){rx+=(mx-rx)*.13;ry+=(my-ry)*.13;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(anim)})();
+document.querySelectorAll('a,button,.fc,.step,.fi,.tc,.pc,.pyq-item,.prob-card').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{cur.style.cssText+='width:16px;height:16px;background:transparent;border:1.5px solid var(--fire)';ring.style.cssText+='width:50px;height:50px'});
+  el.addEventListener('mouseleave',()=>{cur.style.cssText='position:fixed;width:8px;height:8px;border-radius:50%;background:var(--fire);pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:difference';ring.style.cssText='position:fixed;width:34px;height:34px;border-radius:50%;border:1px solid rgba(232,82,10,.35);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:all .16s ease'});
+});
+
+/* ── NAV ── */
+window.addEventListener('scroll',()=>document.getElementById('nav').classList.toggle('s',scrollY>60));
+let navOpen=false;
+function tNav(){navOpen=!navOpen;document.getElementById('mnav').classList.toggle('open',navOpen);document.getElementById('ham').classList.toggle('open',navOpen);document.body.style.overflow=navOpen?'hidden':'';}
+function closeMNav(){navOpen=false;document.getElementById('mnav').classList.remove('open');document.getElementById('ham').classList.remove('open');document.body.style.overflow='';}
+
+/* ── REVEAL ── */
+const ro=new IntersectionObserver(es=>{es.forEach((e,i)=>{if(e.isIntersecting)setTimeout(()=>e.target.classList.add('in'),i*70)})},{threshold:.1});
+document.querySelectorAll('.rv,.rvl,.rvr').forEach(el=>ro.observe(el));
+
+/* ── STAT UNDERLINES ── */
+const so=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')})},{threshold:.3});
+document.querySelectorAll('.hstat').forEach(s=>so.observe(s));
+
+/* ── COUNTER ── */
+function animCounter(el){
+  const t=+el.dataset.t,dur=1600,start=performance.now();
+  (function step(now){
+    const p=Math.min((now-start)/dur,1);
+    const ease=1-Math.pow(1-p,3);
+    el.textContent=Math.floor(ease*t);
+    if(p<1)requestAnimationFrame(step);else el.textContent=t;
+  })(start);
+}
+const co=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.querySelectorAll('.counter').forEach(animCounter);co.unobserve(e.target)}})},{threshold:.2});
+document.querySelectorAll('#hero').forEach(s=>co.observe(s));
+
+/* ── BAR ANIMATIONS ── */
+const baro=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.querySelectorAll('.diag-bar-fill').forEach(b=>{const w=b.style.getPropertyValue('--w')||b.style.width;b.style.width=w});e.target.querySelectorAll('.road-week-bar').forEach(b=>{const orig=b.style.width;b.style.transition='width 0.8s ease';b.style.width=orig})}})},{threshold:.2});
+document.querySelectorAll('.diag-visual,.road-visual').forEach(s=>baro.observe(s));
+
+/* ── FAQ ── */
+function tFaq(btn){
+  const item=btn.closest('.fi');
+  const ans=item.querySelector('.fa');
+  const isOpen=item.classList.contains('op');
+  document.querySelectorAll('.fi.op').forEach(x=>{x.classList.remove('op');x.querySelector('.fa').style.maxHeight=null});
+  if(!isOpen){item.classList.add('op');ans.style.maxHeight=ans.scrollHeight+'px';}
+}
+
+/* ── PYQ Filter interaction ── */
+document.querySelectorAll('.pyq-filter').forEach(f=>{
+  f.addEventListener('click',()=>{
+    document.querySelectorAll('.pyq-filter').forEach(x=>x.classList.remove('active'));
+    f.classList.add('active');
+  });
+});
+
+/* ── Diag bar animate on load ── */
+setTimeout(()=>{
+  document.querySelectorAll('.diag-bar-fill').forEach(b=>{
+    const cls=b.classList.contains('weak')?28:b.classList.contains('mid')?61:85;
+    b.style.cssText+=`;width:${cls}%`;
+  });
+},1200);
+</script>
+</body>
+</html>

@@ -1,50 +1,85 @@
 {
   "questions": [
     {
-      "subject": "Operating Systems",
-      "topic": "CPU Scheduling",
-      "subtopic": "Round Robin",
-      "question_text": "In Round Robin scheduling with time quantum q=4ms, if 3 processes P1(12ms), P2(6ms), P3(8ms) arrive at t=0, what is the average waiting time?",
+      "subject": "Engineering Mathematics",
+      "topic": "Linear Algebra",
+      "subtopic": "Eigenvalues and eigenvectors",
+      "question_text": "For matrix A = [[2, 1], [1, 2]], what are the eigenvalues of A?",
       "options": [
-        "A. 8.33 ms",
-        "B. 10.67 ms",
-        "C. 6.5 ms",
-        "D. 12 ms"
+        "A. 1 and 3",
+        "B. 2 and 2",
+        "C. 0 and 4",
+        "D. 1 and 2"
       ],
-      "question_image_urls": [
-        "https://example.com/pyq/os-rr-diagram-1.png",
-        "https://example.com/pyq/os-rr-diagram-2.png"
-      ],
+      "question_image_urls": [],
       "correct_answer": "A",
-      "explanation": "Using Gantt Chart: P1(0-4), P2(4-8), P3(8-12), P1(12-16), P2(16-18), P3(18-22), P1(22-26). Waiting times: P1=14ms, P2=10ms, P3=10ms. Average = (14+10+10)/3 = 11.33... Recompute: P1 finishes at t=26, WT=26-12=14. P2 finishes at t=18, WT=18-6=12. P3 finishes at t=22, WT=22-8=14. Average = (14+12+14)/3 ≈ 8.33ms. Answer: 8.33ms.",
+      "explanation": "The characteristic polynomial is |A - lambda*I| = (2-lambda)^2 - 1 = lambda^2 - 4lambda + 3. Its roots are lambda = 1 and lambda = 3.",
       "difficulty": "medium",
       "source_type": "PYQ",
-      "year": 2022,
-      "nlp_tags": ["round robin", "scheduling", "time quantum", "waiting time", "Gantt chart"]
+      "year": 2023,
+      "nlp_tags": ["linear algebra", "eigenvalue", "eigenvector", "matrix", "determinant"]
     },
     {
-      "subject": "DBMS",
-      "topic": "Normalization",
-      "subtopic": "BCNF",
-      "question_text": "A relation R(A, B, C, D) has functional dependencies A\u2192B, BC\u2192D. Which normal form does R satisfy?",
+      "subject": "Digital Logic",
+      "topic": "Logic Minimization",
+      "subtopic": "Karnaugh map",
+      "question_text": "For F(A, B, C) = Sigma m(1, 3, 5, 7), the minimized expression is:",
       "options": [
-        "A. 1NF only",
-        "B. 2NF but not 3NF",
-        "C. 3NF but not BCNF",
-        "D. BCNF"
+        "A. A + B",
+        "B. A' + C",
+        "C. C",
+        "D. AB + AC"
       ],
       "question_image_urls": [],
       "correct_answer": "C",
-      "explanation": "A\u2192B means B is dependent on part of the key (if BC is the candidate key), violating 3NF. However, BC\u2192D is fine. R is in 3NF but not BCNF since A is not a superkey.",
-      "difficulty": "hard",
+      "explanation": "All minterms where C=1 are present, independent of A and B. Therefore, F simplifies directly to C.",
+      "difficulty": "easy",
+      "source_type": "PYQ",
+      "year": 2022,
+      "nlp_tags": ["karnaugh map", "logic minimization", "boolean algebra", "sum of minterms"]
+    },
+    {
+      "subject": "Computer Organization and Architecture",
+      "topic": "Instruction Pipelining",
+      "subtopic": "Pipeline speedup",
+      "question_text": "A 5-stage pipeline executes 20 instructions with no stalls. If each stage takes 1 cycle, what is the speedup over a non-pipelined processor?",
+      "options": [
+        "A. 2.50",
+        "B. 3.33",
+        "C. 4.17",
+        "D. 5.00"
+      ],
+      "question_image_urls": [],
+      "correct_answer": "C",
+      "explanation": "Non-pipelined cycles = 20 * 5 = 100. Pipelined cycles = k + n - 1 = 5 + 20 - 1 = 24. Speedup = 100 / 24 = 4.17.",
+      "difficulty": "medium",
       "source_type": "PYQ",
       "year": 2021,
-      "nlp_tags": ["BCNF", "3NF", "functional dependency", "normalization", "candidate key"]
+      "nlp_tags": ["pipelining", "speedup", "latency", "throughput", "coa"]
+    },
+    {
+      "subject": "Programming and Data Structures",
+      "topic": "Stacks Queues and Linked Lists",
+      "subtopic": "Stack applications",
+      "question_text": "Evaluate the postfix expression: 5 1 2 + 4 * + 3 -",
+      "options": [
+        "A. 10",
+        "B. 12",
+        "C. 14",
+        "D. 16"
+      ],
+      "question_image_urls": [],
+      "correct_answer": "C",
+      "explanation": "1+2=3, 3*4=12, 5+12=17, and 17-3=14.",
+      "difficulty": "easy",
+      "source_type": "practice",
+      "year": null,
+      "nlp_tags": ["stack", "postfix", "expression evaluation", "data structures"]
     },
     {
       "subject": "Algorithms",
       "topic": "Dynamic Programming",
-      "subtopic": "Knapsack",
+      "subtopic": "0/1 knapsack",
       "question_text": "What is the time complexity of the 0/1 Knapsack problem using dynamic programming with n items and weight capacity W?",
       "options": [
         "A. O(n log n)",
@@ -59,6 +94,140 @@
       "source_type": "practice",
       "year": null,
       "nlp_tags": ["knapsack", "0/1 knapsack", "DP", "dynamic programming", "time complexity"]
+    },
+    {
+      "subject": "Theory of Computation",
+      "topic": "Pumping Lemma",
+      "subtopic": "Regular languages",
+      "question_text": "The pumping lemma for regular languages is primarily used to:",
+      "options": [
+        "A. Construct a DFA for every language",
+        "B. Prove that a language is not regular",
+        "C. Minimize context-free grammars",
+        "D. Convert NFA to DFA"
+      ],
+      "question_image_urls": [],
+      "correct_answer": "B",
+      "explanation": "The pumping lemma gives a necessary property of regular languages. Violating it proves that a language cannot be regular.",
+      "difficulty": "medium",
+      "source_type": "PYQ",
+      "year": 2020,
+      "nlp_tags": ["pumping lemma", "regular language", "automata", "proof by contradiction"]
+    },
+    {
+      "subject": "Compiler Design",
+      "topic": "Data Flow Analysis",
+      "subtopic": "Liveness analysis",
+      "question_text": "A variable x is live at a program point if:",
+      "options": [
+        "A. x was defined at that point",
+        "B. x will be used along some path before being redefined",
+        "C. x is global",
+        "D. x appears in the symbol table"
+      ],
+      "question_image_urls": [],
+      "correct_answer": "B",
+      "explanation": "Liveness means the current value may be needed in the future on at least one path before another assignment to x occurs.",
+      "difficulty": "medium",
+      "source_type": "practice",
+      "year": null,
+      "nlp_tags": ["data flow", "liveness", "compiler", "optimization", "register allocation"]
+    },
+    {
+      "subject": "Operating System",
+      "topic": "CPU Scheduling",
+      "subtopic": "Round robin",
+      "question_text": "In round robin scheduling (time quantum = 2), three processes P1=5, P2=3, P3=1 arrive at time 0. What is the average waiting time?",
+      "options": [
+        "A. 3.33",
+        "B. 4.33",
+        "C. 5.00",
+        "D. 6.00"
+      ],
+      "question_image_urls": [],
+      "correct_answer": "B",
+      "explanation": "Completion times: P3=5, P2=8, P1=9. Waiting times are P1=4, P2=5, P3=4. Average waiting time = (4+5+4)/3 = 4.33.",
+      "difficulty": "medium",
+      "source_type": "PYQ",
+      "year": 2019,
+      "nlp_tags": ["operating system", "cpu scheduling", "round robin", "waiting time"]
+    },
+    {
+      "subject": "Databases",
+      "topic": "Normal Forms",
+      "subtopic": "BCNF",
+      "question_text": "A relation is in BCNF if for every non-trivial functional dependency X -> Y:",
+      "options": [
+        "A. Y is a prime attribute",
+        "B. X is a candidate key",
+        "C. X is a superkey",
+        "D. Y is fully dependent on X"
+      ],
+      "question_image_urls": [],
+      "correct_answer": "C",
+      "explanation": "BCNF requires that the determinant in every non-trivial functional dependency be a superkey.",
+      "difficulty": "easy",
+      "source_type": "PYQ",
+      "year": 2021,
+      "nlp_tags": ["database", "normalization", "bcnf", "functional dependency"]
+    },
+    {
+      "subject": "Computer Networks",
+      "topic": "Routing Protocols",
+      "subtopic": "Link state routing",
+      "question_text": "Which shortest path algorithm is typically used by link-state routing protocols?",
+      "options": [
+        "A. Bellman-Ford",
+        "B. Dijkstra",
+        "C. Floyd-Warshall",
+        "D. Kruskal"
+      ],
+      "question_image_urls": [],
+      "correct_answer": "B",
+      "explanation": "Link-state protocols (like OSPF) compute shortest paths using Dijkstra's algorithm on the network graph.",
+      "difficulty": "easy",
+      "source_type": "PYQ",
+      "year": 2022,
+      "nlp_tags": ["computer networks", "routing", "link state", "dijkstra", "ospf"]
+    },
+    {
+      "subject": "Databases",
+      "topic": "Transactions",
+      "subtopic": "Conflict serializability",
+      "question_text": "A schedule is conflict-serializable when:",
+      "options": [
+        "A. Every transaction is read-only",
+        "B. Its precedence graph is acyclic",
+        "C. It uses strict two-phase locking",
+        "D. It has no write operations"
+      ],
+      "question_image_urls": [],
+      "correct_answer": "B",
+      "explanation": "A schedule is conflict-serializable if and only if the precedence graph has no cycle.",
+      "difficulty": "medium",
+      "source_type": "practice",
+      "year": null,
+      "nlp_tags": ["transaction", "serializability", "precedence graph", "concurrency"]
+    },
+    {
+      "subject": "Programming and Data Structures",
+      "topic": "Trees and Binary Search Trees",
+      "subtopic": "BST traversal",
+      "question_text": "The inorder traversal of a binary search tree outputs keys in:",
+      "options": [
+        "A. Random order",
+        "B. Descending order",
+        "C. Insertion order",
+        "D. Non-decreasing sorted order"
+      ],
+      "question_image_urls": [],
+      "correct_answer": "D",
+      "explanation": "Inorder traversal visits left subtree, root, and right subtree. For a BST, this yields sorted keys.",
+      "difficulty": "easy",
+      "source_type": "practice",
+      "year": null,
+      "nlp_tags": ["bst", "inorder traversal", "tree", "sorting property"]
     }
   ]
 }
+

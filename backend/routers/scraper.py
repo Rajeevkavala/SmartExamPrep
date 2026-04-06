@@ -27,7 +27,7 @@ def _serialize_job(job: ScrapeJob) -> dict:
 @router.post(
 	"/start",
 	status_code=status.HTTP_202_ACCEPTED,
-	summary="Start a new scrape and Gemini classification job",
+	summary="Start a new scrape and AI structuring job",
 )
 async def start_scrape(
 	req: ScrapeStartRequest,

@@ -37,6 +37,7 @@ type UseScrapeJobPollerResult = {
 
 const TERMINAL_STATUSES: ReadonlySet<ScrapeJobStatus> = new Set(["done", "failed"]);
 const POLL_INTERVAL_MS = 3000;
+const MAX_POLL_DURATION_MS = 5 * 60 * 1000;
 
 const getErrorMessage = (error: unknown): string => {
   const detail = (error as { response?: { data?: { detail?: string } } })?.response
@@ -55,12 +56,14 @@ export function useScrapeJobPoller(jobId: string | null): UseScrapeJobPollerResu
   const [isPolling, setIsPolling] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const activeJobIdRef = useRef<string | null>(jobId);
+  const startedAtRef = useRef<number | null>(null);
 
   const stopPolling = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
+    startedAtRef.current = null;
     setIsPolling(false);
   }, []);
 
@@ -79,6 +82,15 @@ export function useScrapeJobPoller(jobId: string | null): UseScrapeJobPollerResu
     }
 
     try {
+      if (
+        startedAtRef.current &&
+        Date.now() - startedAtRef.current > MAX_POLL_DURATION_MS
+      ) {
+        setPollingError("Scrape job polling timed out. Refresh manually to check the latest state.");
+        stopPolling();
+        return;
+      }
+
       const latest = await fetchJob(targetJobId);
       setJob(latest);
       setPollingError(null);
@@ -128,6 +140,7 @@ export function useScrapeJobPoller(jobId: string | null): UseScrapeJobPollerResu
     };
 
     setIsPolling(true);
+    startedAtRef.current = Date.now();
     void poll();
 
     intervalRef.current = setInterval(() => {

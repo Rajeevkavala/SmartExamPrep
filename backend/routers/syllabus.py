@@ -28,7 +28,7 @@ def _serialize_upload(upload: SyllabusUpload) -> dict:
 @router.post(
 	"/upload",
 	status_code=status.HTTP_202_ACCEPTED,
-	summary="Upload syllabus PDF and start Gemini parsing",
+	summary="Upload syllabus PDF and start AI parsing",
 )
 async def upload_syllabus(
 	background_tasks: BackgroundTasks,

@@ -1,6 +1,6 @@
-# PHASE 12 — RESEARCH PAPER SUPPORT
+﻿# PHASE 12 â€” RESEARCH PAPER SUPPORT
 
-> **Goal:** Convert the SmartExamPrep MVP into a complete IEEE-style research project — including abstract, novelty, methodology, architecture diagram, evaluation plan, experiment design, and paper title ideas.
+> **Goal:** Convert the SmartExamPrep MVP into a complete IEEE-style research project â€” including abstract, novelty, methodology, architecture diagram, evaluation plan, experiment design, and paper title ideas.
 
 ---
 
@@ -8,7 +8,7 @@
 
 **SmartExamPrep: An ML-Powered Adaptive Learning System for Competitive Examination Preparation**
 
-> Competitive examinations such as GATE CSE present significant challenges to aspirants due to the breadth of the syllabus and the need for targeted preparation. This paper presents SmartExamPrep, an end-to-end web-based adaptive learning platform that leverages machine learning, natural language processing, and spaced repetition algorithms to personalize examination preparation. The system employs a tri-engine AI architecture comprising: (1) a Weakness Detection Engine that computes per-topic weakness scores using an XGBoost regressor trained on quiz performance features; (2) an Adaptive Quiz Recommendation Engine that prioritizes question selection based on weakness severity, semantic similarity filtering using sentence-transformers, and difficulty progression heuristics; and (3) a Spaced Revision Scheduler based on a modified SM-2 algorithm calibrated by topic difficulty coefficients. Additionally, the system integrates an Admin Content Management Panel with automated question extraction from web URLs using BeautifulSoup4 and Gemini AI structured classification, and a PDF syllabus parser that uses pdfplumber and Gemini API to auto-populate the curriculum database. Preliminary evaluation with 20 GATE CSE aspirants demonstrates statistically significant improvements in weak topic accuracy recovery rates over a 4-week intervention period, with a mean weakness score reduction of 22.3 points across participants.
+> Competitive examinations such as GATE CSE present significant challenges to aspirants due to the breadth of the syllabus and the need for targeted preparation. This paper presents SmartExamPrep, an end-to-end web-based adaptive learning platform that leverages machine learning, natural language processing, and spaced repetition algorithms to personalize examination preparation. The system employs a tri-engine AI architecture comprising: (1) a Weakness Detection Engine that computes per-topic weakness scores using an XGBoost regressor trained on quiz performance features; (2) an Adaptive Quiz Recommendation Engine that prioritizes question selection based on weakness severity, semantic similarity filtering using sentence-transformers, and difficulty progression heuristics; and (3) a Spaced Revision Scheduler based on a modified SM-2 algorithm calibrated by topic difficulty coefficients. Additionally, the system integrates an Admin Content Management Panel with automated question extraction from web URLs using BeautifulSoup4 and AI AI structured classification, and a PDF syllabus parser that uses pdfplumber and AI API to auto-populate the curriculum database. Preliminary evaluation with 20 GATE CSE aspirants demonstrates statistically significant improvements in weak topic accuracy recovery rates over a 4-week intervention period, with a mean weakness score reduction of 22.3 points across participants.
 
 ---
 
@@ -20,11 +20,11 @@ This work makes the following novel contributions:
 
 2. **Semantic Deduplication in Recommendation**: Application of sentence-transformers cosine similarity to filter near-duplicate questions in real-time recommendation, a technique previously applied in NLP but not in adaptive learning for competitive exams.
 
-3. **Automated Content Ingestion Pipeline**: Novel admin-side pipeline combining BeautifulSoup4 HTML parsing with Gemini structured JSON classification to auto-extract, tag, and import PYQ questions from arbitrary educational web pages — reducing manual content entry time by an estimated 80%.
+3. **Automated Content Ingestion Pipeline**: Novel admin-side pipeline combining BeautifulSoup4 HTML parsing with AI structured JSON classification to auto-extract, tag, and import PYQ questions from arbitrary educational web pages â€” reducing manual content entry time by an estimated 80%.
 
-4. **Syllabus-Driven Curriculum Bootstrap**: Use of Gemini API in structured output mode to parse PDF syllabi and auto-generate the subject/topic/subtopic curriculum tree, enabling rapid system initialization for new exam domains.
+4. **Syllabus-Driven Curriculum Bootstrap**: Use of AI API in structured output mode to parse PDF syllabi and auto-generate the subject/topic/subtopic curriculum tree, enabling rapid system initialization for new exam domains.
 
-5. **Research-Grade Evaluation**: Controlled experiment design measuring weak topic recovery rate, recommendation relevance, and revision effectiveness across 10–30 student participants over 4 weeks.
+5. **Research-Grade Evaluation**: Controlled experiment design measuring weak topic recovery rate, recommendation relevance, and revision effectiveness across 10â€“30 student participants over 4 weeks.
 
 ---
 
@@ -40,7 +40,7 @@ This work makes the following novel contributions:
 1. Can a lightweight ML model accurately identify weak topics from quiz performance features?
 2. Does semantic similarity filtering in question recommendation reduce perceived repetition without sacrificing coverage?
 3. Does a modified SM-2 spaced revision schedule calibrated by topic difficulty improve retention compared to fixed intervals?
-4. Can Gemini AI reliably classify free-form scraped question text into structured academic categories?
+4. Can AI AI reliably classify free-form scraped question text into structured academic categories?
 
 ---
 
@@ -48,22 +48,22 @@ This work makes the following novel contributions:
 
 ### System Overview
 ```
-[Student] ──quiz──→ [FastAPI Backend]
-                          │
+[Student] â”€â”€quizâ”€â”€â†’ [FastAPI Backend]
+                          â”‚
                     Feature Engineering
-                          │
-               ┌──────────┼───────────┐
-               ▼          ▼           ▼
+                          â”‚
+               â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+               â–¼          â–¼           â–¼
         WeaknessDetector  AdaptiveRec  SpacedRev
         (XGBoost/Formula) (Priority+   (SM-2 +
                            NLP dedup)  difficulty)
-               │          │           │
-               └──────────┼───────────┘
-                          ▼
+               â”‚          â”‚           â”‚
+               â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                          â–¼
                     PostgreSQL DB
-                          │
-               ┌──────────┼──────────┐
-               ▼          ▼          ▼
+                          â”‚
+               â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+               â–¼          â–¼          â–¼
           Dashboard  AdaptiveQuiz  RevisionPlan
           (Next.js)  (Next.js)     (Next.js)
 ```
@@ -76,59 +76,59 @@ This work makes the following novel contributions:
 For each (user, topic) pair, extract:
 ```
 accuracy             = correct_count / total_attempts
-repeated_mistakes    = count(questions wrong ≥ 2 times)
+repeated_mistakes    = count(questions wrong â‰¥ 2 times)
 avg_response_zscore  = (mean_time - 30s) / 15s  [z-score]
 recent_slope         = linear regression slope of last 5 scores
 difficulty_sensitivity = error_rate(hard) - error_rate(easy)
 ```
 
 ### Phase 3: Weakness Detection
-- Feed feature vector → WeaknessDetector (XGBoost or calibrated formula)
-- Output: `weakness_score ∈ [0, 100]` + label `{Weak, Moderate, Strong}`
+- Feed feature vector â†’ WeaknessDetector (XGBoost or calibrated formula)
+- Output: `weakness_score âˆˆ [0, 100]` + label `{Weak, Moderate, Strong}`
 - Update `TopicMastery` table
 
 ### Phase 4: Recommendation
-- Rank topics by `priority = weakness_score × (1 - mastery) × recency_factor`
+- Rank topics by `priority = weakness_score Ã— (1 - mastery) Ã— recency_factor`
 - Select questions from top-3 topics
-- Filter: difficulty progression (easy → hard), semantic deduplication (cosine sim ≥ 0.85 → skip)
-- Output: 5–10 questions for "Today's Adaptive Quiz"
+- Filter: difficulty progression (easy â†’ hard), semantic deduplication (cosine sim â‰¥ 0.85 â†’ skip)
+- Output: 5â€“10 questions for "Today's Adaptive Quiz"
 
 ### Phase 5: Spaced Revision Scheduling
-- Base interval: {<40%: 1d, 40–65%: 3d, 65–85%: 7d, >85%: 14d}
+- Base interval: {<40%: 1d, 40â€“65%: 3d, 65â€“85%: 7d, >85%: 14d}
 - Multiply by `topic.difficulty_weight`
-- Apply SM-2 ease_factor update: `EF' = max(1.3, EF + 0.1 - (4-q)(0.08 + (4-q)×0.02))`
+- Apply SM-2 ease_factor update: `EF' = max(1.3, EF + 0.1 - (4-q)(0.08 + (4-q)Ã—0.02))`
 - Next due date stored in `RevisionSchedule`
 
 ### Phase 6: NLP Layer
 - On question insert: spaCy extracts noun chunks + domain term tags
 - On recommendation: sentence-transformer embeds question text, cosine similarity filters duplicates
-- On explanation: Gemini generates 2–3 sentence feedback from weakness features
+- On explanation: AI generates 2â€“3 sentence feedback from weakness features
 
 ---
 
 ## 5. System Architecture Explanation
 
 ```
-Frontend (Next.js 14 — Vercel)
-  │  Axios + JWT
-  ▼
-Backend (FastAPI — Railway/Render)
-  │  SQLAlchemy ORM
-  ├──── PostgreSQL (Supabase)
-  │  
-  ├──── ML Layer (in-process)
-  │     ├── WeaknessDetector (XGBoost, loaded at startup)
-  │     ├── AdaptiveRecommender (rule-based + NLP)
-  │     ├── SpacedRevisionScheduler (SM-2)
-  │     └── NLP Pipeline (spaCy + sentence-transformers)
-  │
-  └──── External Services
-        ├── Gemini 1.5 Flash API (explanations + scraping + syllabus)
-        └── File System (PDF uploads: /uploads/syllabi/)
+Frontend (Next.js 14 â€” Vercel)
+  â”‚  Axios + JWT
+  â–¼
+Backend (FastAPI â€” Railway/Render)
+  â”‚  SQLAlchemy ORM
+  â”œâ”€â”€â”€â”€ PostgreSQL (Supabase)
+  â”‚  
+  â”œâ”€â”€â”€â”€ ML Layer (in-process)
+  â”‚     â”œâ”€â”€ WeaknessDetector (XGBoost, loaded at startup)
+  â”‚     â”œâ”€â”€ AdaptiveRecommender (rule-based + NLP)
+  â”‚     â”œâ”€â”€ SpacedRevisionScheduler (SM-2)
+  â”‚     â””â”€â”€ NLP Pipeline (spaCy + sentence-transformers)
+  â”‚
+  â””â”€â”€â”€â”€ External Services
+        â”œâ”€â”€ AI 1.5 Flash API (explanations + scraping + syllabus)
+        â””â”€â”€ File System (PDF uploads: /uploads/syllabi/)
 
 Admin Sub-system
-  ├── URL Scraper (httpx + BS4 + Gemini)
-  └── PDF Syllabus Extractor (pdfplumber + Gemini)
+  â”œâ”€â”€ URL Scraper (httpx + BS4 + AI)
+  â””â”€â”€ PDF Syllabus Extractor (pdfplumber + AI)
 ```
 
 ---
@@ -136,7 +136,7 @@ Admin Sub-system
 ## 6. Evaluation Plan
 
 ### 6.1 Participants
-- **N = 20–30** GATE CSE 2025/2026 aspirants
+- **N = 20â€“30** GATE CSE 2025/2026 aspirants
 - Recruited from engineering colleges, online GATE communities
 - Pre-screen: confirm GATE CSE registration + basic CS background
 - Consent form: data used for research only, anonymized
@@ -150,7 +150,7 @@ Admin Sub-system
 ### 6.3 Data Collection Points
 | Week | Activity |
 |---|---|
-| Week 0 | Diagnostic quiz (all topics) — baseline measurement |
+| Week 0 | Diagnostic quiz (all topics) â€” baseline measurement |
 | Week 1 | Daily adaptive quiz + revision plan |
 | Week 2 | Mid-check: topic mastery re-measurement |
 | Week 3 | Continued adaptive prep |
@@ -164,8 +164,8 @@ Admin Sub-system
 
 | Metric | Definition | Measurement |
 |---|---|---|
-| **Weak Topic Recovery Rate** | % of initially-weak topics improved to Moderate/Strong after 4 weeks | `(weak_at_start → non-weak_at_end) / weak_at_start` |
-| **Accuracy Improvement** | Change in per-topic accuracy from Week 0 to Week 4 | `Δaccuracy = accuracy_week4 - accuracy_week0` |
+| **Weak Topic Recovery Rate** | % of initially-weak topics improved to Moderate/Strong after 4 weeks | `(weak_at_start â†’ non-weak_at_end) / weak_at_start` |
+| **Accuracy Improvement** | Change in per-topic accuracy from Week 0 to Week 4 | `Î”accuracy = accuracy_week4 - accuracy_week0` |
 | **Revision Effectiveness** | Score improvement on topics revised via spaced schedule vs unrevisited topics | Paired comparison |
 | **Recommendation Relevance** | User rating of "Was today's quiz relevant to your weaknesses?" | 5-point Likert scale, daily |
 
@@ -190,7 +190,7 @@ Primary:
 
 Secondary:
   - Pearson correlation: weakness_score vs recommendation_relevance_rating
-  - McNemar's test: topic label change (Weak → non-Weak) before/after
+  - McNemar's test: topic label change (Weak â†’ non-Weak) before/after
   - Wilcoxon signed-rank test (if data non-normal): revision effectiveness
 
 Significance level: p < 0.05
@@ -202,17 +202,17 @@ Correction: Bonferroni if multiple comparisons
 ## 9. Experiment Design (Detailed)
 
 ### Baseline Assessment (Week 0)
-- 30-question quiz: 3 questions × 10 major GATE topics
+- 30-question quiz: 3 questions Ã— 10 major GATE topics
 - Difficulty balanced: 1 easy + 1 medium + 1 hard per topic
 - Time: 45 minutes, proctored online via Google Meet
 
-### Weekly Schedule (Weeks 1–4)
+### Weekly Schedule (Weeks 1â€“4)
 ```
-Per Day (30–45 min study time):
-  1. Take today's adaptive quiz (7–10 questions)
+Per Day (30â€“45 min study time):
+  1. Take today's adaptive quiz (7â€“10 questions)
   2. Review result analysis page
   3. Complete due revisions from revision plan
-  4. Rate quiz relevance (daily survey — 1 question)
+  4. Rate quiz relevance (daily survey â€” 1 question)
 
 Per Week:
   - Submit weekly reflection survey (5 mins)
@@ -246,16 +246,16 @@ Per Week:
 ## 11. Related Works Section Outline
 
 ### 11.1 Spaced Repetition Systems
-- Ebbinghaus forgetting curve (1885) — foundational theory
-- SM-2 algorithm (Wozniak, 1987) — basis of Anki
+- Ebbinghaus forgetting curve (1885) â€” foundational theory
+- SM-2 algorithm (Wozniak, 1987) â€” basis of Anki
 - Adaptive spacing: Lindsey et al. (2014) "Improving Students' Long-Term Knowledge Retention"
-- FSRS algorithm (2022) — modern improvement to SM-2
+- FSRS algorithm (2022) â€” modern improvement to SM-2
 
 ### 11.2 Adaptive Learning Systems
 - Intelligent Tutoring Systems (ITS): Bloom's "2-sigma problem" (1984)
 - Knewton Adaptive Learning Platform (commercial)
-- ASSISTments (Worcester Polytechnic) — data-driven adaptive tutoring
-- Deep Knowledge Tracing (Piech et al., 2015) — LSTM-based knowledge state tracking
+- ASSISTments (Worcester Polytechnic) â€” data-driven adaptive tutoring
+- Deep Knowledge Tracing (Piech et al., 2015) â€” LSTM-based knowledge state tracking
 
 ### 11.3 NLP in Education
 - Semantic textual similarity in education: Agirre et al. (2016)
@@ -270,7 +270,7 @@ Per Week:
 
 ### 11.5 LLMs in Education
 - GPT-4 for automated question generation: Elkins et al. (2023)
-- Gemini for structured educational content: Google DeepMind (2024)
+- AI for structured educational content: Google DeepMind (2024)
 - Automated exam question classification: Desmarais & Baker (2012)
 
 ---
@@ -280,17 +280,17 @@ Per Week:
 | Gap | How SmartExamPrep Addresses It |
 |---|---|
 | No open-source ML system for GATE CSE specifically | Domain-specific design + seed data |
-| Manual question content entry in adaptive systems | Automated scraper + Gemini classification |
+| Manual question content entry in adaptive systems | Automated scraper + AI classification |
 | Fixed intervals in spaced repetition | Topic difficulty coefficient calibration |
 | Global recommendations ignoring semantic duplication | sentence-transformer similarity filtering |
-| Opaque AI recommendations | Gemini-generated human-readable explanations |
+| Opaque AI recommendations | AI-generated human-readable explanations |
 
 ---
 
 ## 13. Ethics Statement
 
 - All participant data collected with informed consent
-- Data anonymized before analysis (user_id → participant_id)
+- Data anonymized before analysis (user_id â†’ participant_id)
 - No personal identifiable information stored beyond email
 - Students can withdraw at any time without academic consequence
 - Research data retained for 3 years per institutional policy
@@ -303,3 +303,4 @@ Per Week:
 - Mention `question_image_urls` in system design and data model descriptions.
 - Add evaluation checks for image-bearing scrape samples (image extraction completeness and classification impact).
 - In limitations/future work, discuss OCR quality and multimodal model upgrades for image-heavy questions.
+

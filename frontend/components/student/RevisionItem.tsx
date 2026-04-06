@@ -1,6 +1,12 @@
 "use client";
 
+import { CheckCircle2 } from "lucide-react";
+
+import { insetPanelClass, StatusBadge } from "@/components/shared/brand-ui";
+import { cn } from "@/lib/utils";
+
 export type RevisionPlanItem = {
+  schedule_id?: string;
   topic_id: string;
   topic_name: string;
   subject_name: string;
@@ -11,7 +17,7 @@ export type RevisionPlanItem = {
 
 type RevisionItemProps = {
   item: RevisionPlanItem;
-  onMarkDone: (topicId: string) => void | Promise<void>;
+  onMarkDone: (item: RevisionPlanItem) => void | Promise<void>;
   isSubmitting?: boolean;
 };
 
@@ -37,24 +43,28 @@ export default function RevisionItem({
   const isOverdue = dueDate ? dueDate.getTime() < Date.now() : false;
 
   return (
-    <article className="flex flex-col gap-4 rounded-2xl border border-slate-800 bg-slate-900/70 p-5 sm:flex-row sm:items-center sm:justify-between">
-      <div className="space-y-1">
-        <h3 className="text-base font-semibold text-white">{item.topic_name}</h3>
-        <p className="text-sm text-slate-300">{item.subject_name}</p>
-        <p className={`text-xs ${isOverdue ? "text-rose-300" : "text-slate-400"}`}>
-          Due: {formatDueDate(item.due_date)}
-        </p>
-        <p className="text-xs text-slate-400">
-          Last score: {Math.round(item.last_score_pct)}% • Interval: {item.interval_days} days
+    <article className={cn(insetPanelClass, "flex flex-col gap-4 p-5 lg:flex-row lg:items-center lg:justify-between")}>
+      <div className="space-y-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-lg font-medium text-[var(--cream)]">{item.topic_name}</p>
+          <StatusBadge tone={isOverdue ? "fire" : "warning"}>
+            {isOverdue ? "Due now" : `Interval ${item.interval_days}d`}
+          </StatusBadge>
+        </div>
+        <p className="text-sm text-[rgba(194,186,176,0.72)]">{item.subject_name}</p>
+        <p className="text-xs text-[rgba(194,186,176,0.58)]">Due: {formatDueDate(item.due_date)}</p>
+        <p className="font-mono text-[0.58rem] uppercase tracking-[0.22em] text-[rgba(194,186,176,0.58)]">
+          Last score {Math.round(item.last_score_pct)}%
         </p>
       </div>
 
       <button
         type="button"
         disabled={isSubmitting}
-        onClick={() => onMarkDone(item.topic_id)}
-        className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-70"
+        onClick={() => onMarkDone(item)}
+        className="inline-flex items-center justify-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 font-mono text-[0.62rem] uppercase tracking-[0.24em] text-emerald-200 disabled:opacity-50"
       >
+        <CheckCircle2 className="h-4 w-4" />
         {isSubmitting ? "Updating..." : "Mark Done ✓"}
       </button>
     </article>

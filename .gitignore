@@ -11,6 +11,8 @@ venv/
 node_modules/
 .next/
 out/
+frontend/playwright-report/
+frontend/test-results/
 
 # Environment
 .env
@@ -41,3 +43,4 @@ backend/ml/models/*.pkl
 
 # Uploads
 backend/uploads/
+uploads/

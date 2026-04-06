@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+import math
 from typing import Any
 
 from ml.nlp_pipeline import is_near_duplicate
@@ -38,7 +39,7 @@ class AdaptiveRecommender:
             if not topic_id:
                 continue
 
-            weakness_score = float(tm.get("weakness_score", 0.0))
+            weakness_score = self._safe_weakness_score(tm.get("weakness_score"))
             mastery_pct = (100 - weakness_score) / 100
             recency_factor = self._recency_factor(tm.get("last_attempted_at"))
             priority = weakness_score * (1 - mastery_pct) * recency_factor
@@ -135,6 +136,17 @@ class AdaptiveRecommender:
         if isinstance(embedding, list) and embedding:
             selected_embeddings.append(embedding)
         return True
+
+    @staticmethod
+    def _safe_weakness_score(value: object) -> float:
+        try:
+            score = float(0.0 if value is None else value)
+        except (TypeError, ValueError):
+            return 0.0
+
+        if not math.isfinite(score):
+            return 0.0
+        return max(0.0, min(100.0, score))
 
     def _recency_factor(self, last_attempted_at) -> float:
         if not last_attempted_at:

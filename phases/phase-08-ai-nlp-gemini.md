@@ -1,6 +1,6 @@
-# PHASE 8 — AI / NLP / GEMINI INTEGRATION
+﻿# PHASE 8 â€” AI / NLP / GEMINI INTEGRATION
 
-> **Goal:** Detail the complete AI/NLP integration — where each model is used, full Gemini prompt designs, fallback strategies, and caching — covering both student-facing and admin-facing AI use cases.
+> **Goal:** Detail the complete AI/NLP integration â€” where each model is used, full AI prompt designs, fallback strategies, and caching â€” covering both student-facing and admin-facing AI use cases.
 
 ---
 
@@ -10,10 +10,10 @@
 |---|---|---|
 | Question keyword tagging | spaCy | On question insert (admin or seed) |
 | Deduplication in recommendations | sentence-transformers | `GET /api/quiz/adaptive` |
-| Weakness explanation | Gemini 1.5 Flash | `POST /api/ai/explain` |
-| Scrape classification | Gemini 1.5 Flash | Background scrape job |
-| Syllabus parsing | Gemini 1.5 Flash | PDF upload background task |
-| Study advice generation | Gemini 1.5 Flash | `GET /api/analysis/dashboard` (optional) |
+| Weakness explanation | AI 1.5 Flash | `POST /api/ai/explain` |
+| Scrape classification | AI 1.5 Flash | Background scrape job |
+| Syllabus parsing | AI 1.5 Flash | PDF upload background task |
+| Study advice generation | AI 1.5 Flash | `GET /api/analysis/dashboard` (optional) |
 
 ---
 
@@ -21,25 +21,25 @@
 
 ### When it runs:
 - When admin manually creates a question (`POST /api/admin/questions/`)
-- When admin imports scraped questions (after Gemini classification)
+- When admin imports scraped questions (after AI classification)
 - On seed data insert (`seed.py`)
 
 ### Flow:
 ```
 question_text
-    │
-    ▼
-spaCy parse → noun chunks + domain term match
-    │
-    ▼
+    â”‚
+    â–¼
+spaCy parse â†’ noun chunks + domain term match
+    â”‚
+    â–¼
 tags: ["round robin", "CPU scheduling", "preemptive", "burst time"]
-    │
-    ▼
+    â”‚
+    â–¼
 stored in Question.nlp_keyword_tags (JSON array)
 ```
 
 ### Code Reference:
-See `backend/ml/nlp_pipeline.py → extract_tags()`
+See `backend/ml/nlp_pipeline.py â†’ extract_tags()`
 
 ---
 
@@ -51,18 +51,18 @@ See `backend/ml/nlp_pipeline.py → extract_tags()`
 ### Flow:
 ```
 Candidate question pool
-    │
-    ▼
+    â”‚
+    â–¼
 For each candidate q:
     embedding = embed_text(q.question_text)  # sentence-transformer
-    │
-    ▼
+    â”‚
+    â–¼
     Compare against recent 7-day question embeddings
     cosine_similarity(candidate_emb, recent_emb)
-    │
-    ▼
-    If any similarity >= 0.85 threshold → SKIP (near-duplicate)
-    Else → include in recommended set
+    â”‚
+    â–¼
+    If any similarity >= 0.85 threshold â†’ SKIP (near-duplicate)
+    Else â†’ include in recommended set
 ```
 
 ### Code (`backend/services/recommendation_service.py`):
@@ -137,7 +137,7 @@ def get_adaptive_questions(user, db) -> list[dict]:
 
 ---
 
-## 4. Gemini: Weakness Explanation
+## 4. AI: Weakness Explanation
 
 ### Prompt Design (safe, structured):
 
@@ -149,7 +149,7 @@ You are a GATE CSE exam coach. A student has these statistics for {topic} ({subj
 - Repeated Mistakes: {repeated_mistakes}
 - Avg Response Time: {avg_time:.0f} seconds per question
 
-Write a 2–3 sentence personalized insight for the student explaining:
+Write a 2â€“3 sentence personalized insight for the student explaining:
 1. Why they are struggling in this topic
 2. What specific sub-areas to focus on
 3. One actionable next step
@@ -162,13 +162,13 @@ Output plain text only, no markdown.
 
 ### Safety design:
 - Only uses data explicitly passed in (no DB queries in prompt)
-- Limits response length: Gemini `max_output_tokens=200`
-- Fallback: returns a pre-written template if Gemini call fails
+- Limits response length: AI `max_output_tokens=200`
+- Fallback: returns a pre-written template if AI call fails
 
 ### Caching (in-memory, per user per topic):
 
 ```python
-# backend/services/gemini_service.py
+# backend/services/ai_service.py
 
 from functools import lru_cache
 import hashlib
@@ -205,13 +205,13 @@ async def generate_weakness_explanation(
         return (
             f"You need more practice in {topic_name}. Focus on the foundational "
             f"concepts before attempting harder questions. Your accuracy is "
-            f"{accuracy * 100:.0f}% — aim for 70%+ through consistent practice."
+            f"{accuracy * 100:.0f}% â€” aim for 70%+ through consistent practice."
         )
 ```
 
 ---
 
-## 5. Gemini: Scraper Question Classification
+## 5. AI: Scraper Question Classification
 
 ### Prompt Design:
 
@@ -241,7 +241,7 @@ Raw text:
 ### Batch processing (to avoid API quota):
 
 ```python
-async def classify_questions_with_gemini(raw_texts: list[str]) -> list[dict]:
+async def classify_scraped_questions(raw_texts: list[str]) -> list[dict]:
     """Classify up to 20 questions, with 1 API call per question."""
     import asyncio
     results = []
@@ -269,7 +269,7 @@ async def _classify_single(raw_text: str) -> dict | None:
 
 ---
 
-## 6. Gemini: Syllabus PDF Parsing
+## 6. AI: Syllabus PDF Parsing
 
 ### Prompt Design:
 
@@ -294,7 +294,7 @@ Return ONLY a valid JSON object with this EXACT structure:
 Rules:
 - Only include academic subjects (no admin/logistics text)
 - Group related items into the nearest subject
-- Keep subtopics concise (3–8 words max)
+- Keep subtopics concise (3â€“8 words max)
 - Return ONLY the JSON, no other text
 
 Syllabus text:
@@ -305,10 +305,10 @@ Syllabus text:
 ### Chunked processing (for long PDFs):
 
 ```python
-async def parse_syllabus_with_gemini(raw_text: str) -> dict:
+async def parse_syllabus(raw_text: str) -> dict:
     """
     Handles long PDFs by chunking if needed.
-    Gemini 1.5 Flash context window: 1M tokens, so usually one shot.
+    AI 1.5 Flash context window: 1M tokens, so usually one shot.
     """
     # Trim to avoid token overruns (safety margin)
     truncated_text = raw_text[:8000]
@@ -329,7 +329,7 @@ async def parse_syllabus_with_gemini(raw_text: str) -> dict:
 
 ---
 
-## 7. Fallback Templates (when Gemini is unavailable)
+## 7. Fallback Templates (when AI is unavailable)
 
 ```python
 FALLBACK_EXPLANATIONS = {
@@ -362,7 +362,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql://postgres:password@localhost/smartexamprep"
     JWT_SECRET: str = "change-me-in-production"
     JWT_ALGORITHM: str = "HS256"
-    GEMINI_API_KEY: str = ""
+    OPENROUTER_API_KEY / GROQ_API_KEY: str = ""
     UPLOAD_DIR: str = "uploads"
 
     class Config:
@@ -376,7 +376,7 @@ settings = Settings()
 ```env
 DATABASE_URL=postgresql://postgres:password@localhost/smartexamprep
 JWT_SECRET=your-super-secret-key-here
-GEMINI_API_KEY=your-gemini-api-key-here
+OPENROUTER_API_KEY / GROQ_API_KEY=your-openrouter-or-groq-api-key-here
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
@@ -386,19 +386,21 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 
 | Operation | Model | Avg tokens | Cost |
 |---|---|---|---|
-| Weakness explanation | Gemini Flash | ~300 in + 200 out | ~$0.0001 per call |
-| Scrape classification (per Q) | Gemini Flash | ~400 in + 300 out | ~$0.0002 per Q |
-| Syllabus parsing | Gemini Flash | ~2000 in + 1000 out | ~$0.001 per PDF |
+| Weakness explanation | AI Flash | ~300 in + 200 out | ~$0.0001 per call |
+| Scrape classification (per Q) | AI Flash | ~400 in + 300 out | ~$0.0002 per Q |
+| Syllabus parsing | AI Flash | ~2000 in + 1000 out | ~$0.001 per PDF |
 | NLP tagging (spaCy) | Local | 0 | Free |
 | Embeddings (sentence-transformer) | Local | 0 | Free |
 
-> Gemini 1.5 Flash pricing (as of 2024): ~$0.075 per 1M input tokens, ~$0.30 per 1M output tokens. For MVP scale, total AI cost is < $1/month.
+> AI 1.5 Flash pricing (as of 2024): ~$0.075 per 1M input tokens, ~$0.30 per 1M output tokens. For MVP scale, total AI cost is < $1/month.
 
 ---
 
 ## 10. PYQ Image Support Addendum
 
-- Extend Gemini scraper prompt output schema with `question_image_urls: []`.
+- Extend AI scraper prompt output schema with `question_image_urls: []`.
 - During scraping, include nearby image URLs with each raw question before classification.
 - If OCR/caption text is available, include it in prompts to improve topic/difficulty classification.
 - Ensure explanation generation can reference "diagram/image-based" context when present.
+
+

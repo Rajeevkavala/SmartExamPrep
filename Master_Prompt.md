@@ -1,4 +1,4 @@
-You are a senior full-stack engineer, product architect, and AI/ML systems designer.
+﻿You are a senior full-stack engineer, product architect, and AI/ML systems designer.
 
 I want you to help me build an end-to-end MVP called **SmartExamPrep**.
 
@@ -34,7 +34,7 @@ The goal is to build a **clean, working MVP** that is:
 
 ---
 
-# 🎯 PRODUCT GOAL
+# ðŸŽ¯ PRODUCT GOAL
 
 Build a web app where a GATE CSE aspirant can:
 
@@ -51,7 +51,7 @@ The product should behave like an **intelligent, ML-powered prep assistant**, no
 
 ---
 
-# 🧠 CORE RESEARCH IDEA
+# ðŸ§  CORE RESEARCH IDEA
 
 The unique contribution of this system is a **tri-engine AI architecture**:
 
@@ -63,7 +63,7 @@ The system should identify weak topics using a trained ML model based on:
 - recent performance trend
 - difficulty-level sensitivity
 
-**ML approach**: Train a lightweight classifier (e.g., Random Forest or XGBoost) that outputs a weakness score (0–100) per topic. For MVP, use a weighted formula with ML-calibrated weights.
+**ML approach**: Train a lightweight classifier (e.g., Random Forest or XGBoost) that outputs a weakness score (0â€“100) per topic. For MVP, use a weighted formula with ML-calibrated weights.
 
 ### 2) Adaptive Quiz Recommendation Engine (ML + Collaborative Filtering)
 The system should recommend the **next best quiz** based on:
@@ -71,16 +71,16 @@ The system should recommend the **next best quiz** based on:
 - current mastery level
 - recent performance
 - available study time
-- progression from easy → medium → hard
+- progression from easy â†’ medium â†’ hard
 
 **ML approach**: Use a content-based filtering or lightweight matrix factorization approach. For MVP use rule-based scoring with ML-calibrated priority weights.
 
 ### 3) Spaced Revision Engine (Algorithm + ML)
 The system should schedule revisions using a modified SM-2 spaced repetition algorithm:
-- poor performance → revise in 1 day
-- average → revise in 3 days
-- good → revise in 7 days
-- excellent → revise in 14 days
+- poor performance â†’ revise in 1 day
+- average â†’ revise in 3 days
+- good â†’ revise in 7 days
+- excellent â†’ revise in 14 days
 
 **ML enhancement**: Use past user cohort data to calibrate optimal intervals per topic difficulty.
 
@@ -95,7 +95,7 @@ Use NLP to:
 
 ---
 
-# 🏗️ TECH STACK
+# ðŸ—ï¸ TECH STACK
 
 Use this exact stack:
 
@@ -120,21 +120,21 @@ Use this exact stack:
 - Alembic for migrations
 
 ## ML / AI / NLP Stack
-- **scikit-learn** — weakness scoring model, recommendation ranking
-- **XGBoost** — optional upgrade for weakness classifier
-- **sentence-transformers** — NLP embeddings for semantic question similarity
-- **spaCy** — keyword extraction, NLP tagging of questions
-- **numpy / pandas** — data processing and feature engineering
-- **Google Gemini API** — human-readable explanation generation + scrape formatting assistant
-- **joblib** — ML model serialization and loading
+- **scikit-learn** â€” weakness scoring model, recommendation ranking
+- **XGBoost** â€” optional upgrade for weakness classifier
+- **sentence-transformers** â€” NLP embeddings for semantic question similarity
+- **spaCy** â€” keyword extraction, NLP tagging of questions
+- **numpy / pandas** â€” data processing and feature engineering
+- **Google AI API** â€” human-readable explanation generation + scrape formatting assistant
+- **joblib** â€” ML model serialization and loading
 
 ## Admin / Scraping / PDF Stack
-- **BeautifulSoup4 + httpx** — async web scraping of question pages from URLs
-- **playwright** (optional) — for JS-rendered question pages that BS4 cannot parse
-- **pdfplumber + PyMuPDF (fitz)** — extract text from uploaded syllabus PDFs
-- **Gemini API (structured output mode)** — parse raw scraped/extracted text into structured JSON (question, options, answer, explanation, topic, subtopic, difficulty, source)
-- **python-multipart** — FastAPI file upload handling for PDF
-- **aiofiles** — async file I/O for uploaded PDFs
+- **BeautifulSoup4 + httpx** â€” async web scraping of question pages from URLs
+- **playwright** (optional) â€” for JS-rendered question pages that BS4 cannot parse
+- **pdfplumber + PyMuPDF (fitz)** â€” extract text from uploaded syllabus PDFs
+- **AI API (structured output mode)** â€” parse raw scraped/extracted text into structured JSON (question, options, answer, explanation, topic, subtopic, difficulty, source)
+- **python-multipart** â€” FastAPI file upload handling for PDF
+- **aiofiles** â€” async file I/O for uploaded PDFs
 
 ## Auth
 - Simple JWT auth using **python-jose** + **passlib** (bcrypt)
@@ -148,14 +148,14 @@ Use this exact stack:
 - Admin panel is a protected section of the same Next.js app (`/admin/*` routes)
 
 ## Hosting
-- Frontend → Vercel
-- Backend → Railway or Render (Docker container)
-- Database → Supabase PostgreSQL or Railway PostgreSQL
-- PDF upload storage → local `/uploads` folder (MVP) or Supabase Storage (production)
+- Frontend â†’ Vercel
+- Backend â†’ Railway or Render (Docker container)
+- Database â†’ Supabase PostgreSQL or Railway PostgreSQL
+- PDF upload storage â†’ local `/uploads` folder (MVP) or Supabase Storage (production)
 
 ---
 
-# 📦 WHAT I WANT YOU TO GENERATE
+# ðŸ“¦ WHAT I WANT YOU TO GENERATE
 
 I want you to help me build this project **end-to-end** in a structured way.
 
@@ -163,19 +163,19 @@ You must provide the following in order:
 
 ---
 
-# PHASE 1 — PRODUCT ARCHITECTURE
+# PHASE 1 â€” PRODUCT ARCHITECTURE
 
 Give me:
 
 1. Full monorepo folder structure (`/frontend`, `/backend`, `/ml`) including:
-   - `/backend/routers/admin.py` — admin CRUD APIs
-   - `/backend/routers/scraper.py` — URL scraping API
-   - `/backend/routers/syllabus.py` — PDF upload API
-   - `/backend/services/scraper_service.py` — scraping logic
-   - `/backend/services/syllabus_service.py` — PDF extraction logic
-   - `/frontend/app/admin/` — admin panel pages
+   - `/backend/routers/admin.py` â€” admin CRUD APIs
+   - `/backend/routers/scraper.py` â€” URL scraping API
+   - `/backend/routers/syllabus.py` â€” PDF upload API
+   - `/backend/services/scraper_service.py` â€” scraping logic
+   - `/backend/services/syllabus_service.py` â€” PDF extraction logic
+   - `/frontend/app/admin/` â€” admin panel pages
 2. Feature breakdown (student features + admin features)
-3. Page list (Next.js) — student pages + admin pages
+3. Page list (Next.js) â€” student pages + admin pages
 4. Component list (shared + admin-specific)
 5. FastAPI route list (with router grouping, including admin/scraper/syllabus routers)
 6. Database schema overview (SQLAlchemy models) including admin metadata
@@ -187,7 +187,7 @@ Keep this clean and practical.
 
 ---
 
-# PHASE 2 — DATABASE DESIGN
+# PHASE 2 â€” DATABASE DESIGN
 
 Design a proper **SQLAlchemy** schema for this MVP.
 
@@ -215,11 +215,11 @@ Each **Question** should support:
 - explanation (string)
 - source_type (enum: PYQ / practice / scraped)
 - source_url (nullable, populated if scraped)
-- year (nullable, for PYQs — e.g. 2022)
+- year (nullable, for PYQs â€” e.g. 2022)
 - NLP keyword tags (JSON array)
 - embedding vector reference (nullable)
-- is_verified (bool — admin must verify scraped questions before they go live)
-- created_by (FK → User — which admin added this)
+- is_verified (bool â€” admin must verify scraped questions before they go live)
+- created_by (FK â†’ User â€” which admin added this)
 - created_at / updated_at timestamps
 
 Each **Topic** should support:
@@ -230,20 +230,20 @@ Each **Topic** should support:
 - order / weight (for curriculum ordering)
 
 Each **SyllabusUpload** should support:
-- uploaded_by (FK → User admin)
+- uploaded_by (FK â†’ User admin)
 - filename
 - upload_path
-- extracted_structure (JSON — the full subject/topic/subtopic tree extracted from the PDF)
+- extracted_structure (JSON â€” the full subject/topic/subtopic tree extracted from the PDF)
 - status (enum: pending / processing / done / failed)
 - created_at
 
 Each **ScrapeJob** should support:
 - url (the scraped page URL)
-- initiated_by (FK → User admin)
+- initiated_by (FK â†’ User admin)
 - status (enum: pending / processing / done / failed)
 - raw_html (text, stored for reprocessing)
 - extracted_questions (JSON array of extracted question objects before verification)
-- questions_imported (int — how many were approved and inserted)
+- questions_imported (int â€” how many were approved and inserted)
 - error_message (nullable)
 - created_at
 
@@ -265,7 +265,7 @@ Generate:
 
 ---
 
-# PHASE 3 — SEED DATA DESIGN
+# PHASE 3 â€” SEED DATA DESIGN
 
 I want seed data only for **GATE CSE**.
 
@@ -290,14 +290,14 @@ For each subject:
 Also give me:
 - a JSON structure for inserting questions
 - NLP preprocessing script to tag questions on insert
-- a small sample dataset format for 10–20 questions
+- a small sample dataset format for 10â€“20 questions
 
 Do not generate 1000 questions.
 Just create a scalable structure.
 
 ---
 
-# PHASE 4 — ML MODEL DESIGN
+# PHASE 4 â€” ML MODEL DESIGN
 
 Now design the full ML intelligence layer.
 
@@ -306,25 +306,25 @@ Now design the full ML intelligence layer.
 Design a practical ML pipeline:
 
 **Features (inputs):**
-- accuracy (float 0–1)
+- accuracy (float 0â€“1)
 - repeated_mistakes (int)
 - avg_response_time_zscore (float)
 - recent_performance_slope (float, last 5 attempts)
-- difficulty_sensitivity (float: error rate increase from easy→hard)
+- difficulty_sensitivity (float: error rate increase from easyâ†’hard)
 
 **Target (output):**
-- weakness_score (float 0–100)
+- weakness_score (float 0â€“100)
 
 **Model choices:**
 - For MVP: weighted formula with ML-calibrated weights
 - For production upgrade: XGBoost regressor trained on historical user data
 
 Requirements:
-- weakness score: 0–100
+- weakness score: 0â€“100
 - thresholds:
-  - Strong: 0–30
-  - Moderate: 31–60
-  - Weak: 61–100
+  - Strong: 0â€“30
+  - Moderate: 31â€“60
+  - Weak: 61â€“100
 
 Give:
 - formula + feature engineering
@@ -352,7 +352,7 @@ Design a content-based recommendation engine:
 3. From each topic, rank questions by: difficulty match + low repetition penalty (NLP cosine similarity to recent questions)
 
 Requirements:
-- recommend 5–10 questions
+- recommend 5â€“10 questions
 - prioritize weak topics
 - gradually increase difficulty
 - avoid repeating similar questions (use sentence-transformer similarity)
@@ -371,10 +371,10 @@ Give:
 Design revision scheduling using **modified SM-2 algorithm**:
 
 **Base intervals:**
-- poor (score < 40%) → 1 day
-- average (40–65%) → 3 days
-- good (65–85%) → 7 days
-- excellent (>85%) → 14 days
+- poor (score < 40%) â†’ 1 day
+- average (40â€“65%) â†’ 3 days
+- good (65â€“85%) â†’ 7 days
+- excellent (>85%) â†’ 14 days
 
 **ML enhancement:**
 - Use topic difficulty coefficient to scale intervals
@@ -395,7 +395,7 @@ Design the NLP layer using spaCy + sentence-transformers:
 **Tasks:**
 1. Question tagging: extract GATE CSE concepts from question text using spaCy NER + keyword matching
 2. Semantic similarity: encode questions using `all-MiniLM-L6-v2`, compute cosine similarity to avoid recommending near-duplicate questions
-3. Weakness explanation generation: use topic name + ML scores to build structured prompts → send to Gemini for human-readable output
+3. Weakness explanation generation: use topic name + ML scores to build structured prompts â†’ send to AI for human-readable output
 
 Give:
 - Python NLP module (`nlp_pipeline.py`)
@@ -405,7 +405,7 @@ Give:
 
 ---
 
-# PHASE 5 — BACKEND API DEVELOPMENT (FastAPI)
+# PHASE 5 â€” BACKEND API DEVELOPMENT (FastAPI)
 
 Now generate all backend APIs using **FastAPI**.
 
@@ -419,54 +419,54 @@ I want for each endpoint:
 Required API Endpoints:
 
 ### Auth Router (`/api/auth`)
-1. `POST /register` — register user (role defaults to `student`)
-2. `POST /login` — JWT login (return role in token payload)
-3. `GET /me` — get current user
+1. `POST /register` â€” register user (role defaults to `student`)
+2. `POST /login` â€” JWT login (return role in token payload)
+3. `GET /me` â€” get current user
 
 ### Quiz Router (`/api/quiz`)
-4. `GET /diagnostic` — fetch diagnostic quiz questions
-5. `POST /submit` — submit quiz answers
-6. `GET /adaptive` — fetch today's adaptive quiz (ML-generated)
+4. `GET /diagnostic` â€” fetch diagnostic quiz questions
+5. `POST /submit` â€” submit quiz answers
+6. `GET /adaptive` â€” fetch today's adaptive quiz (ML-generated)
 
 ### Analysis Router (`/api/analysis`)
-7. `GET /weakness` — get ML weakness scores per topic
-8. `GET /dashboard` — get full dashboard summary
+7. `GET /weakness` â€” get ML weakness scores per topic
+8. `GET /dashboard` â€” get full dashboard summary
 
 ### Revision Router (`/api/revision`)
-9. `GET /plan` — get today's revision plan
-10. `POST /mark-done` — mark a revision topic as done
+9. `GET /plan` â€” get today's revision plan
+10. `POST /mark-done` â€” mark a revision topic as done
 
 ### Content Router (`/api/content`)
-11. `GET /subjects` — list all subjects
-12. `GET /subjects/{id}/topics` — list topics for a subject
+11. `GET /subjects` â€” list all subjects
+12. `GET /subjects/{id}/topics` â€” list topics for a subject
 
 ### AI Router (`/api/ai`)
-13. `POST /explain` — generate NLP + Gemini explanation for weakness
+13. `POST /explain` â€” generate NLP + AI explanation for weakness
 
 ---
 
-## PHASE 5A — ADMIN API DEVELOPMENT (FastAPI)
+## PHASE 5A â€” ADMIN API DEVELOPMENT (FastAPI)
 
 All admin routes are protected with `require_admin` dependency (role check from JWT).
 
-### Admin — Subjects & Topics Router (`/api/admin/content`)
-1. `GET /subjects` — list all subjects (with topic count)
-2. `POST /subjects` — create a new subject
-3. `PUT /subjects/{id}` — update subject name/metadata
-4. `DELETE /subjects/{id}` — delete subject (cascade to topics, questions)
-5. `GET /subjects/{id}/topics` — list all topics for a subject
-6. `POST /subjects/{id}/topics` — create a topic under a subject
-7. `PUT /topics/{id}` — update topic (name, subtopics JSON, keyword tags)
-8. `DELETE /topics/{id}` — delete topic (cascade to questions)
+### Admin â€” Subjects & Topics Router (`/api/admin/content`)
+1. `GET /subjects` â€” list all subjects (with topic count)
+2. `POST /subjects` â€” create a new subject
+3. `PUT /subjects/{id}` â€” update subject name/metadata
+4. `DELETE /subjects/{id}` â€” delete subject (cascade to topics, questions)
+5. `GET /subjects/{id}/topics` â€” list all topics for a subject
+6. `POST /subjects/{id}/topics` â€” create a topic under a subject
+7. `PUT /topics/{id}` â€” update topic (name, subtopics JSON, keyword tags)
+8. `DELETE /topics/{id}` â€” delete topic (cascade to questions)
 
-### Admin — Questions / PYQ Router (`/api/admin/questions`)
-9. `GET /questions` — list all questions with filters (subject, topic, difficulty, source_type, is_verified)
-10. `GET /questions/{id}` — get a single question with full detail
-11. `POST /questions` — manually create a question
-12. `PUT /questions/{id}` — edit any field of a question
-13. `DELETE /questions/{id}` — delete a question
-14. `POST /questions/{id}/verify` — mark scraped question as verified (goes live)
-15. `POST /questions/bulk-verify` — bulk verify multiple questions
+### Admin â€” Questions / PYQ Router (`/api/admin/questions`)
+9. `GET /questions` â€” list all questions with filters (subject, topic, difficulty, source_type, is_verified)
+10. `GET /questions/{id}` â€” get a single question with full detail
+11. `POST /questions` â€” manually create a question
+12. `PUT /questions/{id}` â€” edit any field of a question
+13. `DELETE /questions/{id}` â€” delete a question
+14. `POST /questions/{id}/verify` â€” mark scraped question as verified (goes live)
+15. `POST /questions/bulk-verify` â€” bulk verify multiple questions
 
 For each admin question endpoint provide:
 - complete Pydantic request/response schemas
@@ -476,7 +476,7 @@ For each admin question endpoint provide:
 
 ---
 
-## PHASE 5B — WEB SCRAPER API + PDF SYLLABUS API (FastAPI)
+## PHASE 5B â€” WEB SCRAPER API + PDF SYLLABUS API (FastAPI)
 
 ### Scraper Router (`/api/admin/scraper`)
 
@@ -490,7 +490,7 @@ Design a robust async web scraper that:
    - correct answer
    - explanation (if present)
    - year / exam tag (if present)
-4. Sends extracted raw text to **Gemini API (structured JSON mode)** with a prompt that asks Gemini to:
+4. Sends extracted raw text to **AI API (structured JSON mode)** with a prompt that asks AI to:
    - identify the subject
    - identify the topic and subtopic
    - assign difficulty (easy / medium / hard)
@@ -501,21 +501,21 @@ Design a robust async web scraper that:
 6. Admin reviews and verifies questions in the Admin Panel before they go live
 
 **Endpoints:**
-1. `POST /scrape/start` — submit a URL to scrape
+1. `POST /scrape/start` â€” submit a URL to scrape
    - Request: `{ url: string, notes: string (optional) }`
    - Response: `{ job_id: uuid, status: "pending" }`
-2. `GET /scrape/jobs` — list all scrape jobs (paginated)
-3. `GET /scrape/jobs/{job_id}` — get status + extracted questions for a job
-4. `POST /scrape/jobs/{job_id}/import` — approve and import all verified questions from a job to the main questions table
-5. `DELETE /scrape/jobs/{job_id}` — cancel / delete a scrape job
+2. `GET /scrape/jobs` â€” list all scrape jobs (paginated)
+3. `GET /scrape/jobs/{job_id}` â€” get status + extracted questions for a job
+4. `POST /scrape/jobs/{job_id}/import` â€” approve and import all verified questions from a job to the main questions table
+5. `DELETE /scrape/jobs/{job_id}` â€” cancel / delete a scrape job
 
 **Scraper Service (`scraper_service.py`):**
-- `async def fetch_page(url: str) -> str` — fetch raw HTML with httpx
-- `def parse_questions(html: str) -> list[RawQuestion]` — BS4 parsing with site-agnostic heuristics
-- `async def classify_with_gemini(raw_questions: list[RawQuestion]) -> list[StructuredQuestion]` — call Gemini with structured prompt
-- `def save_scrape_job(job_id, url, results)` — persist to DB
+- `async def fetch_page(url: str) -> str` â€” fetch raw HTML with httpx
+- `def parse_questions(html: str) -> list[RawQuestion]` â€” BS4 parsing with site-agnostic heuristics
+- `async def classify_with_ai(raw_questions: list[RawQuestion]) -> list[StructuredQuestion]` â€” call AI with structured prompt
+- `def save_scrape_job(job_id, url, results)` â€” persist to DB
 
-**Gemini Prompt Template for Scraper:**
+**AI Prompt Template for Scraper:**
 ```
 You are a GATE CSE question classifier. Given the following raw question text scraped from a webpage, return a valid JSON object with these exact fields:
 {
@@ -545,8 +545,8 @@ Design a PDF upload and extraction pipeline:
 1. Admin uploads a GATE CSE syllabus PDF via multipart/form-data
 2. FastAPI saves the file using `aiofiles` to `/uploads/syllabi/`
 3. Backend reads the PDF using `pdfplumber` to extract all text
-4. Extracted text is sent to **Gemini API** with a structured prompt:
-   - Gemini parses the text and returns a clean JSON tree:
+4. Extracted text is sent to **AI API** with a structured prompt:
+   - AI parses the text and returns a clean JSON tree:
      ```json
      {
        "subjects": [
@@ -563,25 +563,25 @@ Design a PDF upload and extraction pipeline:
      }
      ```
 5. Admin reviews the extracted structure in the Admin Panel
-6. Admin clicks "Import to DB" → backend creates Subject, Topic records in DB
+6. Admin clicks "Import to DB" â†’ backend creates Subject, Topic records in DB
 7. SyllabusUpload record is updated with status `done` and the extracted JSON
 
 **Endpoints:**
-1. `POST /syllabus/upload` — upload PDF
+1. `POST /syllabus/upload` â€” upload PDF
    - Request: multipart/form-data with `file` (PDF) field
    - Response: `{ upload_id: uuid, status: "processing" }`
-2. `GET /syllabus/uploads` — list all syllabus uploads
-3. `GET /syllabus/uploads/{id}` — get extraction result (extracted JSON tree)
-4. `POST /syllabus/uploads/{id}/import` — import extracted structure into DB as Subject + Topic records
-5. `DELETE /syllabus/uploads/{id}` — delete upload record and file
+2. `GET /syllabus/uploads` â€” list all syllabus uploads
+3. `GET /syllabus/uploads/{id}` â€” get extraction result (extracted JSON tree)
+4. `POST /syllabus/uploads/{id}/import` â€” import extracted structure into DB as Subject + Topic records
+5. `DELETE /syllabus/uploads/{id}` â€” delete upload record and file
 
 **Syllabus Service (`syllabus_service.py`):**
-- `async def save_uploaded_pdf(file: UploadFile) -> str` — save to disk, return path
-- `def extract_text_from_pdf(path: str) -> str` — use pdfplumber to extract raw text
-- `async def parse_syllabus_with_gemini(raw_text: str) -> dict` — call Gemini with structured prompt
-- `def import_structure_to_db(structure: dict, db: Session, admin_id: uuid)` — upsert Subject + Topic + subtopics
+- `async def save_uploaded_pdf(file: UploadFile) -> str` â€” save to disk, return path
+- `def extract_text_from_pdf(path: str) -> str` â€” use pdfplumber to extract raw text
+- `async def parse_syllabus(raw_text: str) -> dict` â€” call AI with structured prompt
+- `def import_structure_to_db(structure: dict, db: Session, admin_id: uuid)` â€” upsert Subject + Topic + subtopics
 
-**Gemini Prompt Template for Syllabus:**
+**AI Prompt Template for Syllabus:**
 ```
 You are a university syllabus parser. Given the following text extracted from a GATE CSE syllabus PDF, return a valid JSON object with the structure:
 {
@@ -610,7 +610,7 @@ Also include:
 
 ---
 
-# PHASE 6 — FRONTEND UI DEVELOPMENT (Next.js)
+# PHASE 6 â€” FRONTEND UI DEVELOPMENT (Next.js)
 
 Now design the frontend pages using Next.js App Router + Tailwind + ShadCN.
 
@@ -628,14 +628,14 @@ Generate full page breakdown and code for:
 7. Adaptive Quiz Page
 8. Revision Plan Page
 
-### Admin Pages (`/admin/*` — only accessible if role === 'admin')
-9. **Admin Dashboard** (`/admin`) — stats: total questions, subjects, topics, pending scrape jobs, unverified questions
-10. **Subjects Manager** (`/admin/subjects`) — list/create/edit/delete subjects; expandable rows showing topics
-11. **Topics Manager** (`/admin/subjects/[id]/topics`) — list/create/edit/delete topics; inline subtopics editor (JSON chip editor)
-12. **Questions Manager** (`/admin/questions`) — full data table with filters (subject, topic, difficulty, source, verified status); inline edit; delete; bulk verify
-13. **Question Detail / Edit Page** (`/admin/questions/[id]`) — full form to edit all fields of a question; preview panel; verify button
-14. **Scraper Page** (`/admin/scraper`) — URL input form; list of past scrape jobs; per-job view with extracted questions table; approve/reject each question; bulk import button
-15. **Syllabus Upload Page** (`/admin/syllabus`) — PDF drag-and-drop upload; progress indicator; extracted subject/topic/subtopic tree viewer; "Import to DB" button
+### Admin Pages (`/admin/*` â€” only accessible if role === 'admin')
+9. **Admin Dashboard** (`/admin`) â€” stats: total questions, subjects, topics, pending scrape jobs, unverified questions
+10. **Subjects Manager** (`/admin/subjects`) â€” list/create/edit/delete subjects; expandable rows showing topics
+11. **Topics Manager** (`/admin/subjects/[id]/topics`) â€” list/create/edit/delete topics; inline subtopics editor (JSON chip editor)
+12. **Questions Manager** (`/admin/questions`) â€” full data table with filters (subject, topic, difficulty, source, verified status); inline edit; delete; bulk verify
+13. **Question Detail / Edit Page** (`/admin/questions/[id]`) â€” full form to edit all fields of a question; preview panel; verify button
+14. **Scraper Page** (`/admin/scraper`) â€” URL input form; list of past scrape jobs; per-job view with extracted questions table; approve/reject each question; bulk import button
+15. **Syllabus Upload Page** (`/admin/syllabus`) â€” PDF drag-and-drop upload; progress indicator; extracted subject/topic/subtopic tree viewer; "Import to DB" button
 
 For each page provide:
 - layout structure
@@ -646,15 +646,15 @@ For each page provide:
 - complete code if possible
 
 ### Admin-specific UI Components to build:
-- `<AdminSidebar />` — fixed sidebar with links to all admin sections
-- `<AdminGuard />` — HOC/wrapper that redirects non-admin users to `/dashboard`
-- `<DataTable />` — reusable ShadCN-based table with sort/filter/pagination
-- `<SubtopicChipEditor />` — add/remove subtopic chips inline
-- `<QuestionFormModal />` — create/edit question in a modal form
-- `<ScrapeJobCard />` — shows URL, status badge, question count, import button
-- `<SyllabusTreeViewer />` — renders extracted JSON as collapsible tree
-- `<PDFDropzone />` — drag-and-drop PDF upload with progress bar
-- `<ScrapedQuestionReview />` — side-by-side raw vs structured question with accept/reject
+- `<AdminSidebar />` â€” fixed sidebar with links to all admin sections
+- `<AdminGuard />` â€” HOC/wrapper that redirects non-admin users to `/dashboard`
+- `<DataTable />` â€” reusable ShadCN-based table with sort/filter/pagination
+- `<SubtopicChipEditor />` â€” add/remove subtopic chips inline
+- `<QuestionFormModal />` â€” create/edit question in a modal form
+- `<ScrapeJobCard />` â€” shows URL, status badge, question count, import button
+- `<SyllabusTreeViewer />` â€” renders extracted JSON as collapsible tree
+- `<PDFDropzone />` â€” drag-and-drop PDF upload with progress bar
+- `<ScrapedQuestionReview />` â€” side-by-side raw vs structured question with accept/reject
 
 Also include:
 - Axios API client setup (`/lib/api.ts`) with separate `adminApi` instance
@@ -664,7 +664,7 @@ Also include:
 
 ---
 
-# PHASE 7 — DASHBOARD DESIGN
+# PHASE 7 â€” DASHBOARD DESIGN
 
 Design the dashboard with these widgets:
 
@@ -686,7 +686,7 @@ Also provide:
 
 ---
 
-# PHASE 8 — AI / NLP / GEMINI INTEGRATION
+# PHASE 8 â€” AI / NLP / GEMINI INTEGRATION
 
 Use AI/NLP where it adds **real measurable value**:
 
@@ -695,18 +695,18 @@ Use AI/NLP where it adds **real measurable value**:
 - Avoid recommending near-duplicate questions (cosine similarity check)
 - Keyword extraction for revision summaries
 
-### Gemini (Google Generative AI):
+### AI (Google Generative AI):
 - Generate human-readable weakness summaries
 - Give short, actionable study advice per weak topic
 - Generate "why this topic matters for GATE" micro-notes
 
 Integration requirements:
 - Safe prompt design (structured prompts, no hallucination leakage)
-- FastAPI async Gemini call
-- Graceful fallback if Gemini API fails (return pre-written template)
+- FastAPI async AI call
+- Graceful fallback if AI API fails (return pre-written template)
 - Response caching (Redis or in-memory) to avoid repeated API calls
 
-Example Gemini outputs:
+Example AI outputs:
 - "You are struggling in CPU Scheduling because your accuracy is 34% on medium-difficulty conceptual questions. Focus on Banker's Algorithm and priority scheduling next."
 - "Revise Deadlock Detection tomorrow. Your last 3 attempts showed repeated mistakes on resource allocation graphs."
 
@@ -714,16 +714,16 @@ Generate production-safe implementation.
 
 ---
 
-# PHASE 9 — ML MODEL TRAINING PIPELINE
+# PHASE 9 â€” ML MODEL TRAINING PIPELINE
 
 Since we are using ML, also design:
 
 ## `/ml` folder structure:
-- `train_weakness_model.py` — training script
-- `feature_engineering.py` — extract features from DB
-- `model_evaluation.py` — evaluate model accuracy
-- `export_model.py` — export with joblib
-- `models/weakness_model.pkl` — serialized model
+- `train_weakness_model.py` â€” training script
+- `feature_engineering.py` â€” extract features from DB
+- `model_evaluation.py` â€” evaluate model accuracy
+- `export_model.py` â€” export with joblib
+- `models/weakness_model.pkl` â€” serialized model
 
 ## Training Data:
 - Synthetic data generation script for MVP (before real user data)
@@ -742,7 +742,7 @@ Give full implementation including:
 
 ---
 
-# PHASE 10 — MVP POLISH
+# PHASE 10 â€” MVP POLISH
 
 Add practical MVP improvements:
 
@@ -766,7 +766,7 @@ Keep everything realistic and deployable.
 
 ---
 
-# PHASE 11 — ADMIN PANEL FULL DESIGN
+# PHASE 11 â€” ADMIN PANEL FULL DESIGN
 
 Design the complete Admin Panel as a polished, production-grade internal tool.
 
@@ -780,7 +780,7 @@ The admin home page (`/admin`) must show:
 - Active student count
 
 ## Subjects & Topics Manager
-- Accordion-style list: Subject → Topics → Subtopics
+- Accordion-style list: Subject â†’ Topics â†’ Subtopics
 - Inline edit for subject name
 - Topic form: name, subtopics (chip multi-input), keyword tags
 - Drag-to-reorder topics within a subject (for curriculum ordering)
@@ -798,12 +798,12 @@ The admin home page (`/admin`) must show:
 ## Scraper Workflow (Admin)
 1. Admin goes to `/admin/scraper`
 2. Enters a URL (e.g., GeeksForGeeks GATE PYQ page, or any exam question page)
-3. Clicks "Scrape" — backend fetches and processes asynchronously
-4. Status badge updates via polling: Pending → Processing → Done / Failed
+3. Clicks "Scrape" â€” backend fetches and processes asynchronously
+4. Status badge updates via polling: Pending â†’ Processing â†’ Done / Failed
 5. When done, admin sees a table of extracted questions with:
    - Question text, Options, Answer, Explanation, Detected Topic, Difficulty
-   - Each row has: ✅ Accept | ❌ Reject toggle
-6. Admin clicks "Import Accepted" → selected questions go into DB with `is_verified = true`
+   - Each row has: âœ… Accept | âŒ Reject toggle
+6. Admin clicks "Import Accepted" â†’ selected questions go into DB with `is_verified = true`
 7. Rejected questions are discarded
 
 For the Scraper page generate:
@@ -811,28 +811,28 @@ For the Scraper page generate:
 - ScrapeJobCard component
 - ScrapedQuestionReview table with Accept/Reject toggles
 - FastAPI service code
-- Gemini prompt logic
+- AI prompt logic
 
 ## Syllabus Upload Workflow (Admin)
 1. Admin goes to `/admin/syllabus`
 2. Drags or selects a GATE CSE Syllabus PDF
-3. Clicks Upload → PDF is sent to FastAPI
-4. Backend extracts text with pdfplumber → sends to Gemini → gets structured JSON
+3. Clicks Upload â†’ PDF is sent to FastAPI
+4. Backend extracts text with pdfplumber â†’ sends to AI â†’ gets structured JSON
 5. Admin sees the extracted structure in a collapsible tree view:
-   - Subject → Topics → Subtopics
+   - Subject â†’ Topics â†’ Subtopics
 6. Admin can manually edit the tree before importing (rename/delete nodes)
-7. Clicks "Import to Database" → Subject and Topic records are created/updated in DB
+7. Clicks "Import to Database" â†’ Subject and Topic records are created/updated in DB
 
 For the Syllabus page generate:
 - Full React component with PDFDropzone
 - SyllabusTreeViewer with editable nodes
 - FastAPI `/api/admin/syllabus/upload` implementation
 - pdfplumber extraction code
-- Gemini structured prompt code
+- AI structured prompt code
 
 ---
 
-# PHASE 12 — RESEARCH PAPER SUPPORT
+# PHASE 12 â€” RESEARCH PAPER SUPPORT
 
 Finally, help me convert this MVP into a research project.
 
@@ -842,7 +842,7 @@ Give me:
 2. Novelty statement (ML + NLP + spaced repetition + automated content ingestion)
 3. Problem statement
 4. Methodology (explain ML pipeline + scraping pipeline + syllabus extraction)
-5. System architecture explanation (frontend ↔ FastAPI ↔ ML ↔ PostgreSQL ↔ Gemini ↔ Admin)
+5. System architecture explanation (frontend â†” FastAPI â†” ML â†” PostgreSQL â†” AI â†” Admin)
 6. Evaluation plan
 7. Metrics to measure:
    - accuracy improvement over time
@@ -852,7 +852,7 @@ Give me:
    - NLP tagging accuracy
    - scraper extraction accuracy (vs manually entered questions)
    - syllabus extraction F1-score
-8. Experiment design for 10–30 students
+8. Experiment design for 10â€“30 students
 9. Possible IEEE-style paper title ideas
 10. Related works section outline (spaced repetition, adaptive learning, NLP in education, automated content extraction)
 
@@ -886,7 +886,7 @@ I want your output to be:
 - clear enough to directly build from
 - suitable for a student developer building solo
 
-Start with **PHASE 1 — PRODUCT ARCHITECTURE**
+Start with **PHASE 1 â€” PRODUCT ARCHITECTURE**
 and continue step-by-step.
 
 Do not jump randomly.
@@ -895,7 +895,7 @@ Build this like a real product architect with ML expertise and content managemen
 For admin features, always prioritize:
 - Security (all admin routes must validate `role === admin` from JWT)
 - Auditability (all admin mutations should log who did what and when)
-- Graceful failure (scraper and PDF extraction can fail — always handle errors and show meaningful messages to admin)
+- Graceful failure (scraper and PDF extraction can fail â€” always handle errors and show meaningful messages to admin)
 
 ---
 
@@ -910,4 +910,5 @@ Apply these rules everywhere question models, schemas, APIs, scraper output, and
 - In scraper flows, extract all relevant image URLs from the source page and include them in `question_image_urls`.
 - In admin create/edit flows, support adding, previewing, reordering, and deleting multiple question images.
 - In student quiz/result pages, render all question images in order before options, with responsive sizing and lazy loading.
-- In NLP/Gemini processing, combine `question_text` with OCR/caption text (if available) so image-dependent PYQs are classified correctly.
+- In NLP/AI processing, combine `question_text` with OCR/caption text (if available) so image-dependent PYQs are classified correctly.
+

@@ -10,9 +10,11 @@ import {
   CircleHelp,
   FileText,
   LayoutDashboard,
+  ShieldCheck,
 } from "lucide-react";
 
 import { adminApi } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 type NavItem = {
   href: string;
@@ -75,15 +77,20 @@ export default function AdminSidebar() {
   }, [pathname]);
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-slate-800 bg-slate-900/95 px-4 py-6 backdrop-blur-sm">
-      <div className="px-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+    <aside className="app-noise fixed inset-y-0 left-0 z-30 flex w-[272px] flex-col border-r border-white/10 bg-[rgba(6,6,10,0.96)] px-4 py-6 backdrop-blur-xl">
+      <div className="rounded-[22px] border border-[rgba(232,82,10,0.16)] bg-[rgba(232,82,10,0.08)] p-4">
+        <p className="font-mono text-[0.56rem] uppercase tracking-[0.26em] text-[rgba(194,186,176,0.62)]">
           SmartExamPrep
         </p>
-        <h2 className="mt-1 text-lg font-semibold text-indigo-300">Admin Panel</h2>
+        <h2 className="mt-2 font-display text-4xl leading-none tracking-[0.08em] text-[var(--cream)]">
+          ADMIN
+        </h2>
+        <p className="mt-2 text-xs text-[rgba(194,186,176,0.7)]">
+          Content Ops Console
+        </p>
       </div>
 
-      <nav className="mt-8 flex flex-1 flex-col gap-1">
+      <nav className="mt-7 flex flex-1 flex-col gap-1.5">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeHref === item.href;
@@ -92,17 +99,18 @@ export default function AdminSidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition ${
+              className={cn(
+                "group flex items-center gap-3 rounded-[14px] border px-3 py-2.5 text-sm transition",
                 isActive
-                  ? "bg-indigo-600/90 text-white shadow-md shadow-indigo-950/40"
-                  : "text-slate-300 hover:bg-slate-800 hover:text-slate-100"
-              }`}
+                  ? "border-[rgba(232,82,10,0.24)] bg-[rgba(232,82,10,0.24)] text-[var(--cream)]"
+                  : "border-transparent text-[rgba(194,186,176,0.76)] hover:border-white/10 hover:bg-white/5 hover:text-[var(--cream)]"
+              )}
             >
               <Icon className="h-4 w-4" aria-hidden />
               <span>{item.label}</span>
 
               {item.label === "Questions" && unverifiedCount > 0 ? (
-                <span className="ml-auto rounded-full bg-rose-500 px-2 py-0.5 text-xs font-semibold text-white">
+                <span className="ml-auto rounded-full border border-rose-500/40 bg-rose-500/15 px-2 py-0.5 text-[0.62rem] font-semibold text-rose-200">
                   {unverifiedCount}
                 </span>
               ) : null}
@@ -110,6 +118,24 @@ export default function AdminSidebar() {
           );
         })}
       </nav>
+
+      <div className="rounded-[18px] border border-white/10 bg-white/4 p-3">
+        <div className="flex items-start gap-2.5">
+          <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-full border border-[rgba(0,212,255,0.2)] bg-[rgba(0,212,255,0.1)]">
+            <ShieldCheck className="h-4 w-4 text-[var(--ice)]" />
+          </div>
+          <div>
+            <p className="font-mono text-[0.56rem] uppercase tracking-[0.22em] text-[rgba(194,186,176,0.56)]">
+              Queue Health
+            </p>
+            <p className="mt-1 text-sm text-[rgba(194,186,176,0.76)]">
+              {unverifiedCount > 0
+                ? `${unverifiedCount} questions pending verification`
+                : "No pending review items"}
+            </p>
+          </div>
+        </div>
+      </div>
     </aside>
   );
 }

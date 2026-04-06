@@ -25,6 +25,13 @@ export type TopicComparison = {
   after?: TopicWeaknessSnapshot;
 };
 
+export type QuizContextPayload = {
+  source?: string;
+  daily_task_id?: string;
+  planner_task_type?: string;
+  [key: string]: unknown;
+};
+
 export type QuizResultSnapshot = {
   attempt_id: string;
   quiz_type: string;
@@ -33,6 +40,9 @@ export type QuizResultSnapshot = {
   total_questions: number;
   topic_scores: Record<string, number>;
   topic_comparisons: TopicComparison[];
+  readiness_before?: number | null;
+  readiness_after?: number | null;
+  context_payload?: QuizContextPayload | null;
   submitted_at: string;
 };
 

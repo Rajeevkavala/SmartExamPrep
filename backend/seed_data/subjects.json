@@ -1,42 +1,37 @@
 {
   "subjects": [
     {
-      "name": "Data Structures",
+      "name": "Engineering Mathematics",
       "topics": [
         {
-          "name": "Arrays and Strings",
-          "subtopics": ["1D/2D Arrays", "String Matching", "Sliding Window", "Prefix Sum"],
-          "nlp_tags": ["array", "string", "index", "buffer", "prefix"]
+          "name": "Logic Sets and Relations",
+          "subtopics": ["Propositional logic", "First order logic", "Sets and set operations", "Relations and functions", "Partial orders"],
+          "nlp_tags": ["logic", "sets", "relations", "functions", "partial order"]
         },
         {
-          "name": "Linked Lists",
-          "subtopics": ["Singly Linked", "Doubly Linked", "Circular", "Floyd's Algorithm"],
-          "nlp_tags": ["linked list", "pointer", "node", "cycle detection"]
+          "name": "Algebraic Structures and Lattices",
+          "subtopics": ["Monoids", "Groups", "Lattices", "Hasse diagrams", "Algebraic properties"],
+          "nlp_tags": ["monoid", "group", "lattice", "algebra", "order theory"]
         },
         {
-          "name": "Stacks and Queues",
-          "subtopics": ["Stack Applications", "Queue Variants", "Deque", "Priority Queue"],
-          "nlp_tags": ["stack", "queue", "LIFO", "FIFO", "push", "pop"]
+          "name": "Graph Theory and Combinatorics",
+          "subtopics": ["Graph connectivity", "Matching", "Graph colouring", "Counting techniques", "Recurrence relations", "Generating functions"],
+          "nlp_tags": ["graph", "matching", "colouring", "combinatorics", "recurrence", "generating function"]
         },
         {
-          "name": "Trees",
-          "subtopics": ["Binary Tree", "BST", "AVL Tree", "Segment Tree", "Fenwick Tree"],
-          "nlp_tags": ["tree", "root", "leaf", "height", "traversal", "BST", "AVL"]
+          "name": "Linear Algebra",
+          "subtopics": ["Matrices and determinants", "System of linear equations", "Rank and nullity", "Eigenvalues and eigenvectors", "LU decomposition"],
+          "nlp_tags": ["matrices", "determinant", "linear system", "eigenvalue", "LU decomposition"]
         },
         {
-          "name": "Heaps",
-          "subtopics": ["Min Heap", "Max Heap", "Heap Sort", "Heapify"],
-          "nlp_tags": ["heap", "priority", "heapify", "parent", "merge"]
+          "name": "Calculus",
+          "subtopics": ["Limits", "Continuity and differentiability", "Maxima and minima", "Mean value theorem", "Integration"],
+          "nlp_tags": ["limits", "continuity", "differentiability", "mean value theorem", "integration"]
         },
         {
-          "name": "Hashing",
-          "subtopics": ["Hash Functions", "Chaining", "Open Addressing", "Load Factor"],
-          "nlp_tags": ["hash", "collision", "chaining", "probing", "load factor"]
-        },
-        {
-          "name": "Graphs",
-          "subtopics": ["BFS", "DFS", "Dijkstra", "Bellman-Ford", "Floyd-Warshall", "Topological Sort"],
-          "nlp_tags": ["graph", "vertex", "edge", "BFS", "DFS", "shortest path"]
+          "name": "Probability and Statistics",
+          "subtopics": ["Random variables", "Uniform normal exponential distributions", "Poisson and binomial distributions", "Mean median mode", "Standard deviation", "Conditional probability", "Bayes theorem"],
+          "nlp_tags": ["probability", "statistics", "distribution", "bayes theorem", "random variable"]
         }
       ]
     },
@@ -44,139 +39,154 @@
       "name": "Algorithms",
       "topics": [
         {
-          "name": "Sorting",
-          "subtopics": ["Merge Sort", "Quick Sort", "Heap Sort", "Counting Sort", "Radix Sort"],
-          "nlp_tags": ["sort", "comparison", "pivot", "merge", "stable sort"]
+          "name": "Searching Sorting and Hashing",
+          "subtopics": ["Linear and binary search", "Hashing basics", "Sorting paradigms", "Comparison vs non comparison sorting"],
+          "nlp_tags": ["searching", "sorting", "hashing", "binary search", "comparison sort"]
         },
         {
-          "name": "Searching",
-          "subtopics": ["Binary Search", "Ternary Search", "KMP", "Rabin-Karp"],
-          "nlp_tags": ["search", "binary search", "pattern matching", "KMP"]
-        },
-        {
-          "name": "Dynamic Programming",
-          "subtopics": ["Memoization", "Tabulation", "LCS", "LIS", "Knapsack", "Matrix Chain"],
-          "nlp_tags": ["dynamic programming", "DP", "optimal substructure", "overlapping", "knapsack"]
+          "name": "Asymptotic Analysis",
+          "subtopics": ["Worst case complexity", "Time complexity", "Space complexity", "Asymptotic notations"],
+          "nlp_tags": ["complexity", "big o", "time complexity", "space complexity", "asymptotic"]
         },
         {
           "name": "Greedy Algorithms",
-          "subtopics": ["Activity Selection", "Huffman Coding", "Fractional Knapsack", "Job Scheduling"],
-          "nlp_tags": ["greedy", "optimal", "activity selection", "Huffman", "local optimum"]
+          "subtopics": ["Greedy choice property", "Activity selection", "Huffman coding", "Interval scheduling"],
+          "nlp_tags": ["greedy", "activity selection", "huffman", "optimization", "local optimum"]
+        },
+        {
+          "name": "Dynamic Programming",
+          "subtopics": ["Optimal substructure", "Overlapping subproblems", "Memoization", "Tabulation", "Knapsack and sequence DP"],
+          "nlp_tags": ["dynamic programming", "memoization", "tabulation", "knapsack", "dp"]
         },
         {
           "name": "Divide and Conquer",
-          "subtopics": ["Merge Sort", "Quick Sort", "Binary Search", "Strassen's Matrix"],
-          "nlp_tags": ["divide", "conquer", "recurrence", "T(n) = 2T(n/2)"]
+          "subtopics": ["Recurrence relations", "Master style analysis", "Merge sort", "Binary search"],
+          "nlp_tags": ["divide and conquer", "recurrence", "merge sort", "master theorem"]
         },
         {
-          "name": "Graph Algorithms",
-          "subtopics": ["MST (Kruskal, Prim)", "Shortest Path", "SCC", "Articulation Points"],
-          "nlp_tags": ["MST", "spanning tree", "Kruskal", "Prim", "Dijkstra"]
+          "name": "Graph Traversals",
+          "subtopics": ["Breadth first search", "Depth first search", "Traversal trees", "Traversal applications"],
+          "nlp_tags": ["graph traversal", "bfs", "dfs", "graph", "traversal"]
         },
         {
-          "name": "Complexity Theory",
-          "subtopics": ["Time Complexity", "Space Complexity", "Big-O", "P vs NP", "NP-Hard"],
-          "nlp_tags": ["complexity", "Big-O", "NP", "polynomial", "reduction"]
+          "name": "Minimum Spanning Trees",
+          "subtopics": ["MST properties", "Kruskal algorithm", "Prim algorithm", "Cut property"],
+          "nlp_tags": ["mst", "kruskal", "prim", "spanning tree", "graph"]
+        },
+        {
+          "name": "Shortest Path Algorithms",
+          "subtopics": ["Single source shortest path", "Dijkstra algorithm", "Bellman Ford basics", "Relaxation"],
+          "nlp_tags": ["shortest path", "dijkstra", "bellman ford", "relaxation", "graph"]
         }
       ]
     },
     {
-      "name": "Operating Systems",
+      "name": "Digital Logic",
       "topics": [
         {
-          "name": "Process Management",
-          "subtopics": ["Process States", "PCB", "Context Switching", "Fork", "Threads"],
-          "nlp_tags": ["process", "PCB", "context switch", "fork", "thread", "state"]
+          "name": "Boolean Algebra and Logic Gates",
+          "subtopics": ["Boolean identities", "Logic gates", "Canonical forms", "Gate level implementation"],
+          "nlp_tags": ["boolean algebra", "logic gates", "canonical form", "digital logic"]
         },
         {
-          "name": "CPU Scheduling",
-          "subtopics": ["FCFS", "SJF", "Round Robin", "Priority Scheduling", "MLFQ"],
-          "nlp_tags": ["scheduling", "CPU", "round robin", "preemptive", "burst time", "waiting time"]
+          "name": "Logic Minimization",
+          "subtopics": ["Karnaugh map", "Sum of products", "Product of sums", "Dont care conditions"],
+          "nlp_tags": ["minimization", "k map", "sop", "pos", "boolean reduction"]
         },
         {
-          "name": "Synchronization",
-          "subtopics": ["Mutex", "Semaphore", "Monitor", "Producer-Consumer", "Readers-Writers"],
-          "nlp_tags": ["semaphore", "mutex", "synchronization", "critical section", "deadlock"]
+          "name": "Combinational Circuits",
+          "subtopics": ["Adders and subtractors", "Encoders and decoders", "Multiplexers", "Comparators"],
+          "nlp_tags": ["combinational", "adder", "decoder", "multiplexer", "comparator"]
         },
         {
-          "name": "Deadlock",
-          "subtopics": ["Conditions", "Prevention", "Avoidance", "Detection", "Banker's Algorithm"],
-          "nlp_tags": ["deadlock", "banker", "resource allocation", "circular wait", "safe state"]
+          "name": "Sequential Circuits",
+          "subtopics": ["Latches and flip flops", "Registers", "Counters", "State transition basics"],
+          "nlp_tags": ["sequential", "flip flop", "register", "counter", "state machine"]
         },
         {
-          "name": "Memory Management",
-          "subtopics": ["Paging", "Segmentation", "TLB", "Page Replacement", "Thrashing"],
-          "nlp_tags": ["paging", "page table", "TLB", "LRU", "FIFO", "page fault", "thrashing"]
+          "name": "Number Representation",
+          "subtopics": ["Signed and unsigned numbers", "Twos complement", "Fixed point representation", "Floating point representation"],
+          "nlp_tags": ["number system", "twos complement", "fixed point", "floating point", "representation"]
         },
         {
-          "name": "File Systems",
-          "subtopics": ["File Allocation", "Directory Structure", "Inode", "FAT", "Ext"],
-          "nlp_tags": ["file system", "inode", "FAT", "directory", "allocation"]
-        },
-        {
-          "name": "Disk Scheduling",
-          "subtopics": ["FCFS", "SSTF", "SCAN", "C-SCAN", "LOOK"],
-          "nlp_tags": ["disk", "seek time", "SSTF", "SCAN", "cylinder"]
+          "name": "Computer Arithmetic",
+          "subtopics": ["Binary addition and subtraction", "Overflow handling", "Fixed point arithmetic", "Floating point arithmetic"],
+          "nlp_tags": ["computer arithmetic", "overflow", "binary arithmetic", "fixed point", "floating point"]
         }
       ]
     },
     {
-      "name": "DBMS",
+      "name": "Computer Organization and Architecture",
       "topics": [
         {
-          "name": "Relational Model",
-          "subtopics": ["Keys", "Integrity Constraints", "Relational Algebra", "Tuple Calculus"],
-          "nlp_tags": ["relation", "primary key", "foreign key", "relational algebra", "tuple"]
+          "name": "Machine Instructions and Addressing Modes",
+          "subtopics": ["Instruction formats", "Addressing modes", "Instruction execution", "Register transfer"],
+          "nlp_tags": ["machine instruction", "addressing mode", "instruction format", "register"]
         },
         {
-          "name": "SQL",
-          "subtopics": ["DDL", "DML", "Joins", "Subqueries", "Aggregation", "Views"],
-          "nlp_tags": ["SQL", "SELECT", "JOIN", "GROUP BY", "aggregate", "view"]
+          "name": "ALU Datapath and Control Unit",
+          "subtopics": ["ALU functions", "Datapath elements", "Control signals", "Hardwired and microprogrammed control"],
+          "nlp_tags": ["alu", "datapath", "control unit", "control signals", "microprogrammed"]
         },
         {
-          "name": "Normalization",
-          "subtopics": ["1NF", "2NF", "3NF", "BCNF", "4NF", "Functional Dependency"],
-          "nlp_tags": ["normalization", "1NF", "2NF", "3NF", "BCNF", "functional dependency"]
+          "name": "Instruction Pipelining",
+          "subtopics": ["Pipeline stages", "Pipeline speedup", "Throughput and latency", "Pipeline timing"],
+          "nlp_tags": ["pipelining", "pipeline stages", "throughput", "latency", "speedup"]
         },
         {
-          "name": "Transactions",
-          "subtopics": ["ACID Properties", "Serializability", "Concurrency Control", "2PL", "MVCC"],
-          "nlp_tags": ["transaction", "ACID", "atomicity", "isolation", "serializability", "2PL"]
+          "name": "Pipeline Hazards",
+          "subtopics": ["Structural hazards", "Data hazards", "Control hazards", "Hazard mitigation"],
+          "nlp_tags": ["pipeline hazards", "data hazard", "control hazard", "stall", "forwarding"]
         },
         {
-          "name": "Indexing",
-          "subtopics": ["B-Tree", "B+ Tree", "Hash Index", "Dense vs Sparse"],
-          "nlp_tags": ["index", "B+ tree", "hash index", "clustered", "dense", "sparse"]
+          "name": "Memory Hierarchy",
+          "subtopics": ["Cache memory", "Main memory", "Secondary storage", "Locality", "Memory performance"],
+          "nlp_tags": ["memory hierarchy", "cache", "main memory", "secondary storage", "locality"]
+        },
+        {
+          "name": "I/O Interface and DMA",
+          "subtopics": ["Interrupt driven I/O", "DMA mode", "I/O interface", "Bus communication"],
+          "nlp_tags": ["io", "interrupt", "dma", "interface", "bus"]
         }
       ]
     },
     {
-      "name": "Computer Networks",
+      "name": "Programming and Data Structures",
       "topics": [
         {
-          "name": "Network Layers",
-          "subtopics": ["OSI Model", "TCP/IP Model", "Layer Functions", "Encapsulation"],
-          "nlp_tags": ["OSI", "TCP/IP", "layer", "protocol", "encapsulation"]
+          "name": "Programming in C",
+          "subtopics": ["Data types and operators", "Control flow", "Functions and scope", "Pointers", "Structures"],
+          "nlp_tags": ["c programming", "pointers", "functions", "structures", "control flow"]
         },
         {
-          "name": "Data Link Layer",
-          "subtopics": ["Framing", "Error Detection", "CSMA/CD", "CSMA/CA", "MAC Address"],
-          "nlp_tags": ["data link", "framing", "CRC", "CSMA", "MAC", "Ethernet"]
+          "name": "Recursion and Problem Solving",
+          "subtopics": ["Recursion basics", "Base and recursive case", "Recursion tree", "Backtracking patterns"],
+          "nlp_tags": ["recursion", "backtracking", "problem solving", "recurrence"]
         },
         {
-          "name": "Network Layer",
-          "subtopics": ["IP Addressing", "Subnetting", "CIDR", "ARP", "ICMP", "Routing"],
-          "nlp_tags": ["IP", "subnet", "CIDR", "routing", "ARP", "ICMP"]
+          "name": "Arrays and Strings",
+          "subtopics": ["Array operations", "Multi dimensional arrays", "String operations", "Two pointer patterns"],
+          "nlp_tags": ["array", "string", "index", "two pointer", "memory layout"]
         },
         {
-          "name": "Transport Layer",
-          "subtopics": ["TCP", "UDP", "Three-Way Handshake", "Flow Control", "Congestion Control"],
-          "nlp_tags": ["TCP", "UDP", "handshake", "flow control", "congestion", "ACK"]
+          "name": "Stacks Queues and Linked Lists",
+          "subtopics": ["Stack operations", "Queue operations", "Singly linked list", "Doubly linked list", "Circular linked list"],
+          "nlp_tags": ["stack", "queue", "linked list", "lifo", "fifo"]
         },
         {
-          "name": "Application Layer",
-          "subtopics": ["HTTP", "DNS", "SMTP", "FTP", "DHCP", "HTTPS"],
-          "nlp_tags": ["HTTP", "DNS", "SMTP", "application layer", "socket"]
+          "name": "Trees and Binary Search Trees",
+          "subtopics": ["Tree traversals", "Binary trees", "BST properties", "Balanced BST overview"],
+          "nlp_tags": ["tree", "bst", "traversal", "balanced tree", "binary tree"]
+        },
+        {
+          "name": "Heaps and Priority Queues",
+          "subtopics": ["Min heap", "Max heap", "Heap operations", "Priority queue usage"],
+          "nlp_tags": ["heap", "priority queue", "heapify", "binary heap"]
+        },
+        {
+          "name": "Graph Data Structures",
+          "subtopics": ["Adjacency matrix", "Adjacency list", "Directed and undirected graphs", "Weighted graph representation"],
+          "nlp_tags": ["graph", "adjacency list", "adjacency matrix", "weighted graph"]
         }
       ]
     },
@@ -184,29 +194,34 @@
       "name": "Theory of Computation",
       "topics": [
         {
-          "name": "Finite Automata",
-          "subtopics": ["DFA", "NFA", "NFA to DFA", "Minimization", "Regular Languages"],
-          "nlp_tags": ["DFA", "NFA", "automata", "state", "transition", "regular language"]
+          "name": "Regular Expressions and Finite Automata",
+          "subtopics": ["Regular expressions", "DFA and NFA", "NFA to DFA conversion", "Automata minimization"],
+          "nlp_tags": ["regular expression", "dfa", "nfa", "automata", "regular language"]
         },
         {
-          "name": "Regular Expressions",
-          "subtopics": ["RE to FA", "Pumping Lemma", "Kleene's Theorem"],
-          "nlp_tags": ["regular expression", "Kleene star", "pumping lemma"]
+          "name": "Context Free Grammars and Pushdown Automata",
+          "subtopics": ["CFG derivations", "Parse trees", "Pushdown automata", "Grammar simplification"],
+          "nlp_tags": ["cfg", "pda", "parse tree", "context free grammar"]
         },
         {
-          "name": "Context-Free Languages",
-          "subtopics": ["CFG", "PDA", "CYK Algorithm", "Ambiguity", "CNF"],
-          "nlp_tags": ["CFG", "context free", "PDA", "pushdown", "ambiguous grammar"]
+          "name": "Regular and Context Free Languages",
+          "subtopics": ["Language classes", "Closure properties", "Decidability basics", "Language hierarchy"],
+          "nlp_tags": ["language class", "regular language", "context free language", "closure"]
+        },
+        {
+          "name": "Pumping Lemma",
+          "subtopics": ["Pumping lemma for regular languages", "Pumping lemma for CFL", "Proof strategy", "Contradiction based proofs"],
+          "nlp_tags": ["pumping lemma", "regular language", "cfl", "proof"]
         },
         {
           "name": "Turing Machines",
-          "subtopics": ["TM Model", "Decidability", "Halting Problem", "Reducibility"],
-          "nlp_tags": ["Turing machine", "halting", "decidable", "undecidable", "reducibility"]
+          "subtopics": ["TM model", "Instantaneous descriptions", "Decidability", "Recognizability"],
+          "nlp_tags": ["turing machine", "decidable", "recognizable", "computation"]
         },
         {
-          "name": "Complexity Classes",
-          "subtopics": ["P", "NP", "NP-Complete", "NP-Hard", "Cook's Theorem"],
-          "nlp_tags": ["P", "NP", "NP-complete", "polynomial time", "Cook's theorem"]
+          "name": "Undecidability",
+          "subtopics": ["Halting problem", "Reductions", "Undecidable problems", "Diagonalization intuition"],
+          "nlp_tags": ["undecidability", "halting problem", "reduction", "diagonalization"]
         }
       ]
     },
@@ -215,130 +230,171 @@
       "topics": [
         {
           "name": "Lexical Analysis",
-          "subtopics": ["Tokens", "LEX Tool", "FA-based Lexer", "Symbol Table"],
-          "nlp_tags": ["lexer", "token", "scanner", "regex", "LEX"]
+          "subtopics": ["Tokens and lexemes", "Regular expressions for tokens", "Finite automata based scanner", "Lexical errors"],
+          "nlp_tags": ["lexical analysis", "token", "lexer", "scanner", "regular expression"]
         },
         {
-          "name": "Syntax Analysis",
-          "subtopics": ["Top-Down Parsing", "Bottom-Up Parsing", "LL(1)", "LR(0)", "SLR", "CLR", "LALR"],
-          "nlp_tags": ["parser", "LL1", "LR", "SLR", "LALR", "grammar", "derivation"]
+          "name": "Parsing Techniques",
+          "subtopics": ["Top down parsing", "Bottom up parsing", "LL parsing", "LR parsing"],
+          "nlp_tags": ["parsing", "ll", "lr", "grammar", "parser"]
         },
         {
-          "name": "Semantic Analysis",
-          "subtopics": ["Type Checking", "Attribute Grammars", "Symbol Table"],
-          "nlp_tags": ["semantic", "type check", "attribute grammar"]
+          "name": "Syntax Directed Translation",
+          "subtopics": ["Syntax directed definitions", "Attribute grammars", "Translation schemes", "Type checking basics"],
+          "nlp_tags": ["syntax directed translation", "attribute grammar", "type checking", "semantic rules"]
         },
         {
-          "name": "Intermediate Code",
-          "subtopics": ["Three-Address Code", "Quadruples", "DAG", "SSA"],
-          "nlp_tags": ["intermediate code", "three-address", "DAG", "SSA"]
+          "name": "Runtime Environments",
+          "subtopics": ["Activation records", "Storage organization", "Parameter passing", "Scope and binding"],
+          "nlp_tags": ["runtime", "activation record", "stack frame", "scope", "binding"]
         },
         {
-          "name": "Code Optimization",
-          "subtopics": ["Peephole", "CSE", "Constant Folding", "Loop Optimization", "Register Allocation"],
-          "nlp_tags": ["optimization", "peephole", "CSE", "loop", "register allocation"]
+          "name": "Intermediate Code Generation",
+          "subtopics": ["Three address code", "Quadruples and triples", "Basic blocks", "Control flow graph"],
+          "nlp_tags": ["intermediate code", "three address code", "basic block", "cfg"]
+        },
+        {
+          "name": "Local Optimization",
+          "subtopics": ["Common subexpression elimination", "Constant folding", "Dead code elimination", "Peephole optimization"],
+          "nlp_tags": ["local optimization", "constant folding", "cse", "dead code", "peephole"]
+        },
+        {
+          "name": "Data Flow Analysis",
+          "subtopics": ["Reaching definitions", "Liveness analysis", "Available expressions", "Constant propagation"],
+          "nlp_tags": ["data flow", "reaching definitions", "liveness", "constant propagation"]
         }
       ]
     },
     {
-      "name": "Digital Logic",
+      "name": "Operating System",
       "topics": [
         {
-          "name": "Boolean Algebra",
-          "subtopics": ["Laws", "De Morgan's", "Karnaugh Map", "Quine-McCluskey"],
-          "nlp_tags": ["boolean", "logic gate", "K-map", "SOP", "POS", "De Morgan"]
+          "name": "System Calls and Process Management",
+          "subtopics": ["System calls", "Process states", "Process control block", "Process creation and termination"],
+          "nlp_tags": ["system call", "process", "pcb", "process state", "os"]
         },
         {
-          "name": "Combinational Circuits",
-          "subtopics": ["Multiplexer", "Demultiplexer", "Encoder", "Decoder", "Adder", "Comparator"],
-          "nlp_tags": ["combinational", "MUX", "decoder", "adder", "half adder", "full adder"]
+          "name": "Threads IPC and Synchronization",
+          "subtopics": ["Threads", "Inter process communication", "Critical section", "Semaphores and mutex", "Monitors"],
+          "nlp_tags": ["thread", "ipc", "synchronization", "semaphore", "mutex"]
         },
         {
-          "name": "Sequential Circuits",
-          "subtopics": ["SR Latch", "D Flip-Flop", "JK Flip-Flop", "Registers", "Counters"],
-          "nlp_tags": ["flip-flop", "latch", "sequential", "register", "counter", "state machine"]
+          "name": "Deadlock",
+          "subtopics": ["Necessary conditions", "Deadlock prevention", "Deadlock avoidance", "Deadlock detection and recovery"],
+          "nlp_tags": ["deadlock", "prevention", "avoidance", "detection", "recovery"]
         },
         {
-          "name": "Number Systems",
-          "subtopics": ["Binary", "Octal", "Hex", "2's Complement", "IEEE 754"],
-          "nlp_tags": ["binary", "hexadecimal", "2's complement", "IEEE 754", "floating point"]
+          "name": "CPU Scheduling",
+          "subtopics": ["FCFS", "SJF and SRTF", "Round robin", "Priority scheduling", "Scheduling metrics"],
+          "nlp_tags": ["cpu scheduling", "fcfs", "sjf", "round robin", "priority scheduling"]
+        },
+        {
+          "name": "I/O Scheduling",
+          "subtopics": ["Disk scheduling goals", "FCFS and SSTF", "SCAN and C-SCAN", "LOOK and C-LOOK"],
+          "nlp_tags": ["io scheduling", "disk scheduling", "scan", "sstf", "look"]
+        },
+        {
+          "name": "Memory Management and Virtual Memory",
+          "subtopics": ["Paging", "Segmentation", "Virtual memory", "Page replacement", "Thrashing"],
+          "nlp_tags": ["memory management", "virtual memory", "paging", "page replacement", "thrashing"]
+        },
+        {
+          "name": "File Systems",
+          "subtopics": ["File allocation methods", "Directory structures", "Inode concepts", "Access permissions"],
+          "nlp_tags": ["file system", "inode", "directory", "allocation", "os storage"]
         }
       ]
     },
     {
-      "name": "Computer Organization",
+      "name": "Databases",
       "topics": [
         {
-          "name": "CPU Architecture",
-          "subtopics": ["ALU", "Control Unit", "Registers", "Instruction Cycle", "Pipeline"],
-          "nlp_tags": ["ALU", "control unit", "instruction cycle", "fetch decode execute", "pipeline"]
+          "name": "ER Modeling",
+          "subtopics": ["Entity relationship model", "Entities and attributes", "Cardinality and participation", "ER diagrams"],
+          "nlp_tags": ["er model", "entity", "relationship", "cardinality", "database design"]
         },
         {
-          "name": "Memory Hierarchy",
-          "subtopics": ["Cache", "DRAM", "SRAM", "Cache Mapping", "Write Policy"],
-          "nlp_tags": ["cache", "memory hierarchy", "direct mapped", "associative", "write-back"]
+          "name": "Relational Model Algebra and Calculus",
+          "subtopics": ["Relational model basics", "Relational algebra operators", "Tuple relational calculus", "Domain relational calculus"],
+          "nlp_tags": ["relational model", "relational algebra", "tuple calculus", "domain calculus"]
         },
         {
-          "name": "Instruction Set",
-          "subtopics": ["RISC vs CISC", "Addressing Modes", "Instruction Formats"],
-          "nlp_tags": ["RISC", "CISC", "addressing mode", "instruction format", "opcode"]
+          "name": "SQL and Integrity Constraints",
+          "subtopics": ["DDL and DML", "Joins and subqueries", "Aggregate queries", "Primary and foreign key constraints", "Check constraints"],
+          "nlp_tags": ["sql", "join", "constraint", "primary key", "foreign key"]
         },
         {
-          "name": "I/O Organization",
-          "subtopics": ["Interrupts", "DMA", "Polling", "I/O Interfaces"],
-          "nlp_tags": ["interrupt", "DMA", "polling", "I/O", "bus"]
+          "name": "Normal Forms",
+          "subtopics": ["Functional dependencies", "1NF 2NF 3NF", "BCNF", "Decomposition"],
+          "nlp_tags": ["normalization", "functional dependency", "3nf", "bcnf", "decomposition"]
+        },
+        {
+          "name": "File Organization",
+          "subtopics": ["Heap files", "Sequential files", "Clustered organization", "Record storage"],
+          "nlp_tags": ["file organization", "heap file", "sequential file", "record"]
+        },
+        {
+          "name": "Indexing with B and B+ Trees",
+          "subtopics": ["Index fundamentals", "B tree", "B plus tree", "Index maintenance"],
+          "nlp_tags": ["indexing", "b tree", "b plus tree", "database index"]
+        },
+        {
+          "name": "Transactions",
+          "subtopics": ["ACID properties", "Transaction schedules", "Serializability", "Recoverability"],
+          "nlp_tags": ["transaction", "acid", "serializability", "recoverability"]
+        },
+        {
+          "name": "Concurrency Control",
+          "subtopics": ["Lock based protocols", "Two phase locking", "Timestamp ordering", "Deadlock handling"],
+          "nlp_tags": ["concurrency control", "2pl", "locking", "timestamp ordering", "deadlock"]
         }
       ]
     },
     {
-      "name": "Discrete Mathematics",
+      "name": "Computer Networks",
       "topics": [
         {
-          "name": "Set Theory",
-          "subtopics": ["Operations", "Venn Diagrams", "Power Set", "Cartesian Product"],
-          "nlp_tags": ["set", "union", "intersection", "complement", "power set"]
+          "name": "Layering and Protocol Stacks",
+          "subtopics": ["OSI model", "TCP IP model", "Layer responsibilities", "Encapsulation"],
+          "nlp_tags": ["osi", "tcp ip", "layering", "encapsulation", "protocol stack"]
         },
         {
-          "name": "Logic and Proofs",
-          "subtopics": ["Propositional Logic", "Predicate Logic", "Inference Rules", "Proof Techniques"],
-          "nlp_tags": ["propositional logic", "predicate", "modus ponens", "proof by induction"]
+          "name": "Switching Techniques",
+          "subtopics": ["Packet switching", "Circuit switching", "Virtual circuit switching", "Switching trade offs"],
+          "nlp_tags": ["packet switching", "circuit switching", "virtual circuit", "network"]
         },
         {
-          "name": "Relations and Functions",
-          "subtopics": ["Equivalence Relations", "Partial Order", "Bijection", "Composition"],
-          "nlp_tags": ["relation", "function", "bijection", "equivalence", "partial order"]
+          "name": "Data Link Layer and Ethernet Bridging",
+          "subtopics": ["Framing", "Error detection", "MAC protocols", "Ethernet bridging"],
+          "nlp_tags": ["data link", "framing", "ethernet", "mac", "bridging"]
         },
         {
-          "name": "Graph Theory",
-          "subtopics": ["Trees", "Planar Graphs", "Euler/Hamilton", "Graph Coloring", "Matching"],
-          "nlp_tags": ["graph theory", "Euler", "Hamiltonian", "planar", "chromatic number"]
+          "name": "Routing Protocols",
+          "subtopics": ["Shortest path routing", "Flooding", "Distance vector routing", "Link state routing"],
+          "nlp_tags": ["routing", "distance vector", "link state", "flooding", "shortest path"]
         },
         {
-          "name": "Combinatorics",
-          "subtopics": ["Permutations", "Combinations", "Pigeonhole", "Inclusion-Exclusion", "Generating Functions"],
-          "nlp_tags": ["permutation", "combination", "pigeonhole", "inclusion exclusion"]
-        }
-      ]
-    },
-    {
-      "name": "Aptitude",
-      "topics": [
-        {
-          "name": "Quantitative Aptitude",
-          "subtopics": ["Number System", "Ratio Proportion", "Time Work", "Probability", "Statistics"],
-          "nlp_tags": ["arithmetic", "ratio", "probability", "percentage", "average"]
+          "name": "IP Addressing and Fragmentation",
+          "subtopics": ["IPv4 addressing", "CIDR notation", "Subnetting basics", "IP fragmentation"],
+          "nlp_tags": ["ip addressing", "ipv4", "cidr", "fragmentation", "subnetting"]
         },
         {
-          "name": "Verbal Aptitude",
-          "subtopics": ["Reading Comprehension", "Sentence Correction", "Vocabulary"],
-          "nlp_tags": ["comprehension", "grammar", "vocabulary", "sentence"]
+          "name": "ARP DHCP ICMP and NAT",
+          "subtopics": ["ARP", "DHCP", "ICMP", "Network address translation", "IP support protocols"],
+          "nlp_tags": ["arp", "dhcp", "icmp", "nat", "support protocol"]
         },
         {
-          "name": "Logical Reasoning",
-          "subtopics": ["Syllogisms", "Puzzles", "Coding-Decoding", "Blood Relations"],
-          "nlp_tags": ["logic", "syllogism", "puzzle", "reasoning", "series"]
+          "name": "Transport Layer (UDP TCP Sockets)",
+          "subtopics": ["UDP", "TCP", "Flow control", "Congestion control", "Socket abstraction"],
+          "nlp_tags": ["transport layer", "udp", "tcp", "flow control", "congestion", "sockets"]
+        },
+        {
+          "name": "Application Layer Protocols",
+          "subtopics": ["DNS", "SMTP", "HTTP", "FTP", "Email workflow"],
+          "nlp_tags": ["application layer", "dns", "smtp", "http", "ftp", "email"]
         }
       ]
     }
   ]
 }
+

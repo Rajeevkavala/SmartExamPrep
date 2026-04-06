@@ -219,7 +219,7 @@ export default function AdminScraperPage() {
 
       toast({
         title: "Scrape job started",
-        description: "Polling for live Gemini classification progress.",
+        description: "Polling for live AI structuring progress.",
       });
     } catch (error) {
       setActionError(getErrorMessage(error));
@@ -291,7 +291,7 @@ export default function AdminScraperPage() {
       <header className="rounded-2xl border border-slate-800 bg-linear-to-r from-slate-900 to-indigo-950 p-6">
         <h1 className="text-3xl font-bold text-white">URL Scraper</h1>
         <p className="mt-2 text-sm text-slate-300">
-          Scrape public pages, classify extracted questions with Gemini, then import
+          Scrape public pages, structure extracted questions with the AI layer, then import
           reviewed results.
         </p>
       </header>
@@ -386,7 +386,7 @@ export default function AdminScraperPage() {
 
           {activeJob.status === "processing" ? (
             <p className="mt-4 text-sm text-sky-200 animate-pulse">
-              Scraping and classifying with Gemini...
+              Scraping and structuring with the AI layer...
             </p>
           ) : null}
 

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
 
+import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import type { UserRole } from "@/store/authStore";
 import { useAuthStore } from "@/store/authStore";
 
@@ -44,7 +45,7 @@ export default function AdminGuard({ children }: AdminGuardProps) {
       return;
     }
 
-    const resolvedToken = token || localStorage.getItem("token");
+    const resolvedToken = token || localStorage.getItem("access_token");
     const resolvedRole = role ?? getStoredRole();
 
     if (!resolvedToken) {
@@ -62,7 +63,11 @@ export default function AdminGuard({ children }: AdminGuardProps) {
   }, [role, router, token]);
 
   if (isChecking || !isAuthorized) {
-    return null;
+    return (
+      <main className="mx-auto flex min-h-screen w-full max-w-5xl items-center px-4 py-8">
+        <LoadingSpinner message="Validating admin access..." />
+      </main>
+    );
   }
 
   return <>{children}</>;

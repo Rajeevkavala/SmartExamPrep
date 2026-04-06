@@ -7,8 +7,7 @@ from sqlalchemy.orm import Session
 
 from ml.adaptive_recommender import AdaptiveRecommender
 from ml.nlp_pipeline import embed_text
-from models.models import Question, QuizAttempt, TopicMastery, User
-from services.quiz_service import get_diagnostic_questions
+from models.models import Question, QuizAttempt, SourceTypeEnum, TopicMastery, User
 
 
 recommender = AdaptiveRecommender()
@@ -43,7 +42,45 @@ def _embedding_text(question: Question) -> str:
     return f"{question.question_text} {image_context}".strip()
 
 
-def get_adaptive_questions(user: User, db: Session) -> list[dict]:
+def _question_to_payload(question: Question) -> dict:
+    return {
+        "id": str(question.id),
+        "question_text": question.question_text,
+        "options": _safe_list(question.options),
+        "question_image_urls": _safe_list(question.question_image_urls),
+        "difficulty": str(_enum_value(question.difficulty)).lower(),
+        "subject_name": question.subject.name if question.subject else "",
+        "topic_name": question.topic.name if question.topic else "",
+        "subtopic": question.subtopic,
+    }
+
+
+def _base_candidate_query(
+    *,
+    db: Session,
+    subject_ids: list[str] | None,
+    year_filter: int | None,
+    source_types: list[SourceTypeEnum] | None,
+):
+    query = db.query(Question).filter(Question.is_verified.is_(True))
+    if subject_ids:
+        query = query.filter(Question.subject_id.in_(subject_ids))
+    if year_filter is not None:
+        query = query.filter(Question.year == int(year_filter))
+    if source_types:
+        query = query.filter(Question.source_type.in_(source_types))
+    return query
+
+
+def get_adaptive_questions(
+    user: User,
+    db: Session,
+    *,
+    subject_ids: list[str] | None = None,
+    question_count: int | None = None,
+    year_filter: int | None = None,
+    source_types: list[SourceTypeEnum] | None = None,
+) -> list[dict]:
     masteries = (
         db.query(TopicMastery)
         .filter(TopicMastery.user_id == user.id)
@@ -51,8 +88,18 @@ def get_adaptive_questions(user: User, db: Session) -> list[dict]:
         .all()
     )
 
+    base_candidate_query = _base_candidate_query(
+        db=db,
+        subject_ids=subject_ids,
+        year_filter=year_filter,
+        source_types=source_types,
+    )
+
     if not masteries:
-        return get_diagnostic_questions(db)
+        candidates = base_candidate_query.order_by(Question.updated_at.desc()).all()
+        if question_count is not None and question_count > 0:
+            candidates = candidates[:question_count]
+        return [_question_to_payload(question) for question in candidates]
 
     topic_mastery_payload = [
         {
@@ -107,13 +154,15 @@ def get_adaptive_questions(user: User, db: Session) -> list[dict]:
         ]
 
     prioritized_topic_ids = [str(mastery.topic_id) for mastery in masteries[:5]]
-    candidate_query = db.query(Question).filter(Question.is_verified.is_(True))
+    candidate_query = base_candidate_query
     if prioritized_topic_ids:
         candidate_query = candidate_query.filter(Question.topic_id.in_(prioritized_topic_ids))
 
     candidates = candidate_query.all()
     if not candidates:
-        return get_diagnostic_questions(db)
+        candidates = base_candidate_query.order_by(Question.updated_at.desc()).all()
+        if not candidates:
+            return []
 
     # Keep recommendation latency bounded when the pool is very large.
     if len(candidates) > 300:
@@ -144,9 +193,9 @@ def get_adaptive_questions(user: User, db: Session) -> list[dict]:
     )
 
     if not selected:
-        return get_diagnostic_questions(db)
+        return [_question_to_payload(question) for question in candidates[: max(1, question_count or 20)]]
 
-    return [
+    payload = [
         {
             "id": item["id"],
             "question_text": item["question_text"],
@@ -159,3 +208,6 @@ def get_adaptive_questions(user: User, db: Session) -> list[dict]:
         }
         for item in selected
     ]
+    if question_count is not None and question_count > 0:
+        return payload[:question_count]
+    return payload

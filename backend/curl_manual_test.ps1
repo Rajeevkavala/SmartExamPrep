@@ -1,4 +1,4 @@
-﻿Set-StrictMode -Version Latest
+Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 Set-Location "d:\New folder (2)\SmartExamPrep"
@@ -136,11 +136,54 @@ Add-Result "POST /api/revision/mark-done" $r
 $r = Invoke-Curl -Method "POST" -Url "$BASE_URL/api/ai/explain" -Headers @{ "Content-Type" = "application/json"; "Authorization" = "Bearer $studentToken" } -Body '{"topic_id":"00000000-0000-0000-0000-000000000000"}'
 Add-Result "POST /api/ai/explain" $r
 
+$r = Invoke-Curl -Method "GET" -Url "$BASE_URL/api/ai/status" -Headers $studentAuth
+Add-Result "GET /api/ai/status" $r
+
+$r = Invoke-Curl -Method "GET" -Url "$BASE_URL/api/analysis/metrics" -Headers $studentAuth
+Add-Result "GET /api/analysis/metrics" $r
+
+$r = Invoke-Curl -Method "GET" -Url "$BASE_URL/api/planner/today" -Headers $studentAuth
+Add-Result "GET /api/planner/today" $r
+
+$r = Invoke-Curl -Method "GET" -Url "$BASE_URL/api/quiz/attempts" -Headers $studentAuth
+Add-Result "GET /api/quiz/attempts" $r
+
+$r = Invoke-Curl -Method "GET" -Url "$BASE_URL/api/study-chat/sessions" -Headers $studentAuth
+Add-Result "GET /api/study-chat/sessions" $r
+
+$chatSessionId = ""
+$r = Invoke-Curl -Method "POST" -Url "$BASE_URL/api/study-chat/sessions" -Headers @{ "Content-Type" = "application/json"; "Authorization" = "Bearer $studentToken" } -Body '{"title":"Curl Session","context_type":"general"}'
+Add-Result "POST /api/study-chat/sessions" $r
+$chatSessionJson = Try-GetJson -Raw $r.Body
+if ($null -ne $chatSessionJson -and $chatSessionJson.PSObject.Properties.Name -contains "session") {
+  $sessionObj = $chatSessionJson.session
+  if ($null -ne $sessionObj -and $sessionObj.PSObject.Properties.Name -contains "session_id") {
+    $chatSessionId = [string]$sessionObj.session_id
+  }
+}
+
+if ($chatSessionId) {
+  $r = Invoke-Curl -Method "GET" -Url "$BASE_URL/api/study-chat/sessions/$chatSessionId" -Headers $studentAuth
+  Add-Result "GET /api/study-chat/sessions/{id}" $r
+
+  $r = Invoke-Curl -Method "POST" -Url "$BASE_URL/api/study-chat/sessions/$chatSessionId/messages" -Headers @{ "Content-Type" = "application/json"; "Authorization" = "Bearer $studentToken" } -Body '{"message":"Give me one focused study tip for today."}'
+  Add-Result "POST /api/study-chat/sessions/{id}/messages" $r
+}
+
+$r = Invoke-Curl -Method "POST" -Url "$BASE_URL/api/roadmap/generate" -Headers @{ "Content-Type" = "application/json"; "Authorization" = "Bearer $studentToken" } -Body '{"force_regenerate":false,"generation_reason":"curl_manual_test"}'
+Add-Result "POST /api/roadmap/generate" $r
+
+$r = Invoke-Curl -Method "GET" -Url "$BASE_URL/api/roadmap/current" -Headers $studentAuth
+Add-Result "GET /api/roadmap/current" $r
+
+$r = Invoke-Curl -Method "POST" -Url "$BASE_URL/api/roadmap/weeks/1/complete" -Headers $studentAuth
+Add-Result "POST /api/roadmap/weeks/{week_number}/complete" $r
+
 # Admin login
 $adminToken = ""
 foreach ($adminCandidate in @(
   @{ email = "chunk07-admin-test@smartexamprep.com"; password = "Admin@1234"; label = "primary" },
-  @{ email = "admin@smartexamprep.com"; password = "Admin@1234"; label = "fallback" }
+  @{ email = "admin@smartexamprep.com"; password = "admin@1234"; label = "fallback" }
 )) {
   if ($adminToken) { break }
   $adminLoginBody = @{ email = $adminCandidate.email; password = $adminCandidate.password } | ConvertTo-Json -Compress

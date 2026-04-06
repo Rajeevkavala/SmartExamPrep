@@ -20,7 +20,7 @@ from models.models import (
     Subject,
     Topic,
 )
-from services.gemini_service import classify_questions_with_gemini
+from services.ai_service import classify_scraped_questions
 
 
 def _normalize_options(raw_options: object) -> list[str]:
@@ -120,7 +120,7 @@ def parse_html_questions(html: str, source_url: str) -> list[str]:
 
 
 async def run_scrape_job(job_id: str, url: str) -> None:
-    """Background task: fetch HTML -> parse candidates -> Gemini classify -> persist results."""
+    """Background task: fetch HTML -> parse candidates -> AI structure -> persist results."""
     db = SessionLocal()
     job: Any = db.query(ScrapeJob).filter(ScrapeJob.id == job_id).first()
 
@@ -148,7 +148,7 @@ async def run_scrape_job(job_id: str, url: str) -> None:
             db.commit()
             return
 
-        structured = await classify_questions_with_gemini(raw_questions)
+        structured = await classify_scraped_questions(raw_questions)
         job.extracted_questions = structured
         job.status = JobStatusEnum.done
         if not structured:

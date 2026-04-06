@@ -59,14 +59,14 @@ const setAdminAuth = async (
 
   await context.addCookies([
     {
-      name: "token",
+      name: "access_token",
       value: token,
       url: appUrl,
     },
   ]);
 
   await page.addInitScript((authToken: string) => {
-    localStorage.setItem("token", authToken);
+    localStorage.setItem("access_token", authToken);
     localStorage.setItem(
       "auth-store",
       JSON.stringify({
@@ -316,7 +316,7 @@ test.describe("Chunk 15 admin scraper", () => {
     await page.getByRole("button", { name: "Scrape", exact: true }).click();
 
     await expect(
-      page.getByText("Scraping and classifying with Gemini...")
+      page.getByText("Scraping and structuring with the AI layer...")
     ).toBeVisible();
 
     await page.getByRole("button", { name: "Refresh Status" }).click();

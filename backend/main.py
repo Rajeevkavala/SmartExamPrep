@@ -1,7 +1,9 @@
 from contextlib import asynccontextmanager
+import logging
 from pathlib import Path
 import sys
 from typing import Any
+import uuid
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -10,6 +12,7 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from ai.models.model_registry import WORKLOAD_PROFILES
 from config import settings
 from database import engine
 from ml.nlp_pipeline import load_nlp_models
@@ -21,16 +24,30 @@ from routers import (
     analysis,
     auth,
     content,
+    exams,
+    feedback,
+    planner,
+    pyq,
     quiz,
+    roadmap,
     revision,
     scraper,
+    study_chat,
     syllabus,
+    uploads,
 )
 
 
 from ml.weakness_detector import WeaknessDetector
+from services.ai_service import provider_status
 
 weakness_detector: WeaknessDetector | None = None
+logger = logging.getLogger(__name__)
+nlp_readiness: dict[str, Any] = {
+    "loaded": False,
+    "degraded_mode": True,
+    "reason": "startup_not_run",
+}
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -42,16 +59,41 @@ async def lifespan(_: FastAPI):
     # Ensure upload directories exist on startup.
     upload_root = Path(settings.upload_dir)
     (upload_root / "syllabi").mkdir(parents=True, exist_ok=True)
+    (upload_root / "student-materials").mkdir(parents=True, exist_ok=True)
 
     # Warm NLP singletons once at startup for low-latency first use.
     try:
         load_nlp_models()
-        print("✅ NLP models loaded (spaCy + sentence-transformers)")
-    except Exception:
-        pass
+        nlp_readiness.update(
+            {
+                "loaded": True,
+                "degraded_mode": False,
+                "reason": "models_loaded",
+            }
+        )
+        print("[ok] NLP models loaded (spaCy + sentence-transformers)")
+    except Exception as exc:
+        nlp_readiness.update(
+            {
+                "loaded": False,
+                "degraded_mode": True,
+                "reason": "model_load_failed",
+                "error": str(exc),
+            }
+        )
+        logger.exception("NLP startup failed; continuing in degraded mode")
+        print("[warn] NLP model load failed; running in degraded mode", file=sys.stderr)
         
     weakness_detector = WeaknessDetector(use_ml_model=True)
-    print("✅ WeaknessDetector loaded")
+    print("[ok] WeaknessDetector loaded")
+
+    ai_status = provider_status()
+    provider_summary = ", ".join(
+        f"{provider}={'on' if enabled else 'off'}"
+        for provider, enabled in ai_status.items()
+    )
+    print(f"[ok] AI providers: {provider_summary}")
+    print(f"[ok] Configured workloads: {', '.join(w.value for w in WORKLOAD_PROFILES.keys())}")
 
     yield
 
@@ -247,7 +289,7 @@ app.openapi = custom_openapi
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -257,12 +299,18 @@ app.add_middleware(
 @app.middleware("http")
 async def log_request_middleware(request: Request, call_next):
     status_code = 500
+    request_id = request.headers.get("X-Request-Id") or uuid.uuid4().hex
+    request.state.request_id = request_id
     try:
         response = await call_next(request)
         status_code = response.status_code
+        response.headers["X-Request-Id"] = request_id
         return response
     finally:
-        print(f"{request.method} {request.url.path} -> {status_code}", file=sys.stderr)
+        print(
+            f"[{request_id}] {request.method} {request.url.path} -> {status_code}",
+            file=sys.stderr,
+        )
 
 
 @app.exception_handler(StarletteHTTPException)
@@ -298,27 +346,46 @@ async def validation_exception_handler(_: Request, exc: RequestValidationError):
 
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
+    request_id = getattr(request.state, "request_id", "unknown")
     print(
-        f"Unhandled exception on {request.method} {request.url.path}: {exc}",
+        f"[{request_id}] Unhandled exception on {request.method} {request.url.path}: {exc}",
         file=sys.stderr,
     )
     return JSONResponse(
         status_code=500,
-        content={"detail": "Internal server error. Please try again."},
+        content={
+            "detail": "Internal server error. Please try again.",
+            "request_id": request_id,
+        },
     )
 
 
 @app.get("/health", tags=["System"])
-def health_check() -> dict[str, str]:
-    return {"status": "ok"}
+def health_check() -> dict[str, Any]:
+    return {
+        "status": "ok",
+        "readiness": {
+            "nlp": dict(nlp_readiness),
+            "ai": {
+                "providers": provider_status(),
+            },
+        },
+    }
 
 
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(quiz.router, prefix="/api/quiz", tags=["Quiz"])
+app.include_router(pyq.router, prefix="/api/pyq", tags=["PYQ"])
 app.include_router(analysis.router, prefix="/api/analysis", tags=["Analysis"])
 app.include_router(revision.router, prefix="/api/revision", tags=["Revision"])
 app.include_router(content.router, prefix="/api/content", tags=["Content"])
+app.include_router(exams.router, prefix="/api/exams", tags=["Exams"])
+app.include_router(roadmap.router, prefix="/api/roadmap", tags=["Roadmap"])
+app.include_router(planner.router, prefix="/api/planner", tags=["Planner"])
+app.include_router(study_chat.router, prefix="/api/study-chat", tags=["Study Chat"])
 app.include_router(ai.router, prefix="/api/ai", tags=["AI"])
+app.include_router(feedback.router, prefix="/api/feedback", tags=["Feedback"])
+app.include_router(uploads.router, prefix="/api/uploads", tags=["Uploads"])
 app.include_router(admin_content.router, prefix="/api/admin/content", tags=["Admin Content"])
 app.include_router(admin_questions.router, prefix="/api/admin/questions", tags=["Admin Questions"])
 app.include_router(scraper.router, prefix="/api/admin/scraper", tags=["Admin Scraper"])

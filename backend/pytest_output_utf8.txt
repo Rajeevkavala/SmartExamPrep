@@ -1,0 +1,91 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.10.6, pytest-8.3.4, pluggy-1.6.0 -- D:\New folder (2)\SmartExamPrep\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: D:\New folder (2)\SmartExamPrep\backend
+plugins: anyio-4.13.0
+collecting ... collected 56 items
+
+tests/test_phase4_ml_components.py::TestWeaknessDetector::test_perfect_performance_yields_low_weakness_score PASSED [  1%]
+tests/test_phase4_ml_components.py::TestWeaknessDetector::test_poor_performance_yields_high_weakness_score PASSED [  3%]
+tests/test_phase4_ml_components.py::TestWeaknessDetector::test_moderate_performance_yields_moderate_score PASSED [  5%]
+tests/test_phase4_ml_components.py::TestWeaknessDetector::test_mastery_level_thresholds_strong PASSED [  7%]
+tests/test_phase4_ml_components.py::TestWeaknessDetector::test_mastery_level_thresholds_weak FAILED [  8%]
+tests/test_phase4_ml_components.py::TestWeaknessDetector::test_repeated_mistakes_capped_at_10 PASSED [ 10%]
+tests/test_phase4_ml_components.py::TestWeaknessDetector::test_negative_response_time_zscore_ignored PASSED [ 12%]
+tests/test_phase4_ml_components.py::TestWeaknessDetector::test_positive_slope_ignored PASSED [ 14%]
+tests/test_phase4_ml_components.py::TestWeaknessDetector::test_score_is_clipped_to_0_100 PASSED [ 16%]
+tests/test_phase4_ml_components.py::TestWeaknessDetectorMLMode::test_ml_model_fallback_when_not_found PASSED [ 17%]
+tests/test_phase4_ml_components.py::TestWeaknessDetectorMLMode::test_ml_model_loads_when_available PASSED [ 19%]
+tests/test_phase4_ml_components.py::TestSpacedRevisionScheduler::test_poor_score_yields_1_day_interval PASSED [ 21%]
+tests/test_phase4_ml_components.py::TestSpacedRevisionScheduler::test_average_score_yields_3_day_interval PASSED [ 23%]
+tests/test_phase4_ml_components.py::TestSpacedRevisionScheduler::test_good_score_yields_7_day_interval PASSED [ 25%]
+tests/test_phase4_ml_components.py::TestSpacedRevisionScheduler::test_excellent_score_yields_14_day_interval PASSED [ 26%]
+tests/test_phase4_ml_components.py::TestSpacedRevisionScheduler::test_topic_difficulty_weight_scales_interval PASSED [ 28%]
+tests/test_phase4_ml_components.py::TestSpacedRevisionScheduler::test_ease_factor_minimum_is_1_3 PASSED [ 30%]
+tests/test_phase4_ml_components.py::TestSpacedRevisionScheduler::test_repeated_good_performance_uses_ease_multiplier PASSED [ 32%]
+tests/test_phase4_ml_components.py::TestSpacedRevisionScheduler::test_repetition_count_increments PASSED [ 33%]
+tests/test_phase4_ml_components.py::TestSpacedRevisionScheduler::test_due_date_is_in_future PASSED [ 35%]
+tests/test_phase4_ml_components.py::TestSpacedRevisionScheduler::test_minimum_interval_is_1_day PASSED [ 37%]
+tests/test_phase4_ml_components.py::TestAdaptiveRecommender::test_empty_masteries_returns_empty PASSED [ 39%]
+tests/test_phase4_ml_components.py::TestAdaptiveRecommender::test_empty_candidates_returns_empty PASSED [ 41%]
+tests/test_phase4_ml_components.py::TestAdaptiveRecommender::test_prioritizes_weak_topics PASSED [ 42%]
+tests/test_phase4_ml_components.py::TestAdaptiveRecommender::test_recency_factor_never_for_new_topics PASSED [ 44%]
+tests/test_phase4_ml_components.py::TestAdaptiveRecommender::test_recency_factor_today PASSED [ 46%]
+tests/test_phase4_ml_components.py::TestAdaptiveRecommender::test_recency_factor_this_week PASSED [ 48%]
+tests/test_phase4_ml_components.py::TestAdaptiveRecommender::test_recency_factor_older PASSED [ 50%]
+tests/test_phase4_ml_components.py::TestAdaptiveRecommender::test_difficulty_progression PASSED [ 51%]
+tests/test_phase4_ml_components.py::TestAdaptiveRecommender::test_target_count_based_on_study_minutes PASSED [ 53%]
+tests/test_phase4_ml_components.py::TestAdaptiveRecommender::test_minimum_questions FAILED [ 55%]
+tests/test_phase4_ml_components.py::TestNLPPipeline::test_extract_tags_from_gate_text PASSED [ 57%]
+tests/test_phase4_ml_components.py::TestNLPPipeline::test_extract_tags_empty_string PASSED [ 58%]
+tests/test_phase4_ml_components.py::TestNLPPipeline::test_extract_tags_max_12 PASSED [ 60%]
+tests/test_phase4_ml_components.py::TestNLPPipeline::test_embed_text_returns_list PASSED [ 62%]
+tests/test_phase4_ml_components.py::TestNLPPipeline::test_embed_text_consistent_dimension PASSED [ 64%]
+tests/test_phase4_ml_components.py::TestNLPPipeline::test_cosine_similarity_identical_vectors PASSED [ 66%]
+tests/test_phase4_ml_components.py::TestNLPPipeline::test_cosine_similarity_orthogonal_vectors PASSED [ 67%]
+tests/test_phase4_ml_components.py::TestNLPPipeline::test_cosine_similarity_opposite_vectors PASSED [ 69%]
+tests/test_phase4_ml_components.py::TestNLPPipeline::test_cosine_similarity_empty_vectors PASSED [ 71%]
+tests/test_phase4_ml_components.py::TestNLPPipeline::test_cosine_similarity_mismatched_dimensions PASSED [ 73%]
+tests/test_phase4_ml_components.py::TestNLPPipeline::test_is_near_duplicate_true PASSED [ 75%]
+tests/test_phase4_ml_components.py::TestNLPPipeline::test_is_near_duplicate_false PASSED [ 76%]
+tests/test_phase4_ml_components.py::TestNLPPipeline::test_is_near_duplicate_empty_existing PASSED [ 78%]
+tests/test_phase4_ml_components.py::TestNLPPipeline::test_is_near_duplicate_empty_candidate PASSED [ 80%]
+tests/test_phase4_ml_components.py::TestWeaknessPromptBuilder::test_build_weakness_prompt_structure PASSED [ 82%]
+tests/test_phase4_ml_components.py::TestWeaknessPromptBuilder::test_build_weakness_prompt_instructions PASSED [ 83%]
+tests/test_phase4_ml_components.py::TestEdgeCases::test_weakness_detector_with_zero_accuracy PASSED [ 85%]
+tests/test_phase4_ml_components.py::TestEdgeCases::test_scheduler_with_100_percent_score PASSED [ 87%]
+tests/test_phase4_ml_components.py::TestEdgeCases::test_scheduler_with_zero_score PASSED [ 89%]
+tests/test_phase4_ml_components.py::TestEdgeCases::test_recommender_with_all_recent_questions PASSED [ 91%]
+tests/test_phase4_ml_components.py::TestEdgeCases::test_recommender_with_iso_date_string PASSED [ 92%]
+tests/test_phase4_ml_components.py::TestEdgeCases::test_nlp_extract_tags_special_characters PASSED [ 94%]
+tests/test_phase4_ml_components.py::TestEdgeCases::test_embedding_unicode_text PASSED [ 96%]
+tests/test_phase4_ml_components.py::TestMLPipelineIntegration::test_weakness_to_recommendation_flow PASSED [ 98%]
+tests/test_phase4_ml_components.py::TestMLPipelineIntegration::test_scheduler_updates_feed_weakness PASSED [100%]
+
+================================== FAILURES ===================================
+___________ TestWeaknessDetector.test_mastery_level_thresholds_weak ___________
+tests\test_phase4_ml_components.py:100: in test_mastery_level_thresholds_weak
+    assert result["mastery_level"] == "Weak"
+E   AssertionError: assert 'Moderate' == 'Weak'
+E     
+E     - Weak
+E     + Moderate
+_______________ TestAdaptiveRecommender.test_minimum_questions ________________
+tests\test_phase4_ml_components.py:481: in test_minimum_questions
+    assert len(result) >= 5
+E   AssertionError: assert 4 >= 5
+E    +  where 4 = len([{'difficulty': 'easy', 'id': 'q0', 'topic_id': 't1'}, {'difficulty': 'easy', 'id': 'q1', 'topic_id': 't1'}, {'difficulty': 'easy', 'id': 'q2', 'topic_id': 't1'}, {'difficulty': 'easy', 'id': 'q3', 'topic_id': 't1'}])
+============================== warnings summary ===============================
+tests/test_phase4_ml_components.py::TestWeaknessDetectorMLMode::test_ml_model_loads_when_available
+  D:\New folder (2)\SmartExamPrep\.venv\lib\site-packages\sklearn\base.py:493: UserWarning: X does not have valid feature names, but StandardScaler was fitted with feature names
+    warnings.warn(
+
+tests/test_phase4_ml_components.py::TestNLPPipeline::test_extract_tags_from_gate_text
+  D:\New folder (2)\SmartExamPrep\.venv\lib\site-packages\spacy\cli\_util.py:23: DeprecationWarning: Importing 'parser.split_arg_string' is deprecated, it will only be available in 'shell_completion' in Click 9.0.
+    from click.parser import split_arg_string
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_phase4_ml_components.py::TestWeaknessDetector::test_mastery_level_thresholds_weak
+FAILED tests/test_phase4_ml_components.py::TestAdaptiveRecommender::test_minimum_questions
+================== 2 failed, 54 passed, 2 warnings in 12.69s ==================

@@ -6,13 +6,49 @@ import {
 } from "zustand/middleware";
 
 export type UserRole = "student" | "admin";
+export type ExperienceLevel = "beginner" | "intermediate" | "advanced";
+
+export type SubjectConfidence = {
+  subject_id: string;
+  confidence_pct: number;
+};
 
 export type AuthUser = {
   id: string;
   email: string;
   full_name?: string | null;
-  daily_study_minutes?: number;
-  [key: string]: unknown;
+  phone?: string | null;
+  language?: string | null;
+  timezone?: string | null;
+  role?: UserRole;
+  daily_study_minutes?: number | null;
+  experience_level?: ExperienceLevel | null;
+  email_notifications_enabled?: boolean;
+  push_notifications_enabled?: boolean;
+  study_reminders_enabled?: boolean;
+  exam_target_date?: string | null;
+  onboarding_version?: number | null;
+  onboarding_completed_at?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  subject_confidences?: SubjectConfidence[];
+  known_topic_ids?: string[];
+};
+
+export const isOnboardingComplete = (user: AuthUser | null | undefined) => {
+  if (!user) {
+    return false;
+  }
+
+  return Boolean(
+    typeof user.daily_study_minutes === "number" &&
+      user.experience_level &&
+      user.exam_target_date &&
+      user.onboarding_version === 2 &&
+      user.onboarding_completed_at &&
+      Array.isArray(user.subject_confidences) &&
+      user.subject_confidences.length > 0
+  );
 };
 
 interface AuthState {
@@ -23,8 +59,8 @@ interface AuthState {
   logout: () => void;
 }
 
-const TOKEN_KEY = "token";
-const TOKEN_COOKIE_NAME = "token";
+const TOKEN_KEY = "access_token";
+const TOKEN_COOKIE_NAME = "access_token";
 const TOKEN_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
 
 const noopStorage: StateStorage = {

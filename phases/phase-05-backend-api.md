@@ -1,6 +1,6 @@
-# PHASE 5 — BACKEND API DEVELOPMENT (FastAPI)
+﻿# PHASE 5 â€” BACKEND API DEVELOPMENT (FastAPI)
 
-> **Goal:** Build all FastAPI routers, services, middleware, and dependency injection for the complete SmartExamPrep backend — student APIs, admin CRUD, web scraper, and PDF syllabus extraction.
+> **Goal:** Build all FastAPI routers, services, middleware, and dependency injection for the complete SmartExamPrep backend â€” student APIs, admin CRUD, web scraper, and PDF syllabus extraction.
 
 ---
 
@@ -27,7 +27,7 @@ async def lifespan(app: FastAPI):
     # Startup: create tables + load ML models
     Base.metadata.create_all(bind=engine)
     load_nlp_models()
-    logger.info("✅ NLP models loaded")
+    logger.info("âœ… NLP models loaded")
     yield
     # Shutdown: cleanup (if needed)
 
@@ -337,7 +337,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from database import get_db
 from dependencies import require_student
-from services.gemini_service import generate_weakness_explanation
+from services.ai_service import generate_weakness_explanation
 from models.models import TopicMastery, Topic
 
 router = APIRouter()
@@ -702,14 +702,14 @@ def delete_upload(upload_id: str, db: Session = Depends(get_db), admin=Depends(r
 ```python
 import httpx
 from bs4 import BeautifulSoup
-from services.gemini_service import classify_questions_with_gemini
+from services.ai_service import classify_scraped_questions
 from models.models import ScrapeJob, Question, Subject, Topic
 from database import SessionLocal
 from ml.nlp_pipeline import extract_tags
 import json
 
 async def run_scrape_job(job_id: str, url: str):
-    """Background task: fetch → parse → classify → update job record."""
+    """Background task: fetch â†’ parse â†’ classify â†’ update job record."""
     db = SessionLocal()
     job = db.query(ScrapeJob).filter_by(id=job_id).first()
     try:
@@ -732,8 +732,8 @@ async def run_scrape_job(job_id: str, url: str):
             db.commit()
             return
 
-        # Step 3: Classify with Gemini
-        structured = await classify_questions_with_gemini(raw_questions)
+        # Step 3: Classify with AI
+        structured = await classify_scraped_questions(raw_questions)
 
         job.extracted_questions = structured
         job.status = "done"
@@ -761,7 +761,7 @@ def parse_html_questions(html: str) -> list[str]:
         if len(text) > 50 and any(opt in text for opt in ["A.", "B.", "(A)", "(B)"]):
             candidates.append(text[:2000])
 
-    # Strategy 2: Fallback — extract all paragraphs with option-like structure
+    # Strategy 2: Fallback â€” extract all paragraphs with option-like structure
     if not candidates:
         for p in soup.find_all("p"):
             text = p.get_text(strip=True)
@@ -829,7 +829,7 @@ import aiofiles
 import os
 from pathlib import Path
 from fastapi import UploadFile
-from services.gemini_service import parse_syllabus_with_gemini
+from services.ai_service import parse_syllabus
 from models.models import SyllabusUpload, Subject, Topic
 from database import SessionLocal
 
@@ -837,7 +837,7 @@ UPLOAD_DIR = Path("uploads/syllabi")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 async def process_syllabus_upload(upload_id: str, file: UploadFile):
-    """Background task: save PDF → extract text → Gemini → update record."""
+    """Background task: save PDF â†’ extract text â†’ AI â†’ update record."""
     db = SessionLocal()
     upload = db.query(SyllabusUpload).filter_by(id=upload_id).first()
     try:
@@ -856,8 +856,8 @@ async def process_syllabus_upload(upload_id: str, file: UploadFile):
         # Extract text with pdfplumber
         raw_text = extract_pdf_text(str(file_path))
 
-        # Parse with Gemini
-        structure = await parse_syllabus_with_gemini(raw_text)
+        # Parse with AI
+        structure = await parse_syllabus(raw_text)
 
         upload.extracted_structure = structure
         upload.status = "done"
@@ -932,7 +932,7 @@ def import_syllabus_to_db(upload_id: str, override_structure: dict | None, admin
 
 ---
 
-## 15. Gemini Service (`backend/services/gemini_service.py`)
+## 15. AI Service (`backend/services/ai_service.py`)
 
 ```python
 import google.generativeai as genai
@@ -940,7 +940,7 @@ import json
 import re
 from config import settings
 
-genai.configure(api_key=settings.GEMINI_API_KEY)
+genai.configure(api_key=settings.OPENROUTER_API_KEY / GROQ_API_KEY)
 model = genai.GenerativeModel("gemini-1.5-flash")
 
 FALLBACK_EXPLANATION = (
@@ -967,7 +967,7 @@ Write 2-3 sentences: why struggling, what to focus on, one next step. Plain text
     except Exception:
         return FALLBACK_EXPLANATION
 
-async def classify_questions_with_gemini(raw_texts: list[str]) -> list[dict]:
+async def classify_scraped_questions(raw_texts: list[str]) -> list[dict]:
     results = []
     for raw in raw_texts:
         prompt = f"""
@@ -996,7 +996,7 @@ Raw text: {raw[:1500]}
             continue
     return results
 
-async def parse_syllabus_with_gemini(raw_text: str) -> dict:
+async def parse_syllabus(raw_text: str) -> dict:
     prompt = f"""
 You are a university syllabus parser. Return ONLY a valid JSON object:
 {{
@@ -1032,3 +1032,5 @@ Apply these backend rules across all relevant routers/services:
 - In scraper pipeline, extract image URLs from HTML and include them in `extracted_questions` structured JSON.
 - In import flow from scrape jobs, copy `question_image_urls` into `Question` rows.
 - In student quiz endpoints (`/diagnostic`, `/adaptive`), include `question_image_urls` so the frontend can render all PYQ diagrams.
+
+

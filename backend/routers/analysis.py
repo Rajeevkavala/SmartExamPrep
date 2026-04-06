@@ -5,8 +5,9 @@ from sqlalchemy.orm import Session
 
 from dependencies import get_db, require_student
 from models.models import User
-from schemas.analysis_schemas import DashboardResponse, TopicWeaknessItem
+from schemas.analysis_schemas import AnalyticsOverviewResponse, DashboardResponse, TopicWeaknessItem
 from services.dashboard_service import get_dashboard_data
+from services.metrics_service import get_analytics_overview
 from services.weakness_service import get_weakness_analysis
 
 router = APIRouter()
@@ -34,3 +35,15 @@ def dashboard(
 	user: Annotated[User, Depends(require_student)],
 ) -> dict:
 	return get_dashboard_data(user.id, db)
+
+
+@router.get(
+	"/metrics",
+	response_model=AnalyticsOverviewResponse,
+	summary="Get learning analytics and research metrics snapshot",
+)
+def metrics(
+	db: Annotated[Session, Depends(get_db)],
+	user: Annotated[User, Depends(require_student)],
+) -> dict:
+	return get_analytics_overview(user.id, db)

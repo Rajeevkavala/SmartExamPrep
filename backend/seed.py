@@ -4,8 +4,8 @@ Database Seed Script for SmartExamPrep MVP.
 Actions (in order):
   1. DROP all tables and re-create them (clean slate)
   2. Create admin user  admin@smartexamprep.com / admin@1234
-  3. Insert all 11 subjects + topics from seed_data/subjects.json
-  4. Insert 3 sample questions from seed_data/questions.json
+    3. Insert all GATE 2026 CSE subjects + topics from seed_data/subjects.json
+    4. Insert sample questions from seed_data/questions.json
 
 Run from the backend/ directory:
     python seed.py
@@ -15,6 +15,15 @@ Requirements: DATABASE_URL set in ../.env or .env
 import json
 import sys
 from pathlib import Path
+
+for stream_name in ("stdout", "stderr"):
+    stream = getattr(sys, stream_name, None)
+    reconfigure = getattr(stream, "reconfigure", None)
+    if callable(reconfigure):
+        try:
+            reconfigure(encoding="utf-8")
+        except Exception:
+            pass
 
 # ── Make sure backend/ is on sys.path when run directly ──────────────────────
 BACKEND_DIR = Path(__file__).parent
