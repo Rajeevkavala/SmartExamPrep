@@ -68,6 +68,13 @@ type MetricsPayload = {
   readiness_score_trend: ReadinessTrendPoint[];
   activity_heatmap: HeatmapCell[];
   ai_insight?: string | null;
+  freshness?: {
+    generated_at?: string | null;
+    last_activity_at?: string | null;
+    freshness_label?: string;
+  } | null;
+  recommended_next_step?: string | null;
+  strongest_recovery_signal?: string | null;
 };
 
 type DashboardPayload = {
@@ -283,6 +290,40 @@ export default function ProgressPage() {
             <p className="mt-1 text-sm text-[rgba(194,186,176,0.58)]">minutes today</p>
           </div>
           <MiniRing value={dailyGoal} />
+        </article>
+      </section>
+
+      <section className="grid gap-3 lg:grid-cols-[1fr_1fr]">
+        <article className="border border-[rgba(0,212,255,0.18)] bg-[rgba(0,212,255,0.04)] p-4">
+          <p className="font-mono text-[0.62rem] uppercase tracking-[0.22em] text-[var(--ice)]">
+            Freshness + Next Step
+          </p>
+          <p className="mt-3 text-lg text-[var(--cream)]">
+            {metrics?.freshness?.freshness_label ?? "No freshness signal yet"}
+          </p>
+          {metrics?.freshness?.last_activity_at ? (
+            <p className="mt-2 text-sm text-[rgba(194,186,176,0.68)]">
+              Last activity {new Date(metrics.freshness.last_activity_at).toLocaleString()}
+            </p>
+          ) : null}
+          <p className="mt-4 text-sm leading-7 text-[rgba(194,186,176,0.76)]">
+            {metrics?.recommended_next_step ??
+              "Complete one planner action and one quiz/revision action to refresh the learning loop."}
+          </p>
+        </article>
+
+        <article className="border border-[rgba(232,82,10,0.22)] bg-[rgba(232,82,10,0.05)] p-4">
+          <p className="font-mono text-[0.62rem] uppercase tracking-[0.22em] text-[var(--fire)]">
+            Recovery Signal
+          </p>
+          <p className="mt-3 text-lg text-[var(--cream)]">
+            {metrics?.strongest_recovery_signal ?? "Recovery trend will appear after more quiz comparisons."}
+          </p>
+          {metrics?.ai_insight ? (
+            <p className="mt-4 text-sm leading-7 text-[rgba(194,186,176,0.76)]">
+              {metrics.ai_insight}
+            </p>
+          ) : null}
         </article>
       </section>
 

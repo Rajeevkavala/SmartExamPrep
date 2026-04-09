@@ -4,6 +4,7 @@ import { jwtDecode } from "jwt-decode";
 
 type DecodedToken = {
   role?: "student" | "admin";
+  exp?: number;
 };
 
 const STUDENT_GUARDED_PATHS = [
@@ -31,28 +32,41 @@ const redirectTo = (request: NextRequest, path: string) =>
 export function middleware(request: NextRequest) {
   const token = request.cookies.get("access_token")?.value;
   const { pathname } = request.nextUrl;
+  const isStudentProtectedRoute = STUDENT_GUARDED_PATHS.some((path) =>
+    pathname.startsWith(path)
+  );
 
-  if (pathname.startsWith("/admin")) {
-    if (!token) {
-      return redirectTo(request, "/login");
-    }
-
+  let decodedToken: DecodedToken | null = null;
+  if (token) {
     try {
-      const decoded = jwtDecode<DecodedToken>(token);
-      if (decoded.role !== "admin") {
-        return redirectTo(request, "/dashboard");
+      decodedToken = jwtDecode<DecodedToken>(token);
+      if (
+        typeof decodedToken.exp === "number" &&
+        decodedToken.exp <= Math.floor(Date.now() / 1000)
+      ) {
+        return redirectTo(request, "/login");
       }
     } catch {
       return redirectTo(request, "/login");
     }
   }
 
-  const isStudentProtectedRoute = STUDENT_GUARDED_PATHS.some((path) =>
-    pathname.startsWith(path)
-  );
+  if (pathname.startsWith("/admin")) {
+    if (!token) {
+      return redirectTo(request, "/login");
+    }
+
+    if (decodedToken?.role !== "admin") {
+      return redirectTo(request, "/dashboard");
+    }
+  }
 
   if (isStudentProtectedRoute && !token) {
     return redirectTo(request, "/login");
+  }
+
+  if (isStudentProtectedRoute && decodedToken?.role === "admin") {
+    return redirectTo(request, "/admin");
   }
 
   return NextResponse.next();

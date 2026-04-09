@@ -17,6 +17,7 @@ from models.models import (
     User,
 )
 from schemas.roadmap_schemas import GenerateRoadmapRequest
+from services.profile_service import build_profile_readiness
 from services.ai_service import generate_roadmap_month_enrichment
 
 
@@ -50,22 +51,23 @@ def _resolve_horizon_weeks(exam_target_date: date | None, start_date: date) -> i
 
 
 def _ensure_profile_ready_for_roadmap(user: User) -> None:
-    missing_fields: list[str] = []
-
-    if not isinstance(user.exam_target_date, date) or user.exam_target_date <= date.today():
-        missing_fields.append("a future exam target date")
-
-    if not user.subject_confidences:
-        missing_fields.append("at least one subject confidence")
+    readiness = build_profile_readiness(user)
+    missing_fields = list(readiness["missing_profile_fields"])
 
     if missing_fields:
-        missing_text = ", ".join(missing_fields)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=(
-                "Complete onboarding before generating a roadmap. "
-                f"Missing: {missing_text}."
-            ),
+            detail={
+                "message": "Complete onboarding before generating a roadmap.",
+                "missing_profile_fields": missing_fields,
+                "errors": [
+                    {
+                        "field": field,
+                        "message": f"Complete {field.replace('_', ' ')} before roadmap generation.",
+                    }
+                    for field in missing_fields
+                ],
+            },
         )
 
 

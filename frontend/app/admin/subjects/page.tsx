@@ -4,6 +4,13 @@ import { FormEvent, KeyboardEvent, useEffect, useMemo, useState } from "react";
 import { ChevronDown, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 
 import SubtopicChipEditor from "@/components/admin/SubtopicChipEditor";
+import {
+  fireButtonClass,
+  ghostButtonClass,
+  PageHeader,
+  panelClass,
+  StatusBadge,
+} from "@/components/shared/brand-ui";
 import EmptyState from "@/components/shared/EmptyState";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import {
@@ -29,6 +36,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { adminApi } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import { toast } from "@/components/ui/use-toast";
 
 type SubjectRecord = {
@@ -471,25 +479,23 @@ export default function AdminSubjectsPage() {
 
   return (
     <div className="space-y-5">
-      <header className="rounded-2xl border border-slate-800 bg-linear-to-r from-slate-900 to-indigo-950 p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-white">Subjects Manager</h1>
-            <p className="mt-2 text-sm text-slate-300">
-              Organize subjects and topics used by quizzes, analysis, and scraping.
-            </p>
-          </div>
-
+      <PageHeader
+        className="app-noise"
+        eyebrow="Admin workflow"
+        title="SUBJECTS MANAGER"
+        description="Organize subjects and topics that power quizzes, diagnostics, roadmap analysis, and scraper classification."
+        badge={<StatusBadge tone="ice">{subjects.length} subjects loaded</StatusBadge>}
+        actions={
           <div className="flex items-center gap-2">
             <Button
               type="button"
               variant="outline"
-              className="border-slate-700 bg-slate-900 text-slate-100 hover:bg-slate-800"
+              className={cn(ghostButtonClass, "h-10 px-4 py-0 text-[0.62rem]")}
               onClick={() => void loadSubjects(false)}
               disabled={isRefreshing}
             >
               <RefreshCw
-                className={`mr-1 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+                className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
                 aria-hidden
               />
               Refresh
@@ -507,14 +513,14 @@ export default function AdminSubjectsPage() {
               <DialogTrigger asChild>
                 <Button
                   type="button"
-                  className="bg-indigo-600 text-white hover:bg-indigo-500"
+                  className={cn(fireButtonClass, "h-10 px-4 py-0 text-[0.62rem]")}
                 >
-                  <Plus className="mr-1 h-4 w-4" aria-hidden />
+                  <Plus className="h-4 w-4" aria-hidden />
                   Add Subject
                 </Button>
               </DialogTrigger>
 
-              <DialogContent className="max-w-lg border-slate-800 bg-slate-900 text-slate-100">
+              <DialogContent className={cn(panelClass, "max-w-lg border-white/12 text-[var(--cream)]")}>
                 <DialogHeader>
                   <DialogTitle>Add Subject</DialogTitle>
                   <DialogDescription className="text-slate-400">
@@ -575,14 +581,14 @@ export default function AdminSubjectsPage() {
                     <Button
                       type="button"
                       variant="outline"
-                      className="border-slate-700 bg-slate-900 text-slate-100 hover:bg-slate-800"
+                      className={cn(ghostButtonClass, "h-10 px-4 py-0 text-[0.62rem]")}
                       onClick={() => setSubjectDialogOpen(false)}
                     >
                       Cancel
                     </Button>
                     <Button
                       type="submit"
-                      className="bg-indigo-600 text-white hover:bg-indigo-500"
+                      className={cn(fireButtonClass, "h-10 px-4 py-0 text-[0.62rem]")}
                       disabled={isCreatingSubject}
                     >
                       {isCreatingSubject ? "Saving..." : "Save Subject"}
@@ -592,8 +598,8 @@ export default function AdminSubjectsPage() {
               </DialogContent>
             </Dialog>
           </div>
-        </div>
-      </header>
+        }
+      />
 
       {actionError ? (
         <p className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-2 text-sm text-rose-200">
@@ -618,7 +624,7 @@ export default function AdminSubjectsPage() {
             return (
               <article
                 key={subject.id}
-                className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70"
+                className={cn(panelClass, "overflow-hidden")}
               >
                 <div
                   className="flex flex-wrap items-center gap-3 px-4 py-3"
@@ -846,7 +852,7 @@ export default function AdminSubjectsPage() {
                     <Button
                       type="button"
                       size="sm"
-                      className="mt-3 bg-indigo-600 text-white hover:bg-indigo-500"
+                      className={cn(fireButtonClass, "mt-3 h-9 px-4 py-0 text-[0.62rem]")}
                       onClick={() => openCreateTopicDialog(subject.id)}
                       aria-label={`Add Topic to ${subject.name}`}
                     >
@@ -862,7 +868,7 @@ export default function AdminSubjectsPage() {
       )}
 
       <Dialog open={topicDialogOpen} onOpenChange={(open) => !open && closeTopicDialog()}>
-        <DialogContent className="max-w-2xl border-slate-800 bg-slate-900 text-slate-100">
+        <DialogContent className={cn(panelClass, "max-w-2xl border-white/12 text-[var(--cream)]")}>
           <DialogHeader>
             <DialogTitle>
               {topicDialogMode === "create" ? "Add Topic" : "Edit Topic"}
@@ -947,14 +953,14 @@ export default function AdminSubjectsPage() {
               <Button
                 type="button"
                 variant="outline"
-                className="border-slate-700 bg-slate-900 text-slate-100 hover:bg-slate-800"
+                className={cn(ghostButtonClass, "h-10 px-4 py-0 text-[0.62rem]")}
                 onClick={closeTopicDialog}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="bg-indigo-600 text-white hover:bg-indigo-500"
+                className={cn(fireButtonClass, "h-10 px-4 py-0 text-[0.62rem]")}
                 disabled={isSavingTopic}
               >
                 {isSavingTopic ? "Saving..." : "Save Topic"}

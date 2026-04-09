@@ -273,7 +273,15 @@ class RoadmapServiceTests(unittest.TestCase):
                 )
 
         self.assertEqual(exc.exception.status_code, 400)
-        self.assertIn("Complete onboarding before generating a roadmap", exc.exception.detail)
+        self.assertIsInstance(exc.exception.detail, dict)
+        self.assertEqual(
+            exc.exception.detail["message"],
+            "Complete onboarding before generating a roadmap.",
+        )
+        self.assertEqual(
+            exc.exception.detail["missing_profile_fields"],
+            ["exam_target_date", "subject_confidences"],
+        )
 
 
 if __name__ == "__main__":

@@ -11,6 +11,7 @@ from schemas.auth_schemas import RegisterRequest
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+ACCESS_TOKEN_TTL = timedelta(hours=24)
 
 
 def hash_password(password: str) -> str:
@@ -50,5 +51,10 @@ def authenticate_user(email: str, password: str, db: Session) -> User | None:
 
 def create_token(data: dict) -> str:
     payload = data.copy()
-    payload["exp"] = datetime.utcnow() + timedelta(hours=24)
+    payload["exp"] = datetime.utcnow() + ACCESS_TOKEN_TTL
     return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
+
+
+def get_access_token_expiry(issued_at: datetime | None = None) -> datetime:
+    base = issued_at or datetime.utcnow()
+    return base + ACCESS_TOKEN_TTL

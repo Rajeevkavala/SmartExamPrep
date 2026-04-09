@@ -23,7 +23,7 @@ from models.models import (
     User,
 )
 from schemas.study_chat_schemas import CreateChatSessionRequest
-from services.ai_service import generate_study_chat_reply
+from services.ai_service import generate_study_chat_reply, provider_readiness
 
 
 INTENT_CONTEXT_MAP = {
@@ -686,13 +686,37 @@ async def send_chat_message(user_id: str, session_id: str, message_text: str, db
         if _clean_text(assistant_reply) == _clean_text(fallback_reply)
         else "ai"
     )
+    readiness = provider_readiness()
+    grounding_sources = [
+        "weakness_analysis",
+        "roadmap" if _safe_dict(grounding_snapshot.get("roadmap")).get("has_roadmap") else None,
+        "planner" if _safe_dict(grounding_snapshot.get("planner")).get("has_plan") else None,
+        "revision_queue" if grounding_snapshot.get("revisions_due") else None,
+        "recent_attempts" if grounding_snapshot.get("recent_quiz_attempts") else None,
+    ]
+    grounding_sources = [source for source in grounding_sources if isinstance(source, str)]
 
     assistant_message = StudyChatMessage(
         session_id=str(session.id),
         role="assistant",
         message_text=_clean_text(assistant_reply, fallback_reply),
         grounding_snapshot_json=grounding_snapshot,
-        token_usage_json={"source": assistant_source, "intent": intent},
+        token_usage_json={
+            "source": assistant_source,
+            "intent": intent,
+            "degraded_mode": assistant_source == "fallback",
+            "matched_topic": grounding_snapshot.get("matched_topic"),
+            "grounding_sources": grounding_sources,
+            "recommended_action_count": len(
+                grounding_snapshot.get("recommended_actions")
+                if isinstance(grounding_snapshot.get("recommended_actions"), list)
+                else []
+            ),
+            "provider_readiness": {
+                "configured_provider_count": readiness.get("configured_provider_count", 0),
+                "unconfigured_workloads": readiness.get("unconfigured_workloads", []),
+            },
+        },
         created_at=datetime.utcnow(),
     )
     db.add(assistant_message)

@@ -2,8 +2,18 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import {
+  fireButtonClass,
+  inputClass,
+  monoLabelClass,
+  PageHeader,
+  panelClass,
+  selectClass,
+  StatusBadge,
+} from "@/components/shared/brand-ui";
 import { api } from "@/lib/api";
 import { readAuthToken } from "@/lib/authToken";
+import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
 
 const formatDateTime = (value?: string | null) => {
@@ -79,85 +89,89 @@ export default function ProfilePage() {
 
   return (
     <main className="space-y-6">
-      <header className="space-y-2">
-        <h1 className="font-display text-[3rem] leading-none tracking-[0.03em] text-[var(--cream)] md:text-[4rem]">
-          PROFILE
-        </h1>
-        <p className="text-xl text-[rgba(194,186,176,0.72)]">
-          Manage your personal details and study profile.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow="Identity"
+        title="PROFILE CONTROL"
+        description="Keep your personal profile, language preferences, and exam metadata up to date so the planning system stays aligned."
+        badge={
+          <StatusBadge tone={user?.onboarding_completed_at ? "success" : "warning"}>
+            Onboarding {onboardingLabel}
+          </StatusBadge>
+        }
+      />
 
-      <section className="mx-auto max-w-[820px] border border-[rgba(240,232,218,0.08)] bg-[rgba(255,255,255,0.01)] p-6">
-        <h2 className="text-4xl font-semibold text-[var(--cream)]">Profile Details</h2>
+      <section className={cn(panelClass, "app-noise mx-auto max-w-[920px] p-6 sm:p-8")}>
+        <h2 className="font-display text-[2.65rem] leading-none tracking-[0.06em] text-[var(--cream)]">
+          PROFILE DETAILS
+        </h2>
 
         <div className="mt-4 space-y-4">
           <div>
-            <p className="mb-2 font-mono text-[0.62rem] uppercase tracking-[0.22em] text-[rgba(194,186,176,0.58)]">
+            <p className={cn(monoLabelClass, "mb-2")}>
               Email
             </p>
             <input
               type="email"
               value={user?.email ?? ""}
               readOnly
-              className="h-11 w-full border border-[rgba(240,232,218,0.08)] bg-transparent px-4 text-[var(--cream)]"
+              className={cn(inputClass, "mt-3 border-b-white/6 text-[rgba(194,186,176,0.85)]")}
             />
           </div>
 
           <div>
-            <p className="mb-2 font-mono text-[0.62rem] uppercase tracking-[0.22em] text-[rgba(194,186,176,0.58)]">
+            <p className={cn(monoLabelClass, "mb-2")}>
               Name
             </p>
             <input
               value={fullName}
               onChange={(event) => setFullName(event.target.value)}
-              className="h-11 w-full border border-[rgba(240,232,218,0.08)] bg-transparent px-4 text-[var(--cream)]"
+              className={cn(inputClass, "mt-3")}
             />
           </div>
 
           <div>
-            <p className="mb-2 font-mono text-[0.62rem] uppercase tracking-[0.22em] text-[rgba(194,186,176,0.58)]">
+            <p className={cn(monoLabelClass, "mb-2")}>
               Phone
             </p>
             <input
               value={phone}
               onChange={(event) => setPhone(event.target.value)}
-              className="h-11 w-full border border-[rgba(240,232,218,0.08)] bg-transparent px-4 text-[var(--cream)]"
+              className={cn(inputClass, "mt-3")}
             />
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <p className="mb-2 font-mono text-[0.62rem] uppercase tracking-[0.22em] text-[rgba(194,186,176,0.58)]">
+              <p className={cn(monoLabelClass, "mb-2")}>
                 Preferred Language
               </p>
               <input
                 value={language}
                 onChange={(event) => setLanguage(event.target.value)}
-                className="h-11 w-full border border-[rgba(240,232,218,0.08)] bg-transparent px-4 text-[var(--cream)]"
+                className={cn(inputClass, "mt-3")}
               />
             </div>
 
             <div>
-              <p className="mb-2 font-mono text-[0.62rem] uppercase tracking-[0.22em] text-[rgba(194,186,176,0.58)]">
+              <p className={cn(monoLabelClass, "mb-2")}>
                 Timezone
               </p>
               <input
                 value={timezone}
                 onChange={(event) => setTimezone(event.target.value)}
-                className="h-11 w-full border border-[rgba(240,232,218,0.08)] bg-transparent px-4 text-[var(--cream)]"
+                className={cn(inputClass, "mt-3")}
               />
             </div>
           </div>
 
           <div>
-            <p className="mb-2 font-mono text-[0.62rem] uppercase tracking-[0.22em] text-[rgba(194,186,176,0.58)]">
+            <p className={cn(monoLabelClass, "mb-2")}>
               Current Level
             </p>
             <select
               value={level}
               onChange={(event) => setLevel(event.target.value)}
-              className="h-11 w-full border border-[rgba(240,232,218,0.08)] bg-[var(--bg)] px-4 capitalize text-[var(--cream)]"
+              className={cn(selectClass, "mt-3 bg-[rgba(255,255,255,0.02)] capitalize")}
             >
               <option value="beginner">Beginner</option>
               <option value="intermediate">Intermediate</option>
@@ -165,7 +179,7 @@ export default function ProfilePage() {
             </select>
           </div>
 
-          <div className="grid gap-2 border border-[rgba(240,232,218,0.08)] bg-[rgba(255,255,255,0.02)] p-3 text-sm text-[rgba(194,186,176,0.72)] md:grid-cols-2">
+          <div className="grid gap-2 rounded-[22px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-4 text-sm text-[rgba(194,186,176,0.74)] md:grid-cols-2">
             <p>Onboarding: {onboardingLabel}</p>
             <p>Joined: {formatDateTime(user?.created_at)}</p>
             <p>Last profile update: {formatDateTime(user?.updated_at)}</p>
@@ -180,12 +194,21 @@ export default function ProfilePage() {
               void saveProfile();
             }}
             disabled={isSaving}
-            className="h-11 bg-[var(--fire)] px-6 font-semibold text-white disabled:opacity-60"
+            className={cn(fireButtonClass, "h-11 px-6")}
           >
             {isSaving ? "Saving..." : "Save Profile"}
           </button>
           {savedMessage ? (
-            <p className="text-sm text-[rgba(194,186,176,0.72)]">{savedMessage}</p>
+            <p
+              className={cn(
+                "text-sm",
+                savedMessage === "Profile saved."
+                  ? "text-emerald-300"
+                  : "text-rose-300"
+              )}
+            >
+              {savedMessage}
+            </p>
           ) : null}
         </div>
       </section>

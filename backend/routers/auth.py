@@ -14,7 +14,13 @@ from schemas.auth_schemas import (
 	UpdateProfileRequest,
 	UserResponse,
 )
-from services.auth_service import authenticate_user, create_token, create_user
+from services.auth_service import (
+	ACCESS_TOKEN_TTL,
+	get_access_token_expiry,
+	authenticate_user,
+	create_token,
+	create_user,
+)
 from services.profile_service import serialize_user_profile, update_profile
 
 
@@ -88,6 +94,7 @@ def login(
 		)
 
 	role_value = getattr(user.role, "value", user.role)
+	expires_at = get_access_token_expiry()
 	token = create_token({"sub": user.id, "role": role_value})
 	response.set_cookie(
 		key="access_token",
@@ -95,10 +102,10 @@ def login(
 		httponly=True,
 		samesite=settings.cookie_samesite,
 		secure=settings.cookie_secure,
-		max_age=60 * 60 * 24,
+		max_age=int(ACCESS_TOKEN_TTL.total_seconds()),
 		path="/",
 	)
-	return TokenResponse(access_token=token, role=role_value)
+	return TokenResponse(access_token=token, role=role_value, expires_at=expires_at)
 
 
 @router.post(

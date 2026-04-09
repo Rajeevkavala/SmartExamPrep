@@ -27,6 +27,7 @@ export default function StudentRouteGuard({
   const role = useAuthStore((state) => state.role);
   const user = useAuthStore((state) => state.user);
   const setAuth = useAuthStore((state) => state.setAuth);
+  const syncSession = useAuthStore((state) => state.syncSession);
 
   const [isMounted, setIsMounted] = useState(false);
   const [isFetchingProfile, setIsFetchingProfile] = useState(false);
@@ -45,7 +46,8 @@ export default function StudentRouteGuard({
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    syncSession();
+  }, [syncSession]);
 
   useEffect(() => {
     if (!isMounted || !activeToken || user || isFetchingProfile) {

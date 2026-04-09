@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import EmptyState from "@/components/shared/EmptyState";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
@@ -85,6 +85,14 @@ export default function FeedbackPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const averageOverall = useMemo(() => {
+    if (!history.length) {
+      return 0;
+    }
+    return (
+      history.reduce((sum, entry) => sum + entry.overall_rating, 0) / history.length
+    ).toFixed(1);
+  }, [history]);
 
   useEffect(() => {
     let cancelled = false;
@@ -169,7 +177,7 @@ export default function FeedbackPage() {
         eyebrow="Student feedback"
         title="TELL US WHAT HELPED AND WHAT DIDN'T."
         description="Rate how useful the AI guidance, revision flow, and interface felt during your prep."
-        badge={<StatusBadge tone="ice">{history.length} past responses</StatusBadge>}
+        badge={<StatusBadge tone="ice">{history.length} past responses · avg {averageOverall}/5</StatusBadge>}
       />
 
       <section className={cn(panelClass, "space-y-5 p-6")}>

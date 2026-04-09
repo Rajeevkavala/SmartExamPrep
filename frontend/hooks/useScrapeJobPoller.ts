@@ -21,10 +21,21 @@ export type ScrapeJob = {
   job_id: string;
   url: string;
   status: ScrapeJobStatus;
+  lifecycle_state?: "queued" | "running" | "completed" | "failed";
+  progress_pct?: number;
   notes?: string | null;
   extracted_questions: ExtractedScrapedQuestion[];
   questions_imported: number;
   error_message?: string | null;
+  can_retry?: boolean;
+  job_summary?: {
+    extracted_count?: number;
+    questions_imported?: number;
+  };
+  provenance?: {
+    classification_source?: string;
+    has_error?: boolean;
+  };
   created_at: string;
 };
 

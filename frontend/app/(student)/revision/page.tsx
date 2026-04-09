@@ -66,6 +66,14 @@ export default function RevisionPage() {
         .length,
     [items]
   );
+  const averageInterval = useMemo(() => {
+    if (!items.length) {
+      return 0;
+    }
+    return Math.round(
+      items.reduce((sum, item) => sum + Number(item.interval_days ?? 0), 0) / items.length
+    );
+  }, [items]);
 
   const handleMarkDone = async (item: RevisionPlanItem) => {
     setActiveTopicId(item.topic_id);
@@ -147,6 +155,23 @@ export default function RevisionPage() {
           This revision was opened from your daily planner. Marking it done also updates the linked task.
         </p>
       ) : null}
+
+      <section className="grid gap-3 md:grid-cols-3">
+        <article className="border border-[rgba(240,232,218,0.08)] bg-[rgba(255,255,255,0.01)] p-4">
+          <p className="font-mono text-[0.58rem] uppercase tracking-[0.2em] text-[rgba(194,186,176,0.58)]">Due now</p>
+          <p className="mt-3 text-3xl font-semibold text-[var(--cream)]">{dueNowCount}</p>
+        </article>
+        <article className="border border-[rgba(240,232,218,0.08)] bg-[rgba(255,255,255,0.01)] p-4">
+          <p className="font-mono text-[0.58rem] uppercase tracking-[0.2em] text-[rgba(194,186,176,0.58)]">Average interval</p>
+          <p className="mt-3 text-3xl font-semibold text-[var(--cream)]">{averageInterval}d</p>
+        </article>
+        <article className="border border-[rgba(240,232,218,0.08)] bg-[rgba(255,255,255,0.01)] p-4">
+          <p className="font-mono text-[0.58rem] uppercase tracking-[0.2em] text-[rgba(194,186,176,0.58)]">Prioritization rule</p>
+          <p className="mt-3 text-sm leading-7 text-[rgba(194,186,176,0.74)]">
+            Earliest due items surface first so missed reviews and weak scores do not drift out of the loop.
+          </p>
+        </article>
+      </section>
 
       {items.length === 0 ? (
         <EmptyState

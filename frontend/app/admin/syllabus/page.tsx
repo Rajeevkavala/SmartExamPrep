@@ -15,6 +15,13 @@ import { AlertCircle, FileUp, Loader2, RefreshCw } from "lucide-react";
 import SyllabusTreeViewer, {
   type SyllabusStructure,
 } from "@/components/admin/SyllabusTreeViewer";
+import {
+  fireButtonClass,
+  ghostButtonClass,
+  PageHeader,
+  panelClass,
+  StatusBadge,
+} from "@/components/shared/brand-ui";
 import EmptyState from "@/components/shared/EmptyState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,10 +35,24 @@ type SyllabusUploadRecord = {
   upload_id: string;
   filename: string;
   status: UploadStatus;
+  lifecycle_state?: "queued" | "running" | "completed" | "failed";
+  progress_pct?: number;
   extracted_structure: SyllabusStructure | null;
   subjects_imported: number;
   topics_imported: number;
   error_message?: string | null;
+  can_retry?: boolean;
+  job_summary?: {
+    subject_count?: number;
+    topic_count?: number;
+    subjects_imported?: number;
+    topics_imported?: number;
+  };
+  provenance?: {
+    parser?: string;
+    has_structure?: boolean;
+    has_error?: boolean;
+  };
   created_at: string;
 };
 
@@ -358,6 +379,24 @@ export default function AdminSyllabusPage() {
     }
   };
 
+  const retryUpload = async () => {
+    if (!activeUploadId) {
+      return;
+    }
+
+    setActionError(null);
+    try {
+      await adminApi.post(`/syllabus/uploads/${activeUploadId}/retry`);
+      await fetchUploads(false);
+      toast({
+        title: "Retry queued",
+        description: "The syllabus PDF will be parsed again.",
+      });
+    } catch (error) {
+      setActionError(getErrorMessage(error));
+    }
+  };
+
   const activeStructure = useMemo(
     () => toStructure(activeUpload?.extracted_structure),
     [activeUpload?.extracted_structure]
@@ -380,15 +419,19 @@ export default function AdminSyllabusPage() {
 
   return (
     <div className="space-y-6">
-      <header className="rounded-2xl border border-slate-800 bg-linear-to-r from-slate-900 to-indigo-950 p-6">
-        <h1 className="text-3xl font-bold text-white">Syllabus Upload</h1>
-        <p className="mt-2 text-sm text-slate-300">
-          Upload a syllabus PDF, inspect extracted structure, then import subjects and
-          topics to the database.
-        </p>
-      </header>
+      <PageHeader
+        className="app-noise"
+        eyebrow="Admin workflow"
+        title="SYLLABUS UPLOAD"
+        description="Upload syllabus PDFs, inspect parsed hierarchy, and import normalized subject/topic trees into content storage."
+        badge={
+          <StatusBadge tone={activeUpload ? "ice" : "neutral"}>
+            {activeUpload ? `Current status ${activeUpload.status}` : `${uploads.length} uploads tracked`}
+          </StatusBadge>
+        }
+      />
 
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
+      <section className={cn(panelClass, "p-5")}>
         <div
           className={cn(
             "rounded-2xl border-2 border-dashed bg-slate-900 p-7 text-center transition",
@@ -434,7 +477,7 @@ export default function AdminSyllabusPage() {
             <Button
               type="button"
               variant="outline"
-              className="border-slate-700 bg-slate-900 text-slate-100 hover:bg-slate-800"
+              className={cn(ghostButtonClass, "h-10 px-4 py-0 text-[0.62rem]")}
               onClick={(event) => {
                 event.stopPropagation();
                 fileInputRef.current?.click();
@@ -445,7 +488,7 @@ export default function AdminSyllabusPage() {
 
             <Button
               type="button"
-              className="bg-indigo-600 text-white hover:bg-indigo-500"
+              className={cn(fireButtonClass, "h-10 px-4 py-0 text-[0.62rem]")}
               disabled={!selectedFile || isUploading}
               onClick={(event) => {
                 event.stopPropagation();
@@ -502,10 +545,12 @@ export default function AdminSyllabusPage() {
       </section>
 
       {activeUpload ? (
-        <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
+        <section className={cn(panelClass, "p-5")}>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h2 className="text-xl font-semibold text-white">Current Upload</h2>
+              <h2 className="font-display text-4xl leading-none tracking-[0.06em] text-[var(--cream)]">
+                CURRENT UPLOAD
+              </h2>
               <p className="mt-1 text-xs text-slate-400">{activeUpload.filename}</p>
             </div>
 
@@ -514,8 +559,12 @@ export default function AdminSyllabusPage() {
                 variant="outline"
                 className={cn("capitalize", statusBadgeClassMap[activeUpload.status])}
               >
-                {activeUpload.status}
+                {activeUpload.lifecycle_state ?? activeUpload.status}
               </Badge>
+
+              {typeof activeUpload.progress_pct === "number" ? (
+                <span className="text-xs text-slate-300">{activeUpload.progress_pct}%</span>
+              ) : null}
 
               {isPolling && !terminalStatuses.has(activeUpload.status) ? (
                 <span className="text-xs text-sky-300">Polling every 2s</span>
@@ -525,7 +574,7 @@ export default function AdminSyllabusPage() {
                 type="button"
                 size="sm"
                 variant="outline"
-                className="border-slate-700 bg-slate-900 text-slate-100 hover:bg-slate-800"
+                className={cn(ghostButtonClass, "h-9 px-4 py-0 text-[0.6rem]")}
                 onClick={() => void fetchUploads(false)}
                 disabled={isRefreshingUploads}
               >
@@ -535,8 +584,28 @@ export default function AdminSyllabusPage() {
                 />
                 Refresh
               </Button>
+
+              {activeUpload.can_retry ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className={cn(ghostButtonClass, "h-9 px-4 py-0 text-[0.6rem]")}
+                  onClick={() => void retryUpload()}
+                >
+                  Retry
+                </Button>
+              ) : null}
             </div>
           </div>
+
+          {activeUpload.job_summary ? (
+            <p className="mt-4 text-xs text-slate-400">
+              Parsed {activeUpload.job_summary.subject_count ?? 0} subjects ·{" "}
+              {activeUpload.job_summary.topic_count ?? 0} topics · Parser{" "}
+              {activeUpload.provenance?.parser ?? "ai_then_rule_fallback"}
+            </p>
+          ) : null}
 
           {activeUpload.status === "processing" || activeUpload.status === "pending" ? (
             <p className="mt-4 text-sm text-sky-200 animate-pulse">
@@ -562,7 +631,7 @@ export default function AdminSyllabusPage() {
                 </p>
                 <Button
                   type="button"
-                  className="bg-emerald-600 text-white hover:bg-emerald-500"
+                  className={cn(fireButtonClass, "h-9 px-4 py-0 text-[0.6rem]")}
                   onClick={() => void importToDatabase()}
                   disabled={isImporting || !activeStructure}
                 >
@@ -601,14 +670,16 @@ export default function AdminSyllabusPage() {
         />
       )}
 
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
+      <section className={cn(panelClass, "p-5")}>
         <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 className="text-xl font-semibold text-white">Past Uploads</h2>
+          <h2 className="font-display text-4xl leading-none tracking-[0.06em] text-[var(--cream)]">
+            PAST UPLOADS
+          </h2>
           <Button
             type="button"
             size="sm"
             variant="outline"
-            className="border-slate-700 bg-slate-900 text-slate-100 hover:bg-slate-800"
+            className={cn(ghostButtonClass, "h-9 px-4 py-0 text-[0.6rem]")}
             onClick={() => void fetchUploads(false)}
             disabled={isRefreshingUploads}
           >
@@ -649,7 +720,7 @@ export default function AdminSyllabusPage() {
                           variant="outline"
                           className={cn("capitalize", statusBadgeClassMap[upload.status])}
                         >
-                          {upload.status}
+                          {upload.lifecycle_state ?? upload.status}
                         </Badge>
                       </td>
                       <td className="px-3 py-3 text-slate-300">{upload.subjects_imported}</td>

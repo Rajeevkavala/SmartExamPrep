@@ -109,6 +109,7 @@ class TopicWeaknessSnapshot(BaseModel):
     weakness_score: float = Field(example=64.2)
     mastery_level: str = Field(example="Weak")
     accuracy: float = Field(example=0.42)
+    updated_at: str | None = Field(default=None, example="2026-04-07T14:20:00Z")
 
 
 class TopicComparisonItem(BaseModel):
@@ -132,6 +133,8 @@ class QuizResultResponse(BaseModel):
     readiness_after: float | None = Field(default=None, example=52.6)
     submitted_at: str | None = Field(default=None, example="2026-04-04T12:30:00")
     context_payload: dict | None = None
+    analysis_updated_at: str | None = Field(default=None, example="2026-04-07T14:20:00Z")
+    result_metadata: dict = Field(default_factory=dict)
 
     model_config = {
         "json_schema_extra": {
@@ -149,6 +152,12 @@ class QuizResultResponse(BaseModel):
                 "readiness_before": 41.8,
                 "readiness_after": 52.6,
                 "submitted_at": "2026-04-04T12:30:00",
+                "analysis_updated_at": "2026-04-04T12:30:01Z",
+                "result_metadata": {
+                    "mastery_records_updated": 2,
+                    "planner_task_completed": True,
+                    "mock_session_completed": False,
+                },
                 "context_payload": {
                     "source": "daily_planner",
                     "daily_task_id": "f4a2152e-7ab6-4f66-9f5d-3e4de8b95a2a",

@@ -323,6 +323,14 @@ class StudyChatRouterTests(unittest.TestCase):
             send_payload["assistant_message"].get("token_usage_json", {}).get("source"),
             "ai",
         )
+        self.assertIn(
+            "grounding_sources",
+            send_payload["assistant_message"].get("token_usage_json", {}),
+        )
+        self.assertIn(
+            "provider_readiness",
+            send_payload["assistant_message"].get("token_usage_json", {}),
+        )
 
         grounding = send_payload["assistant_message"]["grounding_snapshot_json"]
         self.assertIsInstance(grounding, dict)
@@ -330,6 +338,7 @@ class StudyChatRouterTests(unittest.TestCase):
         self.assertIn("weak_topics", grounding)
         self.assertIn("planner", grounding)
         self.assertIn("roadmap", grounding)
+        self.assertIn("recommended_actions", grounding)
 
         session_title = send_payload["session"]["title"]
         self.assertNotEqual(session_title, "New Study Chat")

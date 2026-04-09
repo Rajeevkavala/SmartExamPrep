@@ -9,11 +9,18 @@ class TopicWeaknessItem(BaseModel):
     mastery_level: str = Field(example="Weak")
     accuracy: float = Field(example=0.42)
     total_attempts: int = Field(example=12)
+    updated_at: str | None = Field(default=None, example="2026-04-07T14:20:00Z")
 
 
 class SubjectProgressItem(BaseModel):
     subject_name: str = Field(example="Operating Systems")
     accuracy: float = Field(example=0.58)
+
+
+class DataFreshnessSummary(BaseModel):
+    generated_at: str | None = Field(default=None, example="2026-04-07T14:20:00Z")
+    last_activity_at: str | None = Field(default=None, example="2026-04-07T13:45:00Z")
+    freshness_label: str = Field(default="Fresh today", example="Fresh today")
 
 
 class RecentScoreItem(BaseModel):
@@ -90,6 +97,9 @@ class DashboardResponse(BaseModel):
     quick_actions: list[DashboardQuickActionItem] = Field(default_factory=list)
     planner_summary: PlannerDashboardSummary | None = None
     nlp_insight: str | None
+    freshness: DataFreshnessSummary | None = None
+    next_best_action: str | None = Field(default=None, example="Complete your roadmap-linked planner task before taking another adaptive quiz.")
+    explainability_summary: str | None = Field(default=None, example="CPU Scheduling is still your weakest topic, and today's planner is aligned to that gap.")
 
     model_config = {
         "json_schema_extra": {
@@ -231,3 +241,6 @@ class AnalyticsOverviewResponse(BaseModel):
     ai_insight: str | None = Field(default=None, example="Your strongest recovery pattern is on Operating Systems. Keep one timed OS set tomorrow.")
     roadmap_progress_pct: float = Field(default=0.0, example=37.5)
     planner_completion_pct_today: float = Field(default=0.0, example=40.0)
+    freshness: DataFreshnessSummary | None = None
+    recommended_next_step: str | None = Field(default=None, example="Carry your unfinished planner task into today's first study block.")
+    strongest_recovery_signal: str | None = Field(default=None, example="Your adaptive scores are improving faster than your revision completion rate.")

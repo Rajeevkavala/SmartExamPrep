@@ -14,6 +14,7 @@ export type TopicWeaknessSnapshot = {
   weakness_score: number;
   mastery_level: MasteryLevel;
   accuracy: number;
+  updated_at?: string | null;
 };
 
 export type TopicComparison = {
@@ -44,6 +45,8 @@ export type QuizResultSnapshot = {
   readiness_after?: number | null;
   context_payload?: QuizContextPayload | null;
   submitted_at: string;
+  analysis_updated_at?: string | null;
+  result_metadata?: Record<string, unknown>;
 };
 
 type QuizState = {

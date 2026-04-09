@@ -1,14 +1,19 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class SyllabusUploadResponse(BaseModel):
     upload_id: str
     filename: str
     status: str
+    lifecycle_state: str
+    progress_pct: int
     extracted_structure: dict | None
     subjects_imported: int
     topics_imported: int
     error_message: str | None = None
+    can_retry: bool = False
+    job_summary: dict = Field(default_factory=dict)
+    provenance: dict = Field(default_factory=dict)
     created_at: str
 
     model_config = {

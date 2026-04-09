@@ -14,9 +14,13 @@ type ExamCatalogItem = {
   title: string;
   category: string;
   description?: string | null;
+  subject_count: number;
   topic_count: number;
   pyq_count: number;
   enrolled_count: number;
+  last_updated_at?: string | null;
+  recommended_for?: string | null;
+  capabilities?: Record<string, boolean>;
 };
 
 type SortKey = "popular" | "topics" | "pyqs";
@@ -168,15 +172,35 @@ export default function ExamsPage() {
                 {exam.description ?? "Launch predictions, roadmap planning, and mock tests from this exam track."}
               </p>
 
+              {exam.recommended_for ? (
+                <p className="mt-3 text-sm leading-7 text-[rgba(194,186,176,0.62)]">
+                  {exam.recommended_for}
+                </p>
+              ) : null}
+
               <div className="mt-4 space-y-1 text-[rgba(194,186,176,0.74)]">
                 <p className="flex items-center gap-2 text-sm">
                   <BookOpen className="h-4 w-4 text-[var(--fire)]" />
-                  {exam.topic_count} topics · {exam.pyq_count} PYQs
+                  {exam.subject_count} subjects · {exam.topic_count} topics · {exam.pyq_count} PYQs
                 </p>
                 <p className="flex items-center gap-2 text-sm">
                   <Users className="h-4 w-4 text-[var(--ice)]" />
                   {exam.enrolled_count} learners have launched sessions here
                 </p>
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                {Object.entries(exam.capabilities ?? {})
+                  .filter(([, enabled]) => enabled)
+                  .slice(0, 4)
+                  .map(([capability]) => (
+                    <span
+                      key={capability}
+                      className="rounded-full border border-[rgba(240,232,218,0.12)] bg-[rgba(255,255,255,0.03)] px-3 py-1 font-mono text-[0.56rem] uppercase tracking-[0.16em] text-[rgba(194,186,176,0.74)]"
+                    >
+                      {capability.replace("supports_", "").replaceAll("_", " ")}
+                    </span>
+                  ))}
               </div>
 
               <div className="mt-5 flex gap-3">
@@ -196,6 +220,12 @@ export default function ExamsPage() {
                   Mock
                 </button>
               </div>
+
+              {exam.last_updated_at ? (
+                <p className="mt-4 text-xs text-[rgba(194,186,176,0.5)]">
+                  Catalog refreshed {new Date(exam.last_updated_at).toLocaleString()}
+                </p>
+              ) : null}
             </article>
           ))}
         </section>

@@ -4,6 +4,12 @@ import {
   persist,
   type StateStorage,
 } from "zustand/middleware";
+import {
+  clearAuthToken,
+  decodeAuthToken,
+  persistAuthToken,
+  readAuthToken,
+} from "@/lib/authToken";
 
 export type UserRole = "student" | "admin";
 export type ExperienceLevel = "beginner" | "intermediate" | "advanced";
@@ -29,6 +35,10 @@ export type AuthUser = {
   exam_target_date?: string | null;
   onboarding_version?: number | null;
   onboarding_completed_at?: string | null;
+  onboarding_state?: "complete" | "incomplete";
+  roadmap_ready?: boolean;
+  missing_profile_fields?: string[];
+  profile_last_updated_at?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
   subject_confidences?: SubjectConfidence[];
@@ -38,6 +48,10 @@ export type AuthUser = {
 export const isOnboardingComplete = (user: AuthUser | null | undefined) => {
   if (!user) {
     return false;
+  }
+
+  if (typeof user.roadmap_ready === "boolean") {
+    return user.roadmap_ready;
   }
 
   return Boolean(
@@ -57,11 +71,8 @@ interface AuthState {
   user: AuthUser | null;
   setAuth: (token: string, role: UserRole, user: AuthUser | null) => void;
   logout: () => void;
+  syncSession: () => void;
 }
-
-const TOKEN_KEY = "access_token";
-const TOKEN_COOKIE_NAME = "access_token";
-const TOKEN_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
 
 const noopStorage: StateStorage = {
   getItem: () => null,
@@ -73,22 +84,6 @@ const storage = createJSONStorage<AuthState>(() =>
   typeof window !== "undefined" ? localStorage : noopStorage
 );
 
-const persistToken = (token: string | null) => {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  if (token) {
-    localStorage.setItem(TOKEN_KEY, token);
-    const secureSuffix = window.location.protocol === "https:" ? "; Secure" : "";
-    document.cookie = `${TOKEN_COOKIE_NAME}=${encodeURIComponent(token)}; path=/; max-age=${TOKEN_COOKIE_MAX_AGE}; SameSite=Lax${secureSuffix}`;
-    return;
-  }
-
-  localStorage.removeItem(TOKEN_KEY);
-  document.cookie = `${TOKEN_COOKIE_NAME}=; path=/; max-age=0; SameSite=Lax`;
-};
-
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -96,17 +91,44 @@ export const useAuthStore = create<AuthState>()(
       role: null,
       user: null,
       setAuth: (token, role, user) => {
-        persistToken(token);
-        set({ token, role, user });
+        persistAuthToken(token);
+        set({
+          token,
+          role,
+          user: user ? { ...user, role: user.role ?? role } : null,
+        });
       },
       logout: () => {
-        persistToken(null);
+        clearAuthToken();
         set({ token: null, role: null, user: null });
+      },
+      syncSession: () => {
+        const token = readAuthToken();
+        if (!token) {
+          set({ token: null, role: null, user: null });
+          return;
+        }
+
+        const decoded = decodeAuthToken(token);
+        const role = decoded?.role ?? null;
+        set((state) => ({
+          token,
+          role: role ?? state.role,
+          user: state.user
+            ? {
+                ...state.user,
+                role: state.user.role ?? role ?? undefined,
+              }
+            : null,
+        }));
       },
     }),
     {
       name: "auth-store",
       storage,
+      onRehydrateStorage: () => (state) => {
+        state?.syncSession();
+      },
     }
   )
 );

@@ -10,7 +10,10 @@ class ExamCatalogItem(BaseModel):
         default=None,
         example="Practice the full GATE CSE loop with roadmap, predictor, and mock tests.",
     )
+    subject_count: int = Field(default=0, example=12)
     topic_count: int = Field(default=0, example=68)
     pyq_count: int = Field(default=0, example=540)
     enrolled_count: int = Field(default=0, example=128)
-
+    last_updated_at: str | None = Field(default=None, example="2026-04-07T14:20:00")
+    recommended_for: str | None = Field(default=None, example="Students preparing for full-length technical entrance exams with PYQ-heavy patterns.")
+    capabilities: dict = Field(default_factory=dict)

@@ -10,12 +10,16 @@ import {
   CircleHelp,
   FileText,
   ListChecks,
+  MessageSquareQuote,
+  RefreshCw,
   ShieldAlert,
 } from "lucide-react";
 
+import { PageHeader, panelClass, StatusBadge } from "@/components/shared/brand-ui";
 import EmptyState from "@/components/shared/EmptyState";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
-import { adminApi } from "@/lib/api";
+import { adminApi, api } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 type QuestionsResponse = {
   total?: number;
@@ -25,6 +29,16 @@ type SubjectResponse = {
   topic_count?: number;
 };
 
+type PipelineItem = {
+  status?: string;
+  lifecycle_state?: string;
+};
+
+type FeedbackSummary = {
+  total_responses?: number;
+  average_overall_rating?: number;
+};
+
 type DashboardStats = {
   totalQuestions: number;
   unverifiedQuestions: number;
@@ -32,6 +46,9 @@ type DashboardStats = {
   topicsCount: number;
   scrapeJobsCount: number;
   pdfUploadsCount: number;
+  activeIngestionJobs: number;
+  feedbackCount: number;
+  feedbackAverage: number;
 };
 
 type StatCard = {
@@ -70,6 +87,7 @@ export default function AdminDashboardPage() {
           subjectsResponse,
           jobsResponse,
           uploadsResponse,
+          feedbackSummaryResponse,
         ] = await Promise.all([
           adminApi.get<QuestionsResponse>("/questions/", {
             params: { limit: 1 },
@@ -78,12 +96,13 @@ export default function AdminDashboardPage() {
             params: { is_verified: false, limit: 1 },
           }),
           adminApi.get<SubjectResponse[]>("/content/subjects"),
-          adminApi.get<unknown[]>("/scraper/jobs", {
+          adminApi.get<PipelineItem[]>("/scraper/jobs", {
             params: { limit: 100 },
           }),
-          adminApi.get<unknown[]>("/syllabus/uploads", {
+          adminApi.get<PipelineItem[]>("/syllabus/uploads", {
             params: { limit: 100 },
           }),
+          api.get<FeedbackSummary>("/feedback/admin/summary"),
         ]);
 
         const subjects = Array.isArray(subjectsResponse.data)
@@ -95,18 +114,31 @@ export default function AdminDashboardPage() {
           0
         );
 
+        const scrapeJobs = Array.isArray(jobsResponse.data) ? jobsResponse.data : [];
+        const syllabusUploads = Array.isArray(uploadsResponse.data)
+          ? uploadsResponse.data
+          : [];
+        const activeIngestionJobs = [...scrapeJobs, ...syllabusUploads].filter((item) => {
+          const state = item.lifecycle_state ?? item.status;
+          return (
+            state === "queued" ||
+            state === "running" ||
+            state === "pending" ||
+            state === "processing"
+          );
+        }).length;
+
         if (!cancelled) {
           setStats({
             totalQuestions: Number(totalQuestionsResponse.data?.total ?? 0),
             unverifiedQuestions: Number(unverifiedResponse.data?.total ?? 0),
             subjectsCount: subjects.length,
             topicsCount,
-            scrapeJobsCount: Array.isArray(jobsResponse.data)
-              ? jobsResponse.data.length
-              : 0,
-            pdfUploadsCount: Array.isArray(uploadsResponse.data)
-              ? uploadsResponse.data.length
-              : 0,
+            scrapeJobsCount: scrapeJobs.length,
+            pdfUploadsCount: syllabusUploads.length,
+            activeIngestionJobs,
+            feedbackCount: Number(feedbackSummaryResponse.data?.total_responses ?? 0),
+            feedbackAverage: Number(feedbackSummaryResponse.data?.average_overall_rating ?? 0),
           });
         }
       } catch (fetchError) {
@@ -164,6 +196,16 @@ export default function AdminDashboardPage() {
         value: stats.pdfUploadsCount,
         icon: FileText,
       },
+      {
+        label: "Active Pipelines",
+        value: stats.activeIngestionJobs,
+        icon: RefreshCw,
+      },
+      {
+        label: "Feedback Avg",
+        value: Number(stats.feedbackAverage.toFixed(1)),
+        icon: MessageSquareQuote,
+      },
     ];
   }, [stats]);
 
@@ -197,16 +239,23 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <header className="rounded-2xl border border-slate-800 bg-linear-to-r from-slate-900 to-indigo-950 p-6">
-        <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
-        <p className="mt-2 text-sm text-slate-300">
-          Monitor question quality, content inventory, and ingestion pipelines.
-        </p>
-      </header>
+      <PageHeader
+        className="app-noise"
+        eyebrow="Admin control"
+        title="CONTENT OPS DASHBOARD"
+        description="Track question quality, subject coverage, ingestion queues, and feedback health from one operations surface."
+        badge={
+          <StatusBadge tone={stats.unverifiedQuestions > 0 ? "warning" : "success"}>
+            {stats.unverifiedQuestions > 0
+              ? `${stats.unverifiedQuestions} pending verification`
+              : "All scraped questions verified"}
+          </StatusBadge>
+        }
+      />
 
       {stats.unverifiedQuestions > 0 ? (
-        <div className="rounded-xl border border-rose-500/40 bg-rose-500/10 p-4">
-          <p className="text-sm text-rose-100">
+        <div className="rounded-[22px] border border-rose-500/30 bg-rose-500/10 p-4">
+          <p className="text-sm text-rose-100/95">
             <span className="font-semibold">⚠ {stats.unverifiedQuestions}</span>{" "}
             scraped questions need verification before going live.
           </p>
@@ -228,14 +277,16 @@ export default function AdminDashboardPage() {
           return (
             <article
               key={card.label}
-              className={`rounded-2xl border p-5 ${
+              className={cn("rounded-[22px] border p-5", 
                 isDanger
                   ? "border-rose-500/30 bg-rose-500/10"
-                  : "border-slate-800 bg-slate-900/70"
-              }`}
+                  : "border-white/10 bg-[rgba(255,255,255,0.03)]"
+              )}
             >
               <div className="flex items-center justify-between">
-                <p className="text-sm text-slate-300">{card.label}</p>
+                <p className="font-mono text-[0.64rem] uppercase tracking-[0.2em] text-[rgba(194,186,176,0.72)]">
+                  {card.label}
+                </p>
                 <Icon
                   className={`h-5 w-5 ${isDanger ? "text-rose-300" : "text-indigo-300"}`}
                   aria-hidden
@@ -256,14 +307,18 @@ export default function AdminDashboardPage() {
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Link
           href="/admin/scraper"
-          className="group rounded-2xl border border-slate-800 bg-slate-900/70 p-5 transition hover:border-indigo-500/40 hover:bg-slate-900"
+          className={cn(panelClass, "group p-5 transition duration-300 hover:-translate-y-0.5")}
         >
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-400">Quick Action</p>
-          <h2 className="mt-2 text-lg font-semibold text-white">Scrape Questions</h2>
-          <p className="mt-1 text-sm text-slate-300">
+          <p className="font-mono text-[0.6rem] uppercase tracking-[0.24em] text-[rgba(194,186,176,0.62)]">
+            Quick Action
+          </p>
+          <h2 className="mt-2 font-display text-4xl leading-none tracking-[0.06em] text-[var(--cream)]">
+            SCRAPE QUESTIONS
+          </h2>
+          <p className="mt-2 text-sm text-[rgba(194,186,176,0.76)]">
             Start a new scrape job and import accepted questions.
           </p>
-          <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-indigo-300">
+          <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-[var(--ice)]">
             Open Scraper
             <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
           </span>
@@ -271,14 +326,18 @@ export default function AdminDashboardPage() {
 
         <Link
           href="/admin/syllabus"
-          className="group rounded-2xl border border-slate-800 bg-slate-900/70 p-5 transition hover:border-indigo-500/40 hover:bg-slate-900"
+          className={cn(panelClass, "group p-5 transition duration-300 hover:-translate-y-0.5")}
         >
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-400">Quick Action</p>
-          <h2 className="mt-2 text-lg font-semibold text-white">Upload Syllabus</h2>
-          <p className="mt-1 text-sm text-slate-300">
+          <p className="font-mono text-[0.6rem] uppercase tracking-[0.24em] text-[rgba(194,186,176,0.62)]">
+            Quick Action
+          </p>
+          <h2 className="mt-2 font-display text-4xl leading-none tracking-[0.06em] text-[var(--cream)]">
+            UPLOAD SYLLABUS
+          </h2>
+          <p className="mt-2 text-sm text-[rgba(194,186,176,0.76)]">
             Parse syllabus PDFs and sync extracted structure to the database.
           </p>
-          <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-indigo-300">
+          <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-[var(--ice)]">
             Open Syllabus Upload
             <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
           </span>
@@ -286,14 +345,18 @@ export default function AdminDashboardPage() {
 
         <Link
           href="/admin/questions"
-          className="group rounded-2xl border border-slate-800 bg-slate-900/70 p-5 transition hover:border-indigo-500/40 hover:bg-slate-900"
+          className={cn(panelClass, "group p-5 transition duration-300 hover:-translate-y-0.5")}
         >
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-400">Quick Action</p>
-          <h2 className="mt-2 text-lg font-semibold text-white">Manage Questions</h2>
-          <p className="mt-1 text-sm text-slate-300">
+          <p className="font-mono text-[0.6rem] uppercase tracking-[0.24em] text-[rgba(194,186,176,0.62)]">
+            Quick Action
+          </p>
+          <h2 className="mt-2 font-display text-4xl leading-none tracking-[0.06em] text-[var(--cream)]">
+            MANAGE QUESTIONS
+          </h2>
+          <p className="mt-2 text-sm text-[rgba(194,186,176,0.76)]">
             Verify, edit, and curate all question bank entries.
           </p>
-          <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-indigo-300">
+          <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-[var(--ice)]">
             Open Questions Manager
             <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
           </span>

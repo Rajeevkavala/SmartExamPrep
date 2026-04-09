@@ -41,6 +41,7 @@ class LoginRequest(BaseModel):
 
 
 ExperienceLevel = Literal["beginner", "intermediate", "advanced"]
+OnboardingState = Literal["complete", "incomplete"]
 
 
 class SubjectConfidenceItem(BaseModel):
@@ -100,6 +101,9 @@ class TokenResponse(BaseModel):
     access_token: str = Field(example="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
     token_type: str = "bearer"
     role: RoleEnum = Field(example=RoleEnum.student)
+    expires_at: datetime = Field(
+        example="2026-04-08T12:00:00Z",
+    )
 
 
 class UserResponse(BaseModel):
@@ -120,6 +124,16 @@ class UserResponse(BaseModel):
     onboarding_completed_at: datetime | None = Field(
         default=None,
         example="2026-04-04T12:00:00Z",
+    )
+    onboarding_state: OnboardingState = Field(default="incomplete", example="complete")
+    roadmap_ready: bool = Field(default=False, example=True)
+    missing_profile_fields: list[str] = Field(
+        default_factory=list,
+        example=["subject_confidences"],
+    )
+    profile_last_updated_at: datetime | None = Field(
+        default=None,
+        example="2026-04-05T09:15:00Z",
     )
     created_at: datetime | None = Field(
         default=None,

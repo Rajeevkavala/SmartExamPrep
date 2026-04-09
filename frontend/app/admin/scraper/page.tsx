@@ -5,6 +5,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
 
 import ScrapeJobCard from "@/components/admin/ScrapeJobCard";
+import {
+  fireButtonClass,
+  ghostButtonClass,
+  inputClass,
+  PageHeader,
+  panelClass,
+  StatusBadge,
+} from "@/components/shared/brand-ui";
 import EmptyState from "@/components/shared/EmptyState";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import { Badge } from "@/components/ui/badge";
@@ -266,6 +274,25 @@ export default function AdminScraperPage() {
     }
   };
 
+  const retryActiveJob = async () => {
+    if (!activeJobId) {
+      return;
+    }
+
+    setActionError(null);
+    try {
+      await adminApi.post(`/scraper/jobs/${activeJobId}/retry`);
+      await refreshJob();
+      await fetchJobs(false);
+      toast({
+        title: "Retry queued",
+        description: "The scrape job has been sent back through the structuring pipeline.",
+      });
+    } catch (error) {
+      setActionError(getErrorMessage(error));
+    }
+  };
+
   if (isLoadingJobs) {
     return <LoadingSpinner message="Loading scraper jobs..." />;
   }
@@ -288,28 +315,32 @@ export default function AdminScraperPage() {
 
   return (
     <div className="space-y-6">
-      <header className="rounded-2xl border border-slate-800 bg-linear-to-r from-slate-900 to-indigo-950 p-6">
-        <h1 className="text-3xl font-bold text-white">URL Scraper</h1>
-        <p className="mt-2 text-sm text-slate-300">
-          Scrape public pages, structure extracted questions with the AI layer, then import
-          reviewed results.
-        </p>
-      </header>
+      <PageHeader
+        className="app-noise"
+        eyebrow="Admin workflow"
+        title="URL SCRAPER"
+        description="Scrape public pages, run AI-assisted structuring, review extracted payloads, and import accepted questions."
+        badge={
+          <StatusBadge tone={activeJob ? "fire" : "neutral"}>
+            {activeJob ? `Active job ${activeJob.status}` : `${jobs.length} jobs in history`}
+          </StatusBadge>
+        }
+      />
 
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+      <section className={cn(panelClass, "p-4")}>
         <div className="flex flex-col gap-3 sm:flex-row">
           <Input
             value={url}
             onChange={(event) => setUrl(event.target.value)}
             placeholder="https://example.com/gate-cse-questions"
-            className="h-10 border-slate-700 bg-slate-900 text-slate-100"
+            className={cn(inputClass, "h-10 rounded-full border border-white/12 px-4 py-0")}
             aria-label="Scrape source URL"
           />
 
           <Button
             type="button"
             onClick={() => void startScrape()}
-            className="h-10 bg-indigo-600 text-white hover:bg-indigo-500"
+            className={cn(fireButtonClass, "h-10 px-5 py-0 text-[0.62rem]")}
             disabled={isStarting}
           >
             {isStarting ? (
@@ -325,7 +356,7 @@ export default function AdminScraperPage() {
           <Button
             type="button"
             variant="outline"
-            className="h-10 border-slate-700 bg-slate-900 text-slate-100 hover:bg-slate-800"
+            className={cn(ghostButtonClass, "h-10 px-4 py-0 text-[0.62rem]")}
             onClick={() => void fetchJobs(false)}
             disabled={isRefreshingJobs}
           >
@@ -351,10 +382,12 @@ export default function AdminScraperPage() {
       </section>
 
       {activeJob ? (
-        <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
+        <section className={cn(panelClass, "p-5")}>
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <h2 className="text-lg font-semibold text-white">Active Job Review</h2>
+              <h2 className="font-display text-4xl leading-none tracking-[0.06em] text-[var(--cream)]">
+                ACTIVE JOB REVIEW
+              </h2>
               <p className="mt-1 max-w-3xl break-all text-xs text-slate-400">
                 {activeJob.url}
               </p>
@@ -365,8 +398,12 @@ export default function AdminScraperPage() {
                 variant="outline"
                 className={cn("capitalize", statusBadgeClassMap[activeJob.status])}
               >
-                {activeJob.status}
+                {activeJob.lifecycle_state ?? activeJob.status}
               </Badge>
+
+              {typeof activeJob.progress_pct === "number" ? (
+                <span className="text-xs text-slate-300">{activeJob.progress_pct}%</span>
+              ) : null}
 
               {isPolling ? (
                 <span className="text-xs text-sky-300">Polling every 3s</span>
@@ -376,13 +413,33 @@ export default function AdminScraperPage() {
                 type="button"
                 size="sm"
                 variant="outline"
-                className="border-slate-700 bg-slate-900 text-slate-100 hover:bg-slate-800"
+                className={cn(ghostButtonClass, "h-9 px-4 py-0 text-[0.6rem]")}
                 onClick={() => void refreshJob()}
               >
                 Refresh Status
               </Button>
+
+              {activeJob.can_retry ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className={cn(ghostButtonClass, "h-9 px-4 py-0 text-[0.6rem]")}
+                  onClick={() => void retryActiveJob()}
+                >
+                  Retry Job
+                </Button>
+              ) : null}
             </div>
           </div>
+
+          {activeJob.job_summary ? (
+            <p className="mt-4 text-xs text-slate-400">
+              Extracted {activeJob.job_summary.extracted_count ?? extractedQuestions.length} question(s)
+              · Imported {activeJob.job_summary.questions_imported ?? activeJob.questions_imported}
+              · Source {activeJob.provenance?.classification_source ?? "ai_structured_scrape"}
+            </p>
+          ) : null}
 
           {activeJob.status === "processing" ? (
             <p className="mt-4 text-sm text-sky-200 animate-pulse">
@@ -414,7 +471,7 @@ export default function AdminScraperPage() {
                 </p>
                 <Button
                   type="button"
-                  className="bg-emerald-600 text-white hover:bg-emerald-500"
+                  className={cn(fireButtonClass, "h-9 px-4 py-0 text-[0.6rem]")}
                   onClick={() => void importAccepted()}
                   disabled={!acceptedIndices.length || isImporting}
                 >

@@ -14,6 +14,14 @@ import { CheckCircle2, Plus, RefreshCw, Trash2 } from "lucide-react";
 import QuestionFormModal, {
   type AdminQuestion,
 } from "@/components/admin/QuestionFormModal";
+import {
+  fireButtonClass,
+  ghostButtonClass,
+  inputClass,
+  PageHeader,
+  panelClass,
+  StatusBadge,
+} from "@/components/shared/brand-ui";
 import EmptyState from "@/components/shared/EmptyState";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import {
@@ -30,6 +38,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
 import { adminApi } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 type QuestionsResponse = {
   total?: number;
@@ -359,25 +368,27 @@ export default function AdminQuestionsPage() {
 
   return (
     <div className="space-y-5">
-      <header className="rounded-2xl border border-slate-800 bg-linear-to-r from-slate-900 to-indigo-950 p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-white">Questions Manager</h1>
-            <p className="mt-2 text-sm text-slate-300">
-              Review, verify, and curate question bank quality before student use.
-            </p>
-          </div>
-
+      <PageHeader
+        className="app-noise"
+        eyebrow="Admin workflow"
+        title="QUESTIONS MANAGER"
+        description="Review, verify, filter, and curate quality-controlled question bank entries before learner exposure."
+        badge={
+          <StatusBadge tone={unverifiedOnly ? "warning" : "neutral"}>
+            {unverifiedOnly ? "Showing unverified only" : `${total} total questions`}
+          </StatusBadge>
+        }
+        actions={
           <div className="flex items-center gap-2">
             <Button
               type="button"
               variant="outline"
-              className="border-slate-700 bg-slate-900 text-slate-100 hover:bg-slate-800"
+              className={cn(ghostButtonClass, "h-10 px-4 py-0 text-[0.62rem]")}
               onClick={() => void refreshList()}
               disabled={isRefreshing}
             >
               <RefreshCw
-                className={`mr-1 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+                className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
                 aria-hidden
               />
               Refresh
@@ -385,17 +396,17 @@ export default function AdminQuestionsPage() {
 
             <Button
               type="button"
-              className="bg-indigo-600 text-white hover:bg-indigo-500"
+              className={cn(fireButtonClass, "h-10 px-4 py-0 text-[0.62rem]")}
               onClick={() => setShowCreateModal(true)}
             >
-              <Plus className="mr-1 h-4 w-4" aria-hidden />
+              <Plus className="h-4 w-4" aria-hidden />
               Add Question
             </Button>
           </div>
-        </div>
-      </header>
+        }
+      />
 
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+      <section className={cn(panelClass, "p-4")}>
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <Input
@@ -405,13 +416,13 @@ export default function AdminQuestionsPage() {
                 setSearch(event.target.value);
               }}
               placeholder="Search questions..."
-              className="h-9 w-full max-w-md border-slate-700 bg-slate-900 text-slate-100"
+              className={cn(inputClass, "h-9 w-full max-w-md rounded-full border border-white/12 px-4 py-0")}
             />
 
             {selectedQuestionIds.length > 0 ? (
               <Button
                 type="button"
-                className="bg-emerald-600 text-white hover:bg-emerald-500"
+                className={cn(fireButtonClass, "h-9 px-4 py-0 text-[0.6rem]")}
                 onClick={() => void verifySelectedQuestions()}
                 disabled={isBulkVerifying}
               >
@@ -483,7 +494,7 @@ export default function AdminQuestionsPage() {
         />
       ) : (
         <>
-          <section className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70">
+          <section className={cn(panelClass, "overflow-hidden")}>
             <div className="overflow-x-auto">
               <table className="min-w-225 w-full text-sm">
                 <thead className="bg-slate-900/90 text-xs uppercase tracking-widest text-slate-400">
@@ -610,7 +621,7 @@ export default function AdminQuestionsPage() {
             </div>
           </section>
 
-          <footer className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-3 text-sm text-slate-300">
+          <footer className={cn(panelClass, "flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm text-[rgba(194,186,176,0.78)]")}>
             <p>
               {rangeStart}-{rangeEnd} of {total}
             </p>

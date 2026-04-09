@@ -81,6 +81,7 @@ def get_adaptive_questions(
     year_filter: int | None = None,
     source_types: list[SourceTypeEnum] | None = None,
 ) -> list[dict]:
+    target_question_count = max(1, question_count or 20)
     masteries = (
         db.query(TopicMastery)
         .filter(TopicMastery.user_id == user.id)
@@ -97,9 +98,7 @@ def get_adaptive_questions(
 
     if not masteries:
         candidates = base_candidate_query.order_by(Question.updated_at.desc()).all()
-        if question_count is not None and question_count > 0:
-            candidates = candidates[:question_count]
-        return [_question_to_payload(question) for question in candidates]
+        return [_question_to_payload(question) for question in candidates[:target_question_count]]
 
     topic_mastery_payload = [
         {
@@ -192,9 +191,6 @@ def get_adaptive_questions(
         daily_study_minutes=int(getattr(user, "daily_study_minutes", 60) or 60),
     )
 
-    if not selected:
-        return [_question_to_payload(question) for question in candidates[: max(1, question_count or 20)]]
-
     payload = [
         {
             "id": item["id"],
@@ -206,8 +202,19 @@ def get_adaptive_questions(
             "topic_name": item.get("topic_name", ""),
             "subtopic": item.get("subtopic"),
         }
-        for item in selected
+        for item in (selected or [])
     ]
-    if question_count is not None and question_count > 0:
-        return payload[:question_count]
-    return payload
+    selected_ids = {str(item["id"]) for item in payload}
+
+    if len(payload) < target_question_count:
+        fallback_candidates = base_candidate_query.order_by(Question.updated_at.desc()).all()
+        for question in fallback_candidates:
+            question_id = str(question.id)
+            if question_id in selected_ids:
+                continue
+            payload.append(_question_to_payload(question))
+            selected_ids.add(question_id)
+            if len(payload) >= target_question_count:
+                break
+
+    return payload[:target_question_count]

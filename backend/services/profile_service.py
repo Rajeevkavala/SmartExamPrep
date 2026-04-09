@@ -1,12 +1,20 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from models.models import Subject, Topic, User, UserSubjectConfidence, UserTopicBaseline
 from schemas.auth_schemas import SubjectConfidenceItem, UpdateProfileRequest, UserResponse
+
+
+PROFILE_REQUIRED_FIELDS = (
+	"exam_target_date",
+	"daily_study_minutes",
+	"experience_level",
+	"subject_confidences",
+)
 
 
 def _serialize_subject_confidences(
@@ -28,6 +36,7 @@ def serialize_user_profile(user: User) -> UserResponse:
 		for item in user.topic_baselines
 		if item.already_known
 	)
+	readiness = build_profile_readiness(user)
 
 	return UserResponse(
 		id=str(user.id),
@@ -45,6 +54,10 @@ def serialize_user_profile(user: User) -> UserResponse:
 		exam_target_date=user.exam_target_date,
 		onboarding_version=user.onboarding_version,
 		onboarding_completed_at=user.onboarding_completed_at,
+		onboarding_state=readiness["onboarding_state"],
+		roadmap_ready=readiness["roadmap_ready"],
+		missing_profile_fields=readiness["missing_profile_fields"],
+		profile_last_updated_at=user.updated_at,
 		created_at=user.created_at,
 		updated_at=user.updated_at,
 		subject_confidences=_serialize_subject_confidences(user.subject_confidences),
@@ -115,6 +128,35 @@ def _is_profile_complete(
 		and user.experience_level
 		and subject_confidence_count > 0
 	)
+
+
+def build_profile_readiness(
+	user: User,
+	subject_confidence_count: int | None = None,
+) -> dict[str, object]:
+	if subject_confidence_count is None:
+		subject_confidence_count = len(user.subject_confidences or [])
+
+	missing_fields: list[str] = []
+
+	if user.exam_target_date is None or (
+		isinstance(user.exam_target_date, date) and user.exam_target_date <= date.today()
+	):
+		missing_fields.append("exam_target_date")
+	if not user.daily_study_minutes:
+		missing_fields.append("daily_study_minutes")
+	if not user.experience_level:
+		missing_fields.append("experience_level")
+	if subject_confidence_count <= 0:
+		missing_fields.append("subject_confidences")
+
+	roadmap_ready = len(missing_fields) == 0
+	return {
+		"onboarding_state": "complete" if roadmap_ready else "incomplete",
+		"roadmap_ready": roadmap_ready,
+		"missing_profile_fields": missing_fields,
+		"required_profile_fields": list(PROFILE_REQUIRED_FIELDS),
+	}
 
 
 def update_profile(

@@ -1,7 +1,10 @@
 from contextlib import asynccontextmanager
+import json
 import logging
 from pathlib import Path
 import sys
+import time
+from datetime import datetime
 from typing import Any
 import uuid
 
@@ -39,10 +42,12 @@ from routers import (
 
 
 from ml.weakness_detector import WeaknessDetector
-from services.ai_service import provider_status
+from services.ai_service import provider_readiness, provider_status
 
 weakness_detector: WeaknessDetector | None = None
 logger = logging.getLogger(__name__)
+if not logging.getLogger().handlers:
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
 nlp_readiness: dict[str, Any] = {
     "loaded": False,
     "degraded_mode": True,
@@ -301,28 +306,83 @@ async def log_request_middleware(request: Request, call_next):
     status_code = 500
     request_id = request.headers.get("X-Request-Id") or uuid.uuid4().hex
     request.state.request_id = request_id
+    started_at = time.perf_counter()
     try:
         response = await call_next(request)
         status_code = response.status_code
         response.headers["X-Request-Id"] = request_id
         return response
     finally:
-        print(
-            f"[{request_id}] {request.method} {request.url.path} -> {status_code}",
-            file=sys.stderr,
+        duration_ms = round((time.perf_counter() - started_at) * 1000, 2)
+        logger.info(
+            json.dumps(
+                {
+                    "event": "http_request_completed",
+                    "request_id": request_id,
+                    "method": request.method,
+                    "path": request.url.path,
+                    "status_code": status_code,
+                    "duration_ms": duration_ms,
+                }
+            )
         )
 
 
+def _request_id_from_request(request: Request) -> str:
+    return getattr(request.state, "request_id", "unknown")
+
+
+def _http_error_payload(
+    *,
+    request: Request,
+    status_code: int,
+    detail: Any,
+    default_message: str,
+) -> dict[str, Any]:
+    request_id = _request_id_from_request(request)
+    payload: dict[str, Any] = {
+        "detail": default_message,
+        "status_code": status_code,
+        "request_id": request_id,
+    }
+
+    if isinstance(detail, str) and detail.strip():
+        payload["detail"] = detail
+        return payload
+
+    if isinstance(detail, dict):
+        message = detail.get("message")
+        if isinstance(message, str) and message.strip():
+            payload["detail"] = message
+
+        errors = detail.get("errors")
+        if isinstance(errors, list):
+            payload["errors"] = errors
+
+        missing_profile_fields = detail.get("missing_profile_fields")
+        if isinstance(missing_profile_fields, list):
+            payload["missing_profile_fields"] = missing_profile_fields
+
+    return payload
+
+
 @app.exception_handler(StarletteHTTPException)
-async def http_exception_handler(_: Request, exc: StarletteHTTPException):
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    request_id = _request_id_from_request(request)
     return JSONResponse(
         status_code=exc.status_code,
-        content={"detail": exc.detail, "status_code": exc.status_code},
+        headers={"X-Request-Id": request_id},
+        content=_http_error_payload(
+            request=request,
+            status_code=exc.status_code,
+            detail=exc.detail,
+            default_message="Request failed.",
+        ),
     )
 
 
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(_: Request, exc: RequestValidationError):
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
     errors: list[dict[str, str]] = []
 
     for validation_error in exc.errors():
@@ -338,24 +398,41 @@ async def validation_exception_handler(_: Request, exc: RequestValidationError):
             }
         )
 
+    request_id = _request_id_from_request(request)
     return JSONResponse(
         status_code=422,
-        content={"detail": "Validation error", "errors": errors},
+        headers={"X-Request-Id": request_id},
+        content={
+            "detail": "Validation error",
+            "errors": errors,
+            "request_id": request_id,
+            "status_code": 422,
+        },
     )
 
 
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
-    request_id = getattr(request.state, "request_id", "unknown")
-    print(
-        f"[{request_id}] Unhandled exception on {request.method} {request.url.path}: {exc}",
-        file=sys.stderr,
+    request_id = _request_id_from_request(request)
+    logger.exception(
+        json.dumps(
+            {
+                "event": "http_request_failed",
+                "request_id": request_id,
+                "method": request.method,
+                "path": request.url.path,
+                "status_code": 500,
+                "error": str(exc),
+            }
+        )
     )
     return JSONResponse(
         status_code=500,
+        headers={"X-Request-Id": request_id},
         content={
             "detail": "Internal server error. Please try again.",
             "request_id": request_id,
+            "status_code": 500,
         },
     )
 
@@ -364,11 +441,10 @@ async def generic_exception_handler(request: Request, exc: Exception):
 def health_check() -> dict[str, Any]:
     return {
         "status": "ok",
+        "server_time_utc": datetime.utcnow().isoformat() + "Z",
         "readiness": {
             "nlp": dict(nlp_readiness),
-            "ai": {
-                "providers": provider_status(),
-            },
+            "ai": provider_readiness(),
         },
     }
 

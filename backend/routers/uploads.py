@@ -11,6 +11,7 @@ from services.student_upload_service import (
     delete_student_upload,
     get_student_upload,
     list_student_uploads,
+    prepare_student_upload_retry,
     process_student_upload,
     validate_exam_for_upload,
 )
@@ -77,13 +78,29 @@ async def create_upload(
     return {
         "upload_id": str(upload.id),
         "exam_id": str(upload.exam_id) if upload.exam_id else None,
+        "exam_title": exam.title if exam is not None else None,
         "filename": upload.filename,
         "file_size_bytes": int(upload.file_size_bytes or 0),
         "status": getattr(upload.status, "value", upload.status),
+        "lifecycle_state": "queued",
+        "progress_pct": 10,
         "processing_mode": upload.processing_mode,
         "question_count": 0,
         "extracted_text_preview": None,
         "error_message": None,
+        "can_retry": False,
+        "last_error": None,
+        "job_summary": {
+            "question_count": 0,
+            "preview_ready": False,
+            "processing_mode": upload.processing_mode,
+        },
+        "provenance": {
+            "generation_source": upload.processing_mode,
+            "fallback_used": False,
+            "confidence_label": "unknown",
+            "preview_ready": False,
+        },
         "created_at": upload.created_at.isoformat() if upload.created_at else "",
         "updated_at": upload.updated_at.isoformat() if upload.updated_at else "",
     }
@@ -125,3 +142,25 @@ def remove_upload(
     user: Annotated[User, Depends(require_student)],
 ) -> dict:
     return delete_student_upload(str(user.id), upload_id, db)
+
+
+@router.post(
+    "/{upload_id}/retry",
+    response_model=StudentUploadSummaryResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Retry processing a student's stored PDF upload",
+)
+def retry_upload(
+    upload_id: str,
+    background_tasks: BackgroundTasks,
+    db: Annotated[Session, Depends(get_db)],
+    user: Annotated[User, Depends(require_student)],
+) -> dict:
+    upload, file_bytes = prepare_student_upload_retry(str(user.id), upload_id, db)
+    background_tasks.add_task(
+        process_student_upload,
+        str(upload.id),
+        upload.filename,
+        file_bytes,
+    )
+    return get_student_upload(str(user.id), upload_id, db)

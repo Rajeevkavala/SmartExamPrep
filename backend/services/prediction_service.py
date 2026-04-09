@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from models.models import ExamCatalog, ExamPredictionSnapshot, Question, SourceTypeEnum, User
 from schemas.roadmap_schemas import GenerateRoadmapRequest
+from services.ai_service import provider_readiness
 from services.exam_service import ensure_default_exam_catalog, get_exam_or_404
 from services.roadmap_service import generate_roadmap
 
@@ -231,6 +232,13 @@ def _build_prediction_payload(exam: ExamCatalog, db: Session) -> dict:
             "available_years": all_years,
             "questions_analyzed": len(pyq_questions),
             "topics_analyzed": len(topic_years),
+            "degraded_mode": source_label != "pyq",
+            "provider_readiness": provider_readiness(),
+            "recommended_actions": [
+                f"Prioritize {item['topic_name']} in the next roadmap refresh."
+                for item in rows[:3]
+            ],
+            "ranking_method": "pyq_frequency_recency_blend",
         },
     }
 
@@ -252,13 +260,16 @@ def refresh_prediction_snapshot(db: Session, exam_id: str, generated_by_user_id:
     exam = get_exam_or_404(db, exam_id)
     payload = _build_prediction_payload(exam, db)
 
+    metadata_json = dict(payload["metadata_json"])
+    metadata_json["refreshed_by_user_id"] = generated_by_user_id
+
     snapshot = ExamPredictionSnapshot(
         exam_id=exam.id,
         generated_by_user_id=generated_by_user_id,
         insight_text=payload["insight_text"],
         rows_json=payload["rows_json"],
         repeat_topics_json=payload["repeat_topics_json"],
-        metadata_json=payload["metadata_json"],
+        metadata_json=metadata_json,
         generated_at=datetime.utcnow(),
     )
     db.add(snapshot)

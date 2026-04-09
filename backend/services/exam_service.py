@@ -122,15 +122,34 @@ def _count_enrollments(db: Session, exam: ExamCatalog) -> int:
 
 
 def serialize_exam_catalog_item(exam: ExamCatalog, db: Session) -> dict:
+    subject_ids = _safe_subject_ids(exam.subject_ids)
     return {
         "exam_id": str(exam.id),
         "code": exam.code,
         "title": exam.title,
         "category": exam.category,
         "description": exam.description,
+        "subject_count": len(subject_ids),
         "topic_count": _count_topics(db, exam),
         "pyq_count": _count_pyqs(db, exam),
         "enrolled_count": _count_enrollments(db, exam),
+        "last_updated_at": (
+            exam.updated_at.isoformat()
+            if getattr(exam, "updated_at", None) is not None
+            else exam.created_at.isoformat() if getattr(exam, "created_at", None) is not None else None
+        ),
+        "recommended_for": (
+            "Students preparing for full-length technical entrance exams with structured PYQ patterns."
+            if exam.code == "gate-cse"
+            else "Learners who want a guided roadmap, predictor, and mock workflow."
+        ),
+        "capabilities": {
+            "supports_predictions": True,
+            "supports_mock_tests": True,
+            "supports_pdf_uploads": True,
+            "supports_roadmaps": True,
+            "supports_pyq_practice": True,
+        },
     }
 
 

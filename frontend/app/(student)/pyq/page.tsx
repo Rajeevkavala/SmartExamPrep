@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -30,7 +30,13 @@ type PYQBrowseItem = {
   subtopic?: string | null;
   difficulty: string;
   year?: number | null;
+  source_url?: string | null;
   question_text: string;
+  options: string[];
+  question_image_urls?: string[];
+  correct_answer?: string | null;
+  explanation?: string | null;
+  marks?: number;
 };
 
 type FilterOptionsResponse = {
@@ -43,6 +49,14 @@ type FilterOptionsResponse = {
 type PYQBrowseResponse = {
   total: number;
   questions: PYQBrowseItem[];
+  limit: number;
+  offset: number;
+  applied_filters?: Record<string, unknown>;
+  pagination?: {
+    page: number;
+    page_size: number;
+    has_more: boolean;
+  };
 };
 
 type PYQPracticeQuestion = {
@@ -55,6 +69,7 @@ type PYQPracticeQuestion = {
 
 type PYQPracticeResponse = {
   total: number;
+  requested_count: number;
   questions: PYQPracticeQuestion[];
   context_payload?: {
     source?: string;
@@ -65,7 +80,12 @@ type PYQPracticeResponse = {
       year_from?: number;
       subject_name?: string;
       topic_name?: string;
-    };
+      };
+  };
+  selection_summary?: {
+    total_available?: number;
+    practice_mode?: string;
+    applied_filters?: Record<string, unknown>;
   };
 };
 
@@ -80,6 +100,8 @@ type QuizSubmitResponse = {
   readiness_before?: number | null;
   readiness_after?: number | null;
   context_payload?: Record<string, unknown> | null;
+  analysis_updated_at?: string | null;
+  result_metadata?: Record<string, unknown>;
 };
 
 type FiltersState = {
@@ -98,6 +120,8 @@ const initialFilters: FiltersState = {
   year: "",
 };
 
+const PYQ_FILTER_STORAGE_KEY = "smartexamprep.pyq.filters.v2";
+
 export default function PYQPage() {
   const router = useRouter();
   const setLatestResult = useQuizStore((state) => state.setLatestResult);
@@ -106,6 +130,7 @@ export default function PYQPage() {
   const [filterOptions, setFilterOptions] = useState<FilterOptionsResponse>({});
   const [questions, setQuestions] = useState<PYQBrowseItem[]>([]);
   const [total, setTotal] = useState(0);
+  const [pagination, setPagination] = useState<PYQBrowseResponse["pagination"] | null>(null);
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const [showAnswer, setShowAnswer] = useState(false);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
@@ -115,6 +140,7 @@ export default function PYQPage() {
   const [isSubmittingPractice, setIsSubmittingPractice] = useState(false);
   const [practiceQuestions, setPracticeQuestions] = useState<PYQPracticeQuestion[] | null>(null);
   const [practiceContext, setPracticeContext] = useState<PYQPracticeResponse["context_payload"] | null>(null);
+  const [practiceSelectionSummary, setPracticeSelectionSummary] = useState<PYQPracticeResponse["selection_summary"] | null>(null);
   const [practiceIndex, setPracticeIndex] = useState(0);
   const [practiceAnswers, setPracticeAnswers] = useState<Record<string, string>>({});
 
@@ -166,7 +192,12 @@ export default function PYQPage() {
 
       setQuestions(data.questions ?? []);
       setTotal(Number(data.total ?? 0));
+      setPagination(data.pagination ?? null);
       setSelectedQuestionId((current) => current ?? data.questions?.[0]?.id ?? null);
+
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(PYQ_FILTER_STORAGE_KEY, JSON.stringify(nextFilters));
+      }
     } catch (error) {
       const message =
         (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??
@@ -174,6 +205,7 @@ export default function PYQPage() {
       setLoadError(message);
       setQuestions([]);
       setTotal(0);
+      setPagination(null);
       setSelectedQuestionId(null);
     } finally {
       if (withSpinner) {
@@ -195,7 +227,21 @@ export default function PYQPage() {
         }
 
         setFilterOptions(data);
-        await loadQuestions(initialFilters, false);
+        const savedFilters =
+          typeof window !== "undefined"
+            ? (() => {
+                try {
+                  return JSON.parse(
+                    window.localStorage.getItem(PYQ_FILTER_STORAGE_KEY) ?? "null"
+                  ) as FiltersState | null;
+                } catch {
+                  return null;
+                }
+              })()
+            : null;
+        const bootFilters = savedFilters ?? initialFilters;
+        setFilters(bootFilters);
+        await loadQuestions(bootFilters, false);
       } catch (error) {
         if (cancelled) {
           return;
@@ -237,13 +283,6 @@ export default function PYQPage() {
     );
   }
 
-  const options = [
-    `A. Dynamic Programming`,
-    `B. Divide and Conquer`,
-    `C. Greedy`,
-    `D. Backtracking`,
-  ];
-
   const startPractice = async () => {
     try {
       setIsStartingPractice(true);
@@ -260,6 +299,7 @@ export default function PYQPage() {
       const nextQuestions = data.questions ?? [];
       setPracticeQuestions(nextQuestions);
       setPracticeContext(data.context_payload ?? null);
+      setPracticeSelectionSummary(data.selection_summary ?? null);
       setPracticeIndex(0);
       setPracticeAnswers({});
 
@@ -319,6 +359,8 @@ export default function PYQPage() {
         readiness_after: data.readiness_after ?? null,
         context_payload: data.context_payload ?? null,
         submitted_at: new Date().toISOString(),
+        analysis_updated_at: data.analysis_updated_at ?? null,
+        result_metadata: data.result_metadata ?? {},
       });
 
       router.push(`/quiz/result/${data.attempt_id}`);
@@ -481,18 +523,25 @@ export default function PYQPage() {
                 setFilters(initialFilters);
                 setSelectedQuestionId(null);
                 void loadQuestions(initialFilters, true);
+                if (typeof window !== "undefined") {
+                  window.localStorage.removeItem(PYQ_FILTER_STORAGE_KEY);
+                }
               }}
               className="h-11 w-full border border-[rgba(240,232,218,0.08)] text-[rgba(194,186,176,0.76)]"
             >
               Reset
             </button>
+            <p className="text-xs text-[rgba(194,186,176,0.54)]">
+              Your latest filter state is remembered for the next PYQ session.
+            </p>
           </div>
         </aside>
 
         <section className="border border-[rgba(240,232,218,0.08)] bg-[rgba(255,255,255,0.01)] p-4">
           <h2 className="text-4xl font-semibold text-[var(--cream)]">Question List</h2>
           <p className="mt-1 text-xl text-[rgba(194,186,176,0.68)]">
-            {total} questions - page 1/14
+            {total} questions · page {pagination?.page ?? 1}
+            {pagination?.has_more ? " · more available" : " · current slice fully loaded"}
           </p>
 
           {isLoadingQuestions ? (
@@ -531,9 +580,12 @@ export default function PYQPage() {
                     <span className="rounded-full border border-[rgba(34,197,94,0.35)] bg-[rgba(34,197,94,0.12)] px-3 py-0.5 font-mono text-[0.56rem] uppercase tracking-[0.16em] text-emerald-300">
                       {question.difficulty}
                     </span>
-                    <span>1 marks</span>
+                    <span>{question.marks ?? 1} marks</span>
                   </div>
-                  <p className="mt-1 text-sm text-[rgba(194,186,176,0.62)]">0.0% accuracy</p>
+                  <p className="mt-1 text-sm text-[rgba(194,186,176,0.62)]">
+                    {question.subject_name}
+                    {question.subtopic ? ` · ${question.subtopic}` : ""}
+                  </p>
                 </button>
               );
             })}
@@ -554,6 +606,12 @@ export default function PYQPage() {
               </p>
               <p className="text-sm text-[rgba(194,186,176,0.72)]">
                 Topic: {practiceContext?.filters?.topic_name ?? selectedQuestion?.topic_name ?? "--"}
+              </p>
+              <p className="text-sm text-[rgba(194,186,176,0.72)]">
+                Session size: {practiceQuestions.length} selected
+                {practiceSelectionSummary?.total_available
+                  ? ` from ${practiceSelectionSummary.total_available} matching questions`
+                  : ""}
               </p>
 
               <p className="text-xl font-semibold text-[var(--cream)]">{currentPracticeQuestion.question_text}</p>
@@ -618,8 +676,11 @@ export default function PYQPage() {
               </p>
 
               <div className="mt-4 space-y-2">
-                {options.map((option) => {
-                  const isCorrect = option.startsWith("C.") && showAnswer;
+                {selectedQuestion.options.map((option) => {
+                  const answerKey = selectedQuestion.correct_answer?.trim().toUpperCase();
+                  const isCorrect = answerKey
+                    ? option.trim().toUpperCase().startsWith(answerKey)
+                    : false;
                   return (
                     <div
                       key={option}
@@ -644,40 +705,46 @@ export default function PYQPage() {
                   <Eye className="h-4 w-4" />
                   {showAnswer ? "Hide Answer" : "Show Answer"}
                 </button>
+                {selectedQuestion.source_url ? (
+                  <Link
+                    href={selectedQuestion.source_url}
+                    target="_blank"
+                    className="inline-flex h-11 items-center gap-2 border border-[rgba(240,232,218,0.08)] px-4 text-[var(--cream)]"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    View Source
+                  </Link>
+                ) : null}
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Link
+                  href="/mock-tests"
+                  className="inline-flex h-11 items-center bg-[var(--fire)] px-5 font-semibold text-white"
+                >
+                  Add to Mock
+                </Link>
 
                 <button
                   type="button"
-                  className="inline-flex h-11 items-center gap-2 border border-[rgba(240,232,218,0.08)] px-4 text-[var(--cream)]"
+                  onClick={() => {
+                    void startPractice();
+                  }}
+                  disabled={isStartingPractice}
+                  className="inline-flex h-11 items-center border border-[rgba(240,232,218,0.08)] px-5 text-[var(--cream)] disabled:opacity-60"
                 >
-                  <Sparkles className="h-4 w-4" />
-                  AI Explain
+                  {isStartingPractice ? "Starting..." : "Start PYQ Practice"}
                 </button>
               </div>
 
-              <Link
-                href="/mock-tests"
-                className="mt-3 inline-flex h-11 items-center bg-[var(--fire)] px-5 font-semibold text-white"
-              >
-                Add to Mock
-              </Link>
-
-              <button
-                type="button"
-                onClick={() => {
-                  void startPractice();
-                }}
-                disabled={isStartingPractice}
-                className="ml-2 mt-3 inline-flex h-11 items-center border border-[rgba(240,232,218,0.08)] px-5 text-[var(--cream)] disabled:opacity-60"
-              >
-                {isStartingPractice ? "Starting..." : "Start PYQ Practice"}
-              </button>
-
               {showAnswer ? (
                 <div className="mt-4 border border-[rgba(34,197,94,0.42)] bg-[rgba(34,197,94,0.08)] p-3 text-[rgba(194,186,176,0.86)]">
-                  <p className="font-semibold text-emerald-300">Correct Answer: C</p>
+                  <p className="font-semibold text-emerald-300">
+                    Correct Answer: {selectedQuestion.correct_answer ?? "Unavailable"}
+                  </p>
                   <p className="mt-2">
-                    Dijkstra&apos;s algorithm is a greedy algorithm. At each step, it selects the unvisited vertex with
-                    the smallest distance, making the locally optimal choice.
+                    {selectedQuestion.explanation ??
+                      "Detailed explanation is not available for this PYQ yet. Use the source link or grounded study chat for a walkthrough."}
                   </p>
                 </div>
               ) : null}

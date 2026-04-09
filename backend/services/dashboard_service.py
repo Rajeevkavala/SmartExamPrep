@@ -39,6 +39,69 @@ def _as_int(value: object, default: int = 0) -> int:
         return default
 
 
+def _iso_or_none(value: datetime | None) -> str | None:
+    return value.isoformat() if isinstance(value, datetime) else None
+
+
+def _freshness_label(last_activity_at: datetime | None) -> str:
+    if last_activity_at is None:
+        return "No recent study signal"
+
+    age = datetime.utcnow() - last_activity_at
+    if age <= timedelta(hours=24):
+        return "Fresh today"
+    if age <= timedelta(days=3):
+        return "Updated recently"
+    return "Needs a new study session"
+
+
+def _build_next_best_action(
+    *,
+    planner_summary: dict | None,
+    roadmap_progress: dict,
+    weakest_topics: list[dict],
+    todays_quiz_ready: bool,
+) -> str:
+    if planner_summary and planner_summary.get("has_plan") and _as_float(planner_summary.get("completion_pct"), 0.0) < 100:
+        focus = str(planner_summary.get("roadmap_focus_label") or "today's focus block").strip()
+        return f"Finish the planner task linked to {focus} before opening another study surface."
+
+    if weakest_topics:
+        primary_topic = str(weakest_topics[0].get("topic_name") or "your weakest topic").strip()
+        if todays_quiz_ready:
+            return f"Take one adaptive set on {primary_topic} and let the weakness model refresh."
+        return f"Open revision or PYQ practice for {primary_topic} to consolidate today's quiz feedback."
+
+    if roadmap_progress.get("has_roadmap"):
+        return "Continue your current roadmap week and log at least one focused study block."
+
+    return "Generate your roadmap first so planner, revision, and predictor surfaces can stay in sync."
+
+
+def _build_explainability_summary(
+    *,
+    weakest_topics: list[dict],
+    planner_summary: dict | None,
+    roadmap_progress: dict,
+) -> str | None:
+    if not weakest_topics:
+        return None
+
+    primary_topic = str(weakest_topics[0].get("topic_name") or "Current weak area").strip()
+    subject_name = str(weakest_topics[0].get("subject_name") or "core subject").strip()
+    planner_focus = str(planner_summary.get("roadmap_focus_label") or "").strip() if planner_summary else ""
+
+    if planner_focus:
+        return f"{primary_topic} in {subject_name} remains your main gap, and today's planner is aligned to {planner_focus}."
+
+    if roadmap_progress.get("has_roadmap"):
+        current_week = roadmap_progress.get("current_week")
+        week_text = f"week {current_week}" if current_week is not None else "the current roadmap week"
+        return f"{primary_topic} is still a weak area, so the platform is weighting {week_text} toward that subject cluster."
+
+    return f"{primary_topic} is still your weakest visible topic, so new quizzes and PYQ practice should start there."
+
+
 def _average_accuracy_for_day(user_id: str, target_day: date, db: Session) -> float:
     rows = (
         db.query(StudyActivityLog.accuracy_pct)
@@ -485,6 +548,31 @@ def get_dashboard_data(user_id: str, db: Session) -> dict:
             ),
         )
 
+    latest_activity_at = (
+        db.query(StudyActivityLog.created_at)
+        .filter(StudyActivityLog.user_id == user_id)
+        .order_by(StudyActivityLog.created_at.desc())
+        .first()
+    )
+    latest_attempt_at = (
+        db.query(QuizAttempt.completed_at, QuizAttempt.started_at)
+        .filter(QuizAttempt.user_id == user_id)
+        .order_by(QuizAttempt.completed_at.desc(), QuizAttempt.started_at.desc())
+        .first()
+    )
+    candidate_times = [
+        _as_datetime(latest_activity_at[0]) if latest_activity_at else None,
+        _as_datetime(latest_attempt_at[0]) if latest_attempt_at else None,
+        _as_datetime(latest_attempt_at[1]) if latest_attempt_at else None,
+        _as_datetime(getattr(user, "updated_at", None)) if user is not None else None,
+    ]
+    last_activity_at = max([value for value in candidate_times if value is not None], default=None)
+    freshness = {
+        "generated_at": datetime.utcnow().isoformat(),
+        "last_activity_at": _iso_or_none(last_activity_at),
+        "freshness_label": _freshness_label(last_activity_at),
+    }
+
     return {
         "readiness_score": readiness_score,
         "weakest_topics": weakest_topics,
@@ -516,4 +604,16 @@ def get_dashboard_data(user_id: str, db: Session) -> dict:
         "quick_actions": quick_actions,
         "planner_summary": planner_summary,
         "nlp_insight": nlp_insight,
+        "freshness": freshness,
+        "next_best_action": _build_next_best_action(
+            planner_summary=planner_summary,
+            roadmap_progress=roadmap_progress,
+            weakest_topics=weakest_topics,
+            todays_quiz_ready=todays_quiz_ready,
+        ),
+        "explainability_summary": _build_explainability_summary(
+            weakest_topics=weakest_topics,
+            planner_summary=planner_summary,
+            roadmap_progress=roadmap_progress,
+        ),
     }

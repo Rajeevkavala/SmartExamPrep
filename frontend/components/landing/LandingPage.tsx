@@ -1,7 +1,7 @@
 "use client";
 
-import CTASection from "./CTASection";
 import CompareSection from "./CompareSection";
+import CTASection from "./CTASection";
 import CustomCursor from "./CustomCursor";
 import DashboardPreviewSection from "./DashboardPreviewSection";
 import FAQSection from "./FAQSection";
@@ -29,14 +29,17 @@ export default function LandingPage() {
   } = useLandingInteractions();
 
   return (
-    <main className="landing-root min-h-screen bg-black">
+    <main className="landing-root">
       <CustomCursor cursorRef={cursorRef} ringRef={ringRef} />
+
       <MobileMenu isOpen={isMobileMenuOpen} onClose={closeMobileMenu} />
+
       <Navbar
         isSticky={isNavSticky}
         isMenuOpen={isMobileMenuOpen}
         onToggleMenu={toggleMobileMenu}
       />
+
       <HeroSection />
       <ProblemSection />
       <LearningLoopSection />

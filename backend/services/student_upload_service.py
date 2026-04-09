@@ -48,6 +48,7 @@ def _normalize_question(item: dict[str, Any], index: int) -> dict[str, Any]:
         "subject_name": str(item.get("subject_name") or item.get("subject") or "").strip() or None,
         "topic_name": str(item.get("topic_name") or item.get("topic") or "").strip() or None,
         "difficulty": str(item.get("difficulty") or "").strip().lower() or None,
+        "confidence_label": str(item.get("confidence_label") or "").strip().lower() or None,
     }
 
 
@@ -133,22 +134,89 @@ def extract_pdf_text(file_path: str) -> str:
     return "\n".join(text_parts)
 
 
+def _map_lifecycle_state(status_value: object) -> str:
+    normalized = str(getattr(status_value, "value", status_value) or "").strip().lower()
+    if normalized == "pending":
+        return "queued"
+    if normalized == "processing":
+        return "running"
+    if normalized == "done":
+        return "completed"
+    return "failed"
+
+
+def _upload_progress_pct(upload: StudentUpload) -> int:
+    normalized_status = str(getattr(upload.status, "value", upload.status) or "").strip().lower()
+    if normalized_status == "pending":
+        return 10
+    if normalized_status == "processing":
+        if upload.question_count:
+            return 85
+        if upload.extracted_text_preview:
+            return 65
+        return 40
+    return 100
+
+
+def _upload_provenance(upload: StudentUpload) -> dict:
+    mode = str(upload.processing_mode or "pending")
+    used_ai = mode == "ai_generated"
+    return {
+        "generation_source": mode,
+        "fallback_used": used_ai,
+        "confidence_label": "high" if mode == "ocr_rule_based" else "medium" if used_ai else "unknown",
+        "preview_ready": bool(upload.extracted_text_preview),
+    }
+
+
+def _serialize_generated_questions(questions: object, processing_mode: str) -> list[dict]:
+    raw_questions = questions if isinstance(questions, list) else []
+    normalized_questions: list[dict] = []
+    for index, item in enumerate(raw_questions):
+        if not isinstance(item, dict):
+            continue
+        normalized = _normalize_question(item, index)
+        normalized["provenance"] = {
+            "source": processing_mode,
+            "has_explanation": bool(normalized.get("explanation")),
+            "has_answer_key": bool(normalized.get("correct_answer")),
+        }
+        normalized_questions.append(normalized)
+    return normalized_questions
+
+
 def serialize_student_upload(upload: StudentUpload, include_questions: bool = False) -> dict:
+    lifecycle_state = _map_lifecycle_state(upload.status)
+    provenance = _upload_provenance(upload)
     payload = {
         "upload_id": str(upload.id),
         "exam_id": str(upload.exam_id) if upload.exam_id else None,
+        "exam_title": upload.exam.title if upload.exam else None,
         "filename": upload.filename,
         "file_size_bytes": int(upload.file_size_bytes or 0),
         "status": str(getattr(upload.status, "value", upload.status)),
+        "lifecycle_state": lifecycle_state,
+        "progress_pct": _upload_progress_pct(upload),
         "processing_mode": upload.processing_mode,
         "question_count": int(upload.question_count or 0),
         "extracted_text_preview": upload.extracted_text_preview,
         "error_message": upload.error_message,
+        "can_retry": lifecycle_state == "failed" and bool(upload.upload_path),
+        "last_error": upload.error_message,
+        "job_summary": {
+            "question_count": int(upload.question_count or 0),
+            "preview_ready": bool(upload.extracted_text_preview),
+            "processing_mode": upload.processing_mode,
+        },
+        "provenance": provenance,
         "created_at": upload.created_at.isoformat() if upload.created_at else "",
         "updated_at": upload.updated_at.isoformat() if upload.updated_at else "",
     }
     if include_questions:
-        payload["questions"] = list(upload.generated_questions or [])
+        payload["questions"] = _serialize_generated_questions(
+            upload.generated_questions,
+            str(upload.processing_mode or "pending"),
+        )
     return payload
 
 
@@ -175,6 +243,38 @@ def get_student_upload(user_id: str, upload_id: str, db: Session) -> dict:
             detail="Upload not found.",
         )
     return serialize_student_upload(upload, include_questions=True)
+
+
+def prepare_student_upload_retry(user_id: str, upload_id: str, db: Session) -> tuple[StudentUpload, bytes]:
+    upload = (
+        db.query(StudentUpload)
+        .filter(StudentUpload.id == upload_id, StudentUpload.user_id == user_id)
+        .first()
+    )
+    if upload is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Upload not found.",
+        )
+    if str(getattr(upload.status, "value", upload.status)) not in {"failed", "done"}:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only completed or failed uploads can be retried.",
+        )
+    file_path = Path(upload.upload_path)
+    if not upload.upload_path or not file_path.exists():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Retry is unavailable because the original uploaded PDF is no longer stored.",
+        )
+
+    upload.status = JobStatusEnum.pending
+    upload.processing_mode = "queued_retry"
+    upload.error_message = None
+    db.add(upload)
+    db.commit()
+    db.refresh(upload)
+    return upload, file_path.read_bytes()
 
 
 def delete_student_upload(user_id: str, upload_id: str, db: Session) -> dict:

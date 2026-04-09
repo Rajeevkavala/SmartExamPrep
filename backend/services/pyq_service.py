@@ -164,6 +164,11 @@ def _question_to_browse_item(question: Question) -> dict:
         "year": question.year,
         "source_url": question.source_url,
         "question_text": question.question_text,
+        "options": _safe_list(question.options),
+        "question_image_urls": _safe_list(question.question_image_urls),
+        "correct_answer": str(question.correct_answer or "").strip() or None,
+        "explanation": str(question.explanation or "").strip() or None,
+        "marks": 1,
     }
 
 
@@ -302,6 +307,11 @@ def browse_pyq_questions(
         "offset": int(offset),
         "questions": [_question_to_browse_item(question) for question in questions],
         "applied_filters": applied_filters,
+        "pagination": {
+            "page": int(offset // limit) + 1,
+            "page_size": int(limit),
+            "has_more": int(offset + len(questions)) < int(total),
+        },
     }
 
 
@@ -333,6 +343,7 @@ def start_pyq_practice_session(req: StartPYQPracticeRequest, db: Session) -> dic
         .limit(req.question_limit)
         .all()
     )
+    total_available = query.count()
 
     if not questions:
         raise HTTPException(
@@ -356,6 +367,12 @@ def start_pyq_practice_session(req: StartPYQPracticeRequest, db: Session) -> dic
 
     return {
         "total": len(questions),
+        "requested_count": int(req.question_limit),
         "questions": [_question_to_quiz_payload(question) for question in questions],
         "context_payload": context_payload,
+        "selection_summary": {
+            "total_available": int(total_available),
+            "practice_mode": "verified_pyq_practice",
+            "applied_filters": applied_filters,
+        },
     }

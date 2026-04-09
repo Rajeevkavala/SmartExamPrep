@@ -26,6 +26,8 @@ def update_topic_mastery(
     total: int,
     avg_time: float,
     db: Session,
+    *,
+    commit: bool = True,
 ) -> dict:
     mastery = (
         db.query(TopicMastery)
@@ -107,7 +109,10 @@ def update_topic_mastery(
 
     mastery.next_revision_date = schedule_result["due_date"]
 
-    db.commit()
+    if commit:
+        db.commit()
+    else:
+        db.flush()
 
     mastery_level_value = getattr(mastery.mastery_level, "value", mastery.mastery_level)
 
@@ -141,6 +146,11 @@ def get_weakness_analysis(user_id: str, db: Session) -> list[dict]:
                 "mastery_level": getattr(mastery.mastery_level, "value", mastery.mastery_level),
                 "accuracy": round(float(mastery.accuracy or 0.0), 2),
                 "total_attempts": int(mastery.total_attempts or 0),
+                "updated_at": (
+                    mastery.updated_at.isoformat() + "Z"
+                    if isinstance(mastery.updated_at, datetime)
+                    else None
+                ),
             }
         )
 

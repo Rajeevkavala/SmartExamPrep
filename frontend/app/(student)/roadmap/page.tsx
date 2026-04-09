@@ -242,6 +242,64 @@ export default function RoadmapPage() {
         ))}
       </section>
 
+      <section className="grid gap-3 xl:grid-cols-[0.9fr_1.1fr]">
+        <article className="border border-[rgba(240,232,218,0.08)] bg-[rgba(255,255,255,0.01)] p-4">
+          <p className="font-mono text-[0.62rem] uppercase tracking-[0.22em] text-[rgba(194,186,176,0.58)]">
+            Roadmap Control Tower
+          </p>
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <div>
+              <p className="text-sm text-[rgba(194,186,176,0.58)]">Generated</p>
+              <p className="mt-1 text-[var(--cream)]">
+                {new Date(roadmap.summary.generated_at).toLocaleString()}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-[rgba(194,186,176,0.58)]">Generation reason</p>
+              <p className="mt-1 text-[var(--cream)]">
+                {roadmap.summary.generation_reason ?? "system_generated"}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-[rgba(194,186,176,0.58)]">Weeks left</p>
+              <p className="mt-1 text-[var(--cream)]">{roadmap.summary.weeks_left}</p>
+            </div>
+            <div>
+              <p className="text-sm text-[rgba(194,186,176,0.58)]">Next expansion month</p>
+              <p className="mt-1 text-[var(--cream)]">
+                {roadmap.summary.next_generation_month ?? "Fully generated"}
+              </p>
+            </div>
+          </div>
+        </article>
+
+        <article className="border border-[rgba(240,232,218,0.08)] bg-[rgba(255,255,255,0.01)] p-4">
+          <p className="font-mono text-[0.62rem] uppercase tracking-[0.22em] text-[rgba(194,186,176,0.58)]">
+            Week Rationale
+          </p>
+          <div className="mt-4 space-y-3">
+            {currentWeek.topics.slice(0, 3).map((topic) => (
+              <div
+                key={topic.topic_id}
+                className="border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)] p-3"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-[var(--cream)]">{topic.topic_name}</p>
+                  <span className="rounded-full border border-[rgba(232,82,10,0.35)] bg-[rgba(232,82,10,0.1)] px-3 py-1 font-mono text-[0.56rem] uppercase tracking-[0.16em] text-[var(--fire)]">
+                    {Math.round(topic.priority_score)}
+                  </span>
+                </div>
+                <p className="mt-2 text-sm leading-7 text-[rgba(194,186,176,0.72)]">
+                  {typeof topic.rationale?.reason === "string"
+                    ? topic.rationale.reason
+                    : `Planned for ${topic.goal_type} with ${topic.planned_minutes} minutes this week.`}
+                </p>
+              </div>
+            ))}
+          </div>
+        </article>
+      </section>
+
       {loadError ? (
         <div className="border border-[rgba(240,232,218,0.08)] bg-[rgba(255,255,255,0.01)] px-4 py-3 text-sm text-[rgba(194,186,176,0.76)]">
           {loadError}

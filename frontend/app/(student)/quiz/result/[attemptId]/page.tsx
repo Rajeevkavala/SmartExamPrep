@@ -38,6 +38,8 @@ type AttemptResultResponse = {
   readiness_after?: number | null;
   context_payload?: QuizContextPayload | null;
   submitted_at?: string | null;
+  analysis_updated_at?: string | null;
+  result_metadata?: Record<string, unknown>;
 };
 
 const toTopicSummary = (
@@ -78,6 +80,8 @@ const normalizeResult = (result: AttemptResultResponse): QuizResultSnapshot => (
   readiness_after: result.readiness_after ?? null,
   context_payload: result.context_payload ?? null,
   submitted_at: result.submitted_at ?? new Date().toISOString(),
+  analysis_updated_at: result.analysis_updated_at ?? null,
+  result_metadata: result.result_metadata ?? {},
 });
 
 const formatDateTime = (value: string | undefined): string | null => {
@@ -162,6 +166,8 @@ export default function QuizResultPage() {
   const isPlannerResult = result?.context_payload?.source === "daily_planner";
   const heading = isPyqResult ? "PYQ Practice Result" : "Quiz Result";
   const submittedAtLabel = formatDateTime(result?.submitted_at);
+  const analysisUpdatedAtLabel = formatDateTime(result?.analysis_updated_at ?? undefined);
+  const masteryRecordsUpdated = Number(result?.result_metadata?.mastery_records_updated ?? 0);
 
   const contextBadges = useMemo(() => {
     const filtersValue = result?.context_payload?.filters;
@@ -249,6 +255,9 @@ export default function QuizResultPage() {
               {result.quiz_type.replaceAll("_", " ")}
             </StatusBadge>
             {submittedAtLabel ? <StatusBadge tone="neutral">{submittedAtLabel}</StatusBadge> : null}
+            {analysisUpdatedAtLabel ? (
+              <StatusBadge tone="ice">Analysis {analysisUpdatedAtLabel}</StatusBadge>
+            ) : null}
             {isPlannerResult ? <StatusBadge tone="warning">Planner-linked</StatusBadge> : null}
           </div>
         }
@@ -303,6 +312,43 @@ export default function QuizResultPage() {
           }
           tone={readinessDelta !== null && readinessDelta >= 0 ? "success" : "neutral"}
         />
+      </section>
+
+      <section className={cn(panelClass, "p-6")}>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-display text-4xl tracking-[0.08em] text-[var(--cream)]">
+            Result Provenance
+          </h2>
+          <StatusBadge tone="neutral">
+            {masteryRecordsUpdated} mastery record{masteryRecordsUpdated === 1 ? "" : "s"} updated
+          </StatusBadge>
+        </div>
+        <div className="mt-6 grid gap-4 md:grid-cols-3">
+          <div className="rounded-[22px] border border-white/8 bg-white/4 p-4">
+            <p className="text-xs uppercase tracking-[0.22em] text-[rgba(194,186,176,0.56)]">
+              Analysis refresh
+            </p>
+            <p className="mt-3 text-sm text-[var(--cream)]">
+              {analysisUpdatedAtLabel ?? "Analysis timestamp unavailable"}
+            </p>
+          </div>
+          <div className="rounded-[22px] border border-white/8 bg-white/4 p-4">
+            <p className="text-xs uppercase tracking-[0.22em] text-[rgba(194,186,176,0.56)]">
+              Planner sync
+            </p>
+            <p className="mt-3 text-sm text-[var(--cream)]">
+              {result.result_metadata?.planner_task_completed ? "Planner task completed" : "No planner task linked"}
+            </p>
+          </div>
+          <div className="rounded-[22px] border border-white/8 bg-white/4 p-4">
+            <p className="text-xs uppercase tracking-[0.22em] text-[rgba(194,186,176,0.56)]">
+              Mock session sync
+            </p>
+            <p className="mt-3 text-sm text-[var(--cream)]">
+              {result.result_metadata?.mock_session_completed ? "Mock session marked complete" : "No mock session linked"}
+            </p>
+          </div>
+        </div>
       </section>
 
       <section className={cn(panelClass, "p-6")}>

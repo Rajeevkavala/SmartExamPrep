@@ -19,6 +19,7 @@ export type WeaknessItem = {
   weakness_score: number;
   mastery_level: string;
   accuracy: number;
+  updated_at?: string | null;
 };
 
 export type SubmitQuizResponse = {
@@ -33,6 +34,8 @@ export type SubmitQuizResponse = {
   readiness_after?: number | null;
   context_payload?: QuizContextPayload | null;
   submitted_at?: string | null;
+  analysis_updated_at?: string | null;
+  result_metadata?: Record<string, unknown>;
 };
 
 export type AnswerState = {
@@ -111,4 +114,6 @@ export const buildStoredQuizResult = (
   readiness_after: response.readiness_after ?? null,
   context_payload: response.context_payload ?? contextPayload ?? null,
   submitted_at: response.submitted_at ?? new Date().toISOString(),
+  analysis_updated_at: response.analysis_updated_at ?? null,
+  result_metadata: response.result_metadata ?? {},
 });

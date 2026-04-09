@@ -12,14 +12,43 @@ router = APIRouter()
 
 
 def _serialize_job(job: ScrapeJob) -> dict:
+	def lifecycle_state() -> str:
+		status_value = str(getattr(job.status, "value", job.status) or "").strip().lower()
+		if status_value == "pending":
+			return "queued"
+		if status_value == "processing":
+			return "running"
+		if status_value == "done":
+			return "completed"
+		return "failed"
+
+	def progress_pct() -> int:
+		status_value = str(getattr(job.status, "value", job.status) or "").strip().lower()
+		if status_value == "pending":
+			return 10
+		if status_value == "processing":
+			return 55
+		return 100
+
 	return {
 		"job_id": str(job.id),
 		"url": job.url,
 		"status": getattr(job.status, "value", job.status),
+		"lifecycle_state": lifecycle_state(),
+		"progress_pct": progress_pct(),
 		"notes": job.notes,
 		"extracted_questions": list(job.extracted_questions or []),
 		"questions_imported": int(job.questions_imported or 0),
 		"error_message": job.error_message,
+		"can_retry": str(getattr(job.status, "value", job.status)) in {"failed", "done"},
+		"job_summary": {
+			"extracted_count": len(job.extracted_questions or []),
+			"questions_imported": int(job.questions_imported or 0),
+		},
+		"provenance": {
+			"classification_source": "ai_structured_scrape",
+			"has_error": bool(job.error_message),
+		},
 		"created_at": job.created_at.isoformat() if job.created_at else "",
 	}
 
@@ -141,3 +170,34 @@ def delete_job(
 	db.delete(job)
 	db.commit()
 	return {"deleted": True}
+
+
+@router.post(
+	"/jobs/{job_id}/retry",
+	response_model=ScrapeJobResponse,
+	status_code=status.HTTP_202_ACCEPTED,
+	summary="Retry a scrape and structuring job",
+)
+def retry_job(
+	job_id: str,
+	background_tasks: BackgroundTasks,
+	db: Annotated[Session, Depends(get_db)],
+	admin: Annotated[User, Depends(require_admin)],
+) -> dict:
+	job = db.query(ScrapeJob).filter(ScrapeJob.id == job_id).first()
+	if not job:
+		raise HTTPException(
+			status_code=status.HTTP_404_NOT_FOUND,
+			detail="Job not found.",
+		)
+
+	_ = admin
+	job.status = JobStatusEnum.pending
+	job.error_message = None
+	job.extracted_questions = []
+	db.add(job)
+	db.commit()
+	db.refresh(job)
+
+	background_tasks.add_task(run_scrape_job, str(job.id), str(job.url))
+	return _serialize_job(job)

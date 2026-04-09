@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -16,6 +16,8 @@ type GroundingSnapshot = {
   user_profile?: {
     daily_study_minutes?: number;
   };
+  matched_topic?: string | null;
+  recommended_actions?: string[];
   weak_topics?: Array<{
     topic_name?: string;
     subject_name?: string;
@@ -30,6 +32,14 @@ type ChatMessage = {
   token_usage_json?: {
     source?: string;
     intent?: string;
+    degraded_mode?: boolean;
+    matched_topic?: string | null;
+    grounding_sources?: string[];
+    recommended_action_count?: number;
+    provider_readiness?: {
+      configured_provider_count?: number;
+      unconfigured_workloads?: string[];
+    };
   } | null;
 };
 
@@ -390,6 +400,22 @@ export default function StudyChatPage() {
 
                     {message.role === "assistant" && message.grounding_snapshot_json ? (
                       <div className="mt-3 space-y-2 border-t border-[rgba(240,232,218,0.08)] pt-3 text-sm text-[rgba(194,186,176,0.84)]">
+                        {message.token_usage_json?.grounding_sources?.length ? (
+                          <p>
+                            Grounded with: {message.token_usage_json.grounding_sources.join(", ")}
+                          </p>
+                        ) : null}
+
+                        {message.token_usage_json?.provider_readiness ? (
+                          <p>
+                            AI providers ready: {message.token_usage_json.provider_readiness.configured_provider_count ?? 0}
+                          </p>
+                        ) : null}
+
+                        {message.grounding_snapshot_json.matched_topic ? (
+                          <p>Matched topic: {message.grounding_snapshot_json.matched_topic}</p>
+                        ) : null}
+
                         {typeof message.grounding_snapshot_json.user_profile?.daily_study_minutes === "number" ? (
                           <p>
                             Daily target: {message.grounding_snapshot_json.user_profile.daily_study_minutes} minutes
@@ -409,6 +435,10 @@ export default function StudyChatPage() {
                             <p key={`${label}-${index}`}>{label}</p>
                           );
                         })}
+
+                        {(message.grounding_snapshot_json.recommended_actions ?? []).map((action, index) => (
+                          <p key={`${message.id}-action-${index}`}>Action: {action}</p>
+                        ))}
                       </div>
                     ) : null}
                   </div>

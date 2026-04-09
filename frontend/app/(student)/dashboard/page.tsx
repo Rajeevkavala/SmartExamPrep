@@ -37,6 +37,10 @@ export default function DashboardPage() {
   const roadmapProgressPct = useDashboardStore((state) => state.roadmap_progress_pct);
   const roadmapCurrentWeek = useDashboardStore((state) => state.roadmap_current_week);
   const nlpInsight = useDashboardStore((state) => state.nlp_insight);
+  const freshness = useDashboardStore((state) => state.freshness);
+  const nextBestAction = useDashboardStore((state) => state.next_best_action);
+  const explainabilitySummary = useDashboardStore((state) => state.explainability_summary);
+  const plannerSummary = useDashboardStore((state) => state.planner_summary);
   const setDashboard = useDashboardStore((state) => state.setDashboard);
 
   const user = useAuthStore((state) => state.user);
@@ -170,6 +174,43 @@ export default function DashboardPage() {
           <span className="flex h-11 w-11 items-center justify-center bg-[rgba(245,158,11,0.11)] text-amber-300">
             <Clock3 className="h-5 w-5" />
           </span>
+        </article>
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+        <article className="border border-[rgba(240,232,218,0.08)] bg-[rgba(255,255,255,0.01)] p-5">
+          <p className="font-mono text-[0.62rem] uppercase tracking-[0.22em] text-[rgba(194,186,176,0.58)]">
+            Loop Freshness
+          </p>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <span className="inline-flex rounded-full border border-[rgba(0,212,255,0.35)] bg-[rgba(0,212,255,0.1)] px-3 py-1 font-mono text-[0.56rem] uppercase tracking-[0.16em] text-[var(--ice)]">
+              {freshness?.freshness_label ?? "Waiting for fresh study data"}
+            </span>
+            {freshness?.last_activity_at ? (
+              <span className="text-sm text-[rgba(194,186,176,0.68)]">
+                Last activity {new Date(freshness.last_activity_at).toLocaleString()}
+              </span>
+            ) : null}
+          </div>
+          <p className="mt-4 text-lg leading-8 text-[rgba(194,186,176,0.78)]">
+            {nextBestAction ?? "Finish one meaningful study action to keep the planner, weakness model, and revision queue aligned."}
+          </p>
+        </article>
+
+        <article className="border border-[rgba(240,232,218,0.08)] bg-[rgba(255,255,255,0.01)] p-5">
+          <p className="font-mono text-[0.62rem] uppercase tracking-[0.22em] text-[rgba(194,186,176,0.58)]">
+            Why This Matters
+          </p>
+          <p className="mt-4 text-lg leading-8 text-[rgba(194,186,176,0.78)]">
+            {explainabilitySummary ??
+              "Your planner, roadmap, and weakness signals will explain themselves here once you complete a quiz or generate a study plan."}
+          </p>
+          {plannerSummary?.has_plan ? (
+            <div className="mt-4 rounded-[20px] border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.03)] p-4 text-sm text-[rgba(194,186,176,0.72)]">
+              Today&apos;s plan is {Math.round(plannerSummary.completion_pct)}% complete with{" "}
+              {plannerSummary.pending_tasks} tasks still active.
+            </div>
+          ) : null}
         </article>
       </section>
 

@@ -25,3 +25,13 @@ class FeedbackResponse(BaseModel):
     comment: str | None = Field(default=None)
     context_page: str | None = Field(default=None)
     created_at: str = Field(example="2026-04-04T14:20:00")
+
+
+class FeedbackSummaryResponse(BaseModel):
+    total_responses: int = Field(default=0, example=18)
+    average_overall_rating: float = Field(default=0.0, example=4.2)
+    average_weakness_analysis_rating: float = Field(default=0.0, example=4.1)
+    average_recommendation_rating: float = Field(default=0.0, example=4.3)
+    average_revision_rating: float = Field(default=0.0, example=3.9)
+    average_ui_clarity_rating: float = Field(default=0.0, example=4.0)
+    recent_contexts: list[dict] = Field(default_factory=list)

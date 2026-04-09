@@ -20,6 +20,12 @@ export type RecentScore = {
   date: string;
 };
 
+export type DataFreshness = {
+  generated_at?: string | null;
+  last_activity_at?: string | null;
+  freshness_label: string;
+};
+
 export type PlannerDashboardSummary = {
   has_plan: boolean;
   plan_id?: string;
@@ -89,6 +95,9 @@ type DashboardPayload = {
   quick_actions?: DashboardQuickActionItem[];
   planner_summary?: PlannerDashboardSummary | null;
   nlp_insight?: string | null;
+  freshness?: DataFreshness | null;
+  next_best_action?: string | null;
+  explainability_summary?: string | null;
 };
 
 interface DashboardState {
@@ -115,6 +124,9 @@ interface DashboardState {
   quick_actions: DashboardQuickActionItem[];
   planner_summary: PlannerDashboardSummary | null;
   nlp_insight: string | null;
+  freshness: DataFreshness | null;
+  next_best_action: string | null;
+  explainability_summary: string | null;
   isLoaded: boolean;
   setDashboard: (data: DashboardPayload) => void;
   setInsight: (text: string) => void;
@@ -144,6 +156,9 @@ export const useDashboardStore = create<DashboardState>((set) => ({
   quick_actions: [],
   planner_summary: null,
   nlp_insight: null,
+  freshness: null,
+  next_best_action: null,
+  explainability_summary: null,
   isLoaded: false,
   setDashboard: (data) =>
     set({
@@ -170,6 +185,9 @@ export const useDashboardStore = create<DashboardState>((set) => ({
       quick_actions: data.quick_actions ?? [],
       planner_summary: data.planner_summary ?? null,
       nlp_insight: data.nlp_insight ?? null,
+      freshness: data.freshness ?? null,
+      next_best_action: data.next_best_action ?? null,
+      explainability_summary: data.explainability_summary ?? null,
       isLoaded: true,
     }),
   setInsight: (text) =>

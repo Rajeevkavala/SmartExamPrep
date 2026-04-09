@@ -32,6 +32,17 @@ class PYQBrowseItem(BaseModel):
     year: int | None = None
     source_url: str | None = None
     question_text: str
+    options: list[str] = Field(default_factory=list)
+    question_image_urls: list[str] = Field(default_factory=list)
+    correct_answer: str | None = None
+    explanation: str | None = None
+    marks: int = Field(default=1)
+
+
+class PYQBrowsePagination(BaseModel):
+    page: int = Field(default=1)
+    page_size: int = Field(default=20)
+    has_more: bool = Field(default=False)
 
 
 class PYQBrowseResponse(BaseModel):
@@ -40,6 +51,7 @@ class PYQBrowseResponse(BaseModel):
     offset: int
     questions: list[PYQBrowseItem] = Field(default_factory=list)
     applied_filters: dict = Field(default_factory=dict)
+    pagination: PYQBrowsePagination = Field(default_factory=PYQBrowsePagination)
 
 
 class StartPYQPracticeRequest(BaseModel):
@@ -54,5 +66,7 @@ class StartPYQPracticeRequest(BaseModel):
 
 class PYQPracticeResponse(BaseModel):
     total: int
+    requested_count: int = Field(default=0)
     questions: list[QuestionOut] = Field(default_factory=list)
     context_payload: dict = Field(default_factory=dict)
+    selection_summary: dict = Field(default_factory=dict)

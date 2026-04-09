@@ -19,10 +19,15 @@ class ScrapeJobResponse(BaseModel):
     job_id: str
     url: str
     status: str
+    lifecycle_state: str
+    progress_pct: int
     notes: str | None
     extracted_questions: list[dict]
     questions_imported: int
     error_message: str | None
+    can_retry: bool = False
+    job_summary: dict = Field(default_factory=dict)
+    provenance: dict = Field(default_factory=dict)
     created_at: str
 
     model_config = {

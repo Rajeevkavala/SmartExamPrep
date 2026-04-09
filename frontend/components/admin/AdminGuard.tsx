@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
 
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import { readAuthToken } from "@/lib/authToken";
 import type { UserRole } from "@/store/authStore";
 import { useAuthStore } from "@/store/authStore";
 
@@ -36,6 +37,7 @@ export default function AdminGuard({ children }: AdminGuardProps) {
   const router = useRouter();
   const token = useAuthStore((state) => state.token);
   const role = useAuthStore((state) => state.role);
+  const syncSession = useAuthStore((state) => state.syncSession);
 
   const [isChecking, setIsChecking] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -45,7 +47,9 @@ export default function AdminGuard({ children }: AdminGuardProps) {
       return;
     }
 
-    const resolvedToken = token || localStorage.getItem("access_token");
+    syncSession();
+
+    const resolvedToken = token || readAuthToken();
     const resolvedRole = role ?? getStoredRole();
 
     if (!resolvedToken) {
@@ -60,7 +64,7 @@ export default function AdminGuard({ children }: AdminGuardProps) {
 
     setIsAuthorized(true);
     setIsChecking(false);
-  }, [role, router, token]);
+  }, [role, router, syncSession, token]);
 
   if (isChecking || !isAuthorized) {
     return (

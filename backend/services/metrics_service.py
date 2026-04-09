@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime, timedelta
 from statistics import mean
 
 from sqlalchemy import func
@@ -22,6 +22,22 @@ def _to_float(value: object, default: float = 0.0) -> float:
         return float(value)  # type: ignore[arg-type]
     except (TypeError, ValueError):
         return default
+
+
+def _iso_or_none(value: datetime | None) -> str | None:
+    return value.isoformat() if isinstance(value, datetime) else None
+
+
+def _freshness_label(last_activity_at: datetime | None) -> str:
+    if last_activity_at is None:
+        return "No recent study signal"
+
+    age = datetime.utcnow() - last_activity_at
+    if age <= timedelta(hours=24):
+        return "Fresh today"
+    if age <= timedelta(days=3):
+        return "Updated recently"
+    return "Needs a new study session"
 
 
 def _topic_item(row: TopicMastery | None) -> dict | None:
@@ -213,6 +229,48 @@ def get_analytics_overview(user_id: str, db: Session) -> dict:
         today_plan_status=today_plan.status if today_plan is not None else "missing",
     )
 
+    latest_activity_row = (
+        db.query(StudyActivityLog.created_at)
+        .filter(StudyActivityLog.user_id == user_id)
+        .order_by(StudyActivityLog.created_at.desc())
+        .first()
+    )
+    latest_attempt_time = None
+    if attempts:
+        latest_attempt = attempts[-1]
+        latest_attempt_time = latest_attempt.completed_at or latest_attempt.started_at
+    last_activity_at = max(
+        [
+            value
+            for value in [
+                latest_activity_row[0] if latest_activity_row else None,
+                latest_attempt_time,
+            ]
+            if isinstance(value, datetime)
+        ],
+        default=None,
+    )
+
+    if planner_completion_pct_today < 100 and today_plan is not None:
+        recommended_next_step = "Finish today's planner before branching into a new quiz or revision block."
+    elif weakest_mastery and weakest_mastery.topic is not None:
+        recommended_next_step = f"Run one targeted practice set on {weakest_mastery.topic.name} to keep the recovery curve moving."
+    elif revision_completion_rate_pct < 100:
+        recommended_next_step = "Clear one due revision item so the spaced-revision queue stays trustworthy."
+    else:
+        recommended_next_step = "Keep the loop active with one adaptive set and one planner task today."
+
+    if adaptive_improvement_pct is not None and adaptive_improvement_pct > 0:
+        strongest_recovery_signal = (
+            f"Adaptive performance is up {adaptive_improvement_pct:.1f}% versus your diagnostic baseline."
+        )
+    elif topic_recovery_pct > 0:
+        strongest_recovery_signal = (
+            f"{topic_recovery_pct:.1f}% of comparable topic snapshots are trending in the right direction."
+        )
+    else:
+        strongest_recovery_signal = "Your learning loop needs one fresh quiz submission to establish a recovery trend."
+
     return {
         "total_quizzes_attempted": total_quizzes_attempted,
         "total_questions_solved": total_questions_solved,
@@ -235,4 +293,11 @@ def get_analytics_overview(user_id: str, db: Session) -> dict:
         "ai_insight": ai_insight,
         "roadmap_progress_pct": roadmap_progress_pct,
         "planner_completion_pct_today": planner_completion_pct_today,
+        "freshness": {
+            "generated_at": datetime.utcnow().isoformat(),
+            "last_activity_at": _iso_or_none(last_activity_at),
+            "freshness_label": _freshness_label(last_activity_at),
+        },
+        "recommended_next_step": recommended_next_step,
+        "strongest_recovery_signal": strongest_recovery_signal,
     }

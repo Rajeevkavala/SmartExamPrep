@@ -468,6 +468,8 @@ class StudentRuntimeFeatureTests(unittest.TestCase):
         self.assertEqual(submit_response.status_code, 200)
         result_payload = submit_response.json()
         self.assertEqual(result_payload["score"], 100.0)
+        self.assertIn("analysis_updated_at", result_payload)
+        self.assertEqual(result_payload["result_metadata"]["mock_session_completed"], True)
 
         history_response = self.client.get(
             "/api/quiz/attempts",
@@ -487,6 +489,29 @@ class StudentRuntimeFeatureTests(unittest.TestCase):
             )
             self.assertIsNotNone(stored_session)
             self.assertEqual(stored_session.status, "completed")
+
+    def test_adaptive_mock_session_backfills_to_requested_count(self) -> None:
+        user = self._create_student(complete_profile=True)
+        _ = self._seed_exam_inventory(str(user.id))
+        headers = self._auth_headers(user)
+        exam_payload = self._get_exam(user)
+
+        create_session_response = self.client.post(
+            "/api/quiz/mock-session",
+            headers=headers,
+            json={
+                "exam_id": exam_payload["exam_id"],
+                "mock_type": "adaptive",
+                "session_mode": "full",
+                "time_limit_seconds": 1800,
+                "question_count": 5,
+                "year_filter": None,
+            },
+        )
+        self.assertEqual(create_session_response.status_code, 200)
+        session_payload = create_session_response.json()
+        self.assertEqual(session_payload["question_count"], 5)
+        self.assertEqual(len(session_payload["questions"]), 5)
 
     def test_upload_route_processes_pdfs_into_mcqs_and_supports_history(self) -> None:
         user = self._create_student(complete_profile=True)

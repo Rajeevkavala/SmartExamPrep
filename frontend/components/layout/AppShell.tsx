@@ -301,11 +301,14 @@ export default function AppShell({ children }: AppShellProps) {
   }, [user?.full_name]);
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-      <div className="flex min-h-screen">
+    <div className="relative min-h-screen overflow-hidden bg-[var(--bg)] text-[var(--ink)]">
+      <div className="app-grid pointer-events-none absolute inset-0 opacity-[0.03]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(0,212,255,0.1),transparent_28%),radial-gradient(circle_at_10%_12%,rgba(232,82,10,0.12),transparent_24%)]" />
+
+      <div className="relative flex min-h-screen">
         <aside
           className={cn(
-            "relative hidden shrink-0 border-r border-[rgba(240,232,218,0.08)] bg-[rgba(5,5,8,0.96)] lg:flex",
+            "app-noise relative hidden shrink-0 border-r border-[rgba(240,232,218,0.08)] bg-[rgba(5,5,8,0.96)] shadow-[18px_0_60px_rgba(0,0,0,0.35)] lg:flex",
             collapsed ? "w-[86px]" : "w-[250px]"
           )}
         >
@@ -318,7 +321,7 @@ export default function AppShell({ children }: AppShellProps) {
           <button
             type="button"
             onClick={() => setCollapsed((value) => !value)}
-            className="absolute -right-5 top-20 flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(240,232,218,0.08)] bg-[rgba(12,12,16,0.95)] text-[rgba(194,186,176,0.72)]"
+            className="absolute -right-5 top-20 flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(240,232,218,0.12)] bg-[rgba(12,12,16,0.98)] text-[rgba(194,186,176,0.72)] shadow-[0_8px_22px_rgba(0,0,0,0.35)]"
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -340,7 +343,7 @@ export default function AppShell({ children }: AppShellProps) {
           />
           <aside
             className={cn(
-              "absolute inset-y-0 left-0 w-[88vw] max-w-[280px] border-r border-[rgba(240,232,218,0.08)] bg-[rgba(5,5,8,0.98)] transition duration-300",
+              "app-noise absolute inset-y-0 left-0 w-[88vw] max-w-[280px] border-r border-[rgba(240,232,218,0.08)] bg-[rgba(5,5,8,0.98)] transition duration-300",
               mobileOpen ? "translate-x-0" : "-translate-x-[110%]"
             )}
           >
@@ -354,7 +357,7 @@ export default function AppShell({ children }: AppShellProps) {
         </div>
 
         <div className="min-w-0 flex-1">
-          <header className="sticky top-0 z-40 flex h-[58px] items-center justify-between border-b border-[rgba(240,232,218,0.08)] bg-[rgba(6,6,10,0.95)] px-3 md:px-5 lg:px-7">
+          <header className="app-noise sticky top-0 z-40 flex h-[62px] items-center justify-between border-b border-[rgba(240,232,218,0.08)] bg-[linear-gradient(180deg,rgba(10,10,14,0.96),rgba(8,8,12,0.96))] px-3 backdrop-blur-xl md:px-5 lg:px-7">
             <div className="flex items-center gap-3">
               <button
                 type="button"
@@ -439,7 +442,9 @@ export default function AppShell({ children }: AppShellProps) {
             </div>
           </header>
 
-          <main className="px-3 pb-8 pt-5 md:px-5 lg:px-7">{children}</main>
+          <main className="px-3 pb-10 pt-6 md:px-5 lg:px-7">
+            <div className="mx-auto w-full max-w-[1520px]">{children}</div>
+          </main>
         </div>
       </div>
     </div>

@@ -73,13 +73,13 @@ def _refresh_daily_plan_progress(plan: object) -> None:
         setattr(plan, "status", "active")
 
 
-def _complete_planner_task_from_context(user_id: str, context_payload: dict | None, db: Session) -> None:
+def _complete_planner_task_from_context(user_id: str, context_payload: dict | None, db: Session) -> bool:
     if not isinstance(context_payload, dict):
-        return
+        return False
 
     daily_task_id = context_payload.get("daily_task_id")
     if not daily_task_id:
-        return
+        return False
 
     task = (
         db.query(DailyStudyTask)
@@ -87,27 +87,30 @@ def _complete_planner_task_from_context(user_id: str, context_payload: dict | No
         .first()
     )
     if task is None or task.daily_plan is None:
-        return
+        return False
     if str(task.daily_plan.user_id) != str(user_id):
-        return
+        return False
 
+    updated = False
     if str(task.status) != "completed":
         task.status = "completed"
         task.completed_at = datetime.utcnow()
         db.add(task)
+        updated = True
 
     plan = task.daily_plan
     _refresh_daily_plan_progress(plan)
     db.add(plan)
+    return updated
 
 
-def _complete_mock_session_from_context(user_id: str, context_payload: dict | None, db: Session) -> None:
+def _complete_mock_session_from_context(user_id: str, context_payload: dict | None, db: Session) -> bool:
     if not isinstance(context_payload, dict):
-        return
+        return False
 
     mock_session_id = context_payload.get("mock_session_id")
     if not mock_session_id:
-        return
+        return False
 
     session = (
         db.query(MockQuizSession)
@@ -115,11 +118,13 @@ def _complete_mock_session_from_context(user_id: str, context_payload: dict | No
         .first()
     )
     if session is None:
-        return
+        return False
 
+    updated = str(session.status) != "completed"
     session.status = "completed"
     session.completed_at = datetime.utcnow()
     db.add(session)
+    return updated
 
 
 def _normalize_snapshot(item: dict) -> dict:
@@ -544,6 +549,7 @@ async def process_quiz_submission(
     total_questions = len(answers_payload)
     score = round((correct_count / total_questions) * 100, 2) if total_questions else 0.0
 
+    submission_time = datetime.utcnow()
     attempt = QuizAttempt(
         user_id=user_id,
         quiz_type=req.quiz_type,
@@ -552,12 +558,11 @@ async def process_quiz_submission(
         correct_count=correct_count,
         answers=answers_payload,
         context_payload=req.context_payload or {},
-        started_at=datetime.utcnow(),
-        completed_at=datetime.utcnow(),
+        started_at=submission_time,
+        completed_at=submission_time,
     )
     db.add(attempt)
-    db.commit()
-    db.refresh(attempt)
+    db.flush()
 
     topic_scores: dict[str, float] = {}
     topic_ids_by_name: dict[str, str] = {}
@@ -573,6 +578,7 @@ async def process_quiz_submission(
             total=total,
             avg_time=avg_time,
             db=db,
+            commit=False,
         )
 
         topic_name = topic_names.get(topic_id, topic_id)
@@ -589,6 +595,23 @@ async def process_quiz_submission(
     )
 
     submitted_at = (attempt.completed_at or attempt.started_at or datetime.utcnow()).isoformat()
+    analysis_updated_at = datetime.utcnow().isoformat() + "Z"
+    planner_task_completed = _complete_planner_task_from_context(
+        user_id=str(user_id),
+        context_payload=req.context_payload or {},
+        db=db,
+    )
+    mock_session_completed = _complete_mock_session_from_context(
+        user_id=str(user_id),
+        context_payload=req.context_payload or {},
+        db=db,
+    )
+    result_metadata = {
+        "analysis_updated_at": analysis_updated_at,
+        "mastery_records_updated": len(topic_stats),
+        "planner_task_completed": planner_task_completed,
+        "mock_session_completed": mock_session_completed,
+    }
     attempt.result_snapshot = {
         "quiz_type": req.quiz_type,
         "topic_scores": topic_scores,
@@ -596,6 +619,8 @@ async def process_quiz_submission(
         "readiness_before": readiness_before,
         "readiness_after": readiness_after,
         "submitted_at": submitted_at,
+        "analysis_updated_at": analysis_updated_at,
+        "result_metadata": result_metadata,
         "context_payload": req.context_payload or {},
     }
 
@@ -618,17 +643,6 @@ async def process_quiz_submission(
         quiz_attempt_id=str(attempt.id),
     )
 
-    _complete_planner_task_from_context(
-        user_id=str(user_id),
-        context_payload=req.context_payload or {},
-        db=db,
-    )
-    _complete_mock_session_from_context(
-        user_id=str(user_id),
-        context_payload=req.context_payload or {},
-        db=db,
-    )
-
     db.add(attempt)
     db.commit()
     db.refresh(attempt)
@@ -644,6 +658,8 @@ async def process_quiz_submission(
         readiness_before=readiness_before,
         readiness_after=readiness_after,
         submitted_at=submitted_at,
+        analysis_updated_at=analysis_updated_at,
+        result_metadata=result_metadata,
         context_payload=req.context_payload or {},
     )
 
@@ -711,6 +727,10 @@ def get_attempt_result(user_id: str, attempt_id: str, db: Session) -> dict:
         "readiness_before": snapshot.get("readiness_before"),
         "readiness_after": snapshot.get("readiness_after"),
         "submitted_at": submitted_at,
+        "analysis_updated_at": snapshot.get("analysis_updated_at"),
+        "result_metadata": snapshot.get("result_metadata")
+        if isinstance(snapshot.get("result_metadata"), dict)
+        else {},
         "context_payload": snapshot.get("context_payload")
         if isinstance(snapshot.get("context_payload"), dict)
         else attempt.context_payload,

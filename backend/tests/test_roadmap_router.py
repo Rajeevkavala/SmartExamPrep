@@ -269,10 +269,13 @@ class RoadmapRouterTests(unittest.TestCase):
         )
 
         self.assertEqual(response.status_code, 400)
-        self.assertIn(
-            "Complete onboarding before generating a roadmap",
-            response.json()["detail"],
+        detail = response.json()["detail"]
+        self.assertIsInstance(detail, dict)
+        self.assertEqual(
+            detail["message"],
+            "Complete onboarding before generating a roadmap.",
         )
+        self.assertIn("subject_confidences", detail["missing_profile_fields"])
 
 
 if __name__ == "__main__":

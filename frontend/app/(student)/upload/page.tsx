@@ -21,18 +21,40 @@ type GeneratedUploadQuestion = {
   subject_name?: string | null;
   topic_name?: string | null;
   difficulty?: string | null;
+  confidence_label?: string | null;
+  provenance?: {
+    source?: string;
+    has_explanation?: boolean;
+    has_answer_key?: boolean;
+  };
 };
 
 type UploadRecord = {
   upload_id: string;
   exam_id?: string | null;
+  exam_title?: string | null;
   filename: string;
   file_size_bytes: number;
   status: "pending" | "processing" | "done" | "failed";
+  lifecycle_state: "queued" | "running" | "completed" | "failed";
+  progress_pct: number;
   processing_mode: string;
   question_count: number;
   extracted_text_preview?: string | null;
   error_message?: string | null;
+  can_retry: boolean;
+  last_error?: string | null;
+  job_summary?: {
+    question_count?: number;
+    preview_ready?: boolean;
+    processing_mode?: string;
+  };
+  provenance?: {
+    generation_source?: string;
+    fallback_used?: boolean;
+    confidence_label?: string;
+    preview_ready?: boolean;
+  };
   created_at: string;
   updated_at: string;
   questions?: GeneratedUploadQuestion[];
@@ -164,6 +186,21 @@ export default function UploadPage() {
     }
   };
 
+  const handleRetry = async (uploadId: string) => {
+    try {
+      await api.post(`/uploads/${uploadId}/retry`);
+      await loadUploads();
+      if (selectedUpload?.upload_id === uploadId) {
+        await handleOpen(uploadId);
+      }
+    } catch (error) {
+      const detail =
+        (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??
+        "Unable to retry this upload.";
+      setLoadError(detail);
+    }
+  };
+
   const handleOpen = async (uploadId: string) => {
     try {
       const { data } = await api.get<UploadRecord>(`/uploads/${uploadId}`);
@@ -285,13 +322,16 @@ export default function UploadPage() {
 
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="rounded-full border border-[rgba(34,197,94,0.35)] bg-[rgba(34,197,94,0.12)] px-3 py-1 font-mono text-[0.56rem] uppercase tracking-[0.16em] text-emerald-300">
-                    {item.status}
+                    {item.lifecycle_state}
                   </span>
                   <span className="rounded-full border border-[rgba(240,232,218,0.14)] bg-[rgba(255,255,255,0.03)] px-3 py-1 font-mono text-[0.56rem] uppercase tracking-[0.16em] text-[rgba(194,186,176,0.72)]">
                     {item.question_count} Questions
                   </span>
                   <span className="rounded-full border border-[rgba(0,212,255,0.35)] bg-[rgba(0,212,255,0.12)] px-3 py-1 font-mono text-[0.56rem] uppercase tracking-[0.16em] text-[var(--ice)]">
                     {item.processing_mode}
+                  </span>
+                  <span className="rounded-full border border-[rgba(240,232,218,0.14)] bg-[rgba(255,255,255,0.03)] px-3 py-1 font-mono text-[0.56rem] uppercase tracking-[0.16em] text-[rgba(194,186,176,0.72)]">
+                    {item.progress_pct}% progress
                   </span>
                   <button
                     type="button"
@@ -311,6 +351,17 @@ export default function UploadPage() {
                   >
                     Delete
                   </button>
+                  {item.can_retry ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void handleRetry(item.upload_id);
+                      }}
+                      className="h-11 border border-[rgba(232,82,10,0.28)] px-4 text-[var(--fire)]"
+                    >
+                      Retry
+                    </button>
+                  ) : null}
                 </div>
               </article>
             ))}
@@ -333,12 +384,25 @@ export default function UploadPage() {
                 </p>
                 <p className="mt-1 text-sm text-[rgba(194,186,176,0.58)]">
                   {selectedUpload.question_count} questions · {selectedUpload.processing_mode}
+                  {selectedUpload.exam_title ? ` · ${selectedUpload.exam_title}` : ""}
                 </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <span className="rounded-full border border-[rgba(34,197,94,0.35)] bg-[rgba(34,197,94,0.12)] px-3 py-1 font-mono text-[0.56rem] uppercase tracking-[0.16em] text-emerald-300">
+                    {selectedUpload.lifecycle_state}
+                  </span>
+                  <span className="rounded-full border border-[rgba(240,232,218,0.14)] bg-[rgba(255,255,255,0.03)] px-3 py-1 font-mono text-[0.56rem] uppercase tracking-[0.16em] text-[rgba(194,186,176,0.72)]">
+                    confidence {selectedUpload.provenance?.confidence_label ?? "unknown"}
+                  </span>
+                </div>
                 {selectedUpload.extracted_text_preview ? (
                   <p className="mt-3 text-sm leading-7 text-[rgba(194,186,176,0.68)]">
                     {selectedUpload.extracted_text_preview}
                   </p>
                 ) : null}
+                <p className="mt-3 text-sm text-[rgba(194,186,176,0.64)]">
+                  Source: {selectedUpload.provenance?.generation_source ?? selectedUpload.processing_mode}
+                  {selectedUpload.provenance?.fallback_used ? " · AI fallback used" : ""}
+                </p>
               </div>
 
               <div className="space-y-3">
@@ -351,6 +415,7 @@ export default function UploadPage() {
                       Q{index + 1}
                       {question.topic_name ? ` · ${question.topic_name}` : ""}
                       {question.difficulty ? ` · ${question.difficulty}` : ""}
+                      {question.confidence_label ? ` · ${question.confidence_label}` : ""}
                     </p>
                     <p className="mt-2 text-[var(--cream)]">{question.question_text}</p>
                     <div className="mt-3 space-y-2 text-sm text-[rgba(194,186,176,0.78)]">
@@ -368,6 +433,9 @@ export default function UploadPage() {
                         {question.explanation}
                       </p>
                     ) : null}
+                    <p className="mt-2 text-xs text-[rgba(194,186,176,0.54)]">
+                      Provenance: {question.provenance?.source ?? selectedUpload.processing_mode}
+                    </p>
                   </article>
                 ))}
               </div>

@@ -45,6 +45,16 @@ type PredictionSnapshotResponse = {
   repeat_topics: RepeatTopicItem[];
   metadata: {
     source?: string;
+    questions_analyzed?: number;
+    topics_analyzed?: number;
+    available_years?: number[];
+    degraded_mode?: boolean;
+    recommended_actions?: string[];
+    ranking_method?: string;
+    provider_readiness?: {
+      configured_providers?: string[];
+      unconfigured_workloads?: string[];
+    };
   };
 };
 
@@ -290,6 +300,35 @@ export default function PredictorPage() {
         </section>
       ) : null}
 
+      {prediction ? (
+        <section className="grid gap-3 lg:grid-cols-4">
+          <article className="border border-[rgba(240,232,218,0.08)] bg-[rgba(255,255,255,0.01)] p-4">
+            <p className="text-sm text-[rgba(194,186,176,0.58)]">Questions analyzed</p>
+            <p className="mt-2 text-3xl font-semibold text-[var(--cream)]">
+              {prediction.metadata?.questions_analyzed ?? 0}
+            </p>
+          </article>
+          <article className="border border-[rgba(240,232,218,0.08)] bg-[rgba(255,255,255,0.01)] p-4">
+            <p className="text-sm text-[rgba(194,186,176,0.58)]">Topics ranked</p>
+            <p className="mt-2 text-3xl font-semibold text-[var(--cream)]">
+              {prediction.metadata?.topics_analyzed ?? 0}
+            </p>
+          </article>
+          <article className="border border-[rgba(240,232,218,0.08)] bg-[rgba(255,255,255,0.01)] p-4">
+            <p className="text-sm text-[rgba(194,186,176,0.58)]">Mode</p>
+            <p className="mt-2 text-3xl font-semibold text-[var(--cream)]">
+              {prediction.metadata?.degraded_mode ? "Fallback" : "Primary"}
+            </p>
+          </article>
+          <article className="border border-[rgba(240,232,218,0.08)] bg-[rgba(255,255,255,0.01)] p-4">
+            <p className="text-sm text-[rgba(194,186,176,0.58)]">Ranking model</p>
+            <p className="mt-2 text-lg font-semibold text-[var(--cream)]">
+              {prediction.metadata?.ranking_method ?? "prediction_engine"}
+            </p>
+          </article>
+        </section>
+      ) : null}
+
       <section className="border border-[rgba(0,212,255,0.45)] bg-[rgba(0,212,255,0.04)] p-4">
         <h2 className="text-xl font-semibold text-[var(--cream)]">Exam Insight</h2>
         <p className="mt-1 text-[rgba(194,186,176,0.72)]">
@@ -297,6 +336,22 @@ export default function PredictorPage() {
             "Refresh predictions to generate a fresh topic forecast for this exam."}
         </p>
       </section>
+
+      {prediction?.metadata?.recommended_actions?.length ? (
+        <section className="border border-[rgba(232,82,10,0.28)] bg-[rgba(232,82,10,0.05)] p-4">
+          <h3 className="text-xl font-semibold text-[var(--cream)]">Recommended Actions</h3>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {prediction.metadata.recommended_actions.map((action) => (
+              <span
+                key={action}
+                className="rounded-full border border-[rgba(240,232,218,0.1)] bg-[rgba(255,255,255,0.03)] px-3 py-1 text-sm text-[rgba(194,186,176,0.78)]"
+              >
+                {action}
+              </span>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="border border-[rgba(240,232,218,0.08)] bg-[rgba(255,255,255,0.01)] p-4">
         <h3 className="text-xl font-semibold text-[var(--cream)]">Prediction Filters</h3>

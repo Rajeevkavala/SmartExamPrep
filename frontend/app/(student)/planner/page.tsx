@@ -42,6 +42,29 @@ export default function PlannerPage() {
     return [...plan.tasks].sort((first, second) => first.sequence_order - second.sequence_order);
   }, [plan?.tasks]);
 
+  const taskSourceSummary = useMemo(() => {
+    const summary = {
+      carryForward: 0,
+      roadmap: 0,
+      revision: 0,
+      adaptive: 0,
+    };
+
+    orderedTasks.forEach((task) => {
+      if (task.source_type === "carry_forward") {
+        summary.carryForward += 1;
+      } else if (task.source_type === "roadmap") {
+        summary.roadmap += 1;
+      } else if (task.source_type === "revision_schedule") {
+        summary.revision += 1;
+      } else if (task.source_type === "adaptive_recommendation") {
+        summary.adaptive += 1;
+      }
+    });
+
+    return summary;
+  }, [orderedTasks]);
+
   const loadTodayPlan = useCallback(
     async (showMainLoading = true) => {
       if (showMainLoading) {
@@ -202,6 +225,25 @@ export default function PlannerPage() {
       </div>
 
       <PlannerSummary summary={plan.summary} />
+
+      <section className="grid gap-3 lg:grid-cols-4">
+        <article className="border border-[rgba(240,232,218,0.08)] bg-[rgba(255,255,255,0.01)] p-4">
+          <p className="font-mono text-[0.58rem] uppercase tracking-[0.2em] text-[rgba(194,186,176,0.58)]">Roadmap-synced</p>
+          <p className="mt-3 text-3xl font-semibold text-[var(--cream)]">{taskSourceSummary.roadmap}</p>
+        </article>
+        <article className="border border-[rgba(240,232,218,0.08)] bg-[rgba(255,255,255,0.01)] p-4">
+          <p className="font-mono text-[0.58rem] uppercase tracking-[0.2em] text-[rgba(194,186,176,0.58)]">Revision due</p>
+          <p className="mt-3 text-3xl font-semibold text-[var(--cream)]">{taskSourceSummary.revision}</p>
+        </article>
+        <article className="border border-[rgba(240,232,218,0.08)] bg-[rgba(255,255,255,0.01)] p-4">
+          <p className="font-mono text-[0.58rem] uppercase tracking-[0.2em] text-[rgba(194,186,176,0.58)]">Carry forward</p>
+          <p className="mt-3 text-3xl font-semibold text-[var(--cream)]">{taskSourceSummary.carryForward}</p>
+        </article>
+        <article className="border border-[rgba(240,232,218,0.08)] bg-[rgba(255,255,255,0.01)] p-4">
+          <p className="font-mono text-[0.58rem] uppercase tracking-[0.2em] text-[rgba(194,186,176,0.58)]">Adaptive boosts</p>
+          <p className="mt-3 text-3xl font-semibold text-[var(--cream)]">{taskSourceSummary.adaptive}</p>
+        </article>
+      </section>
 
       <CarryForwardBanner
         hasCarryForward={plan.has_carry_forward}

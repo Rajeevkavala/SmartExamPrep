@@ -1,11 +1,12 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from dependencies import get_db, require_admin, require_student
 from models.models import User, UserFeedback
-from schemas.feedback_schemas import FeedbackCreateRequest, FeedbackResponse
+from schemas.feedback_schemas import FeedbackCreateRequest, FeedbackResponse, FeedbackSummaryResponse
 
 router = APIRouter()
 
@@ -89,3 +90,50 @@ def recent_feedback(
 		.all()
 	)
 	return [_serialize_feedback(entry) for entry in entries]
+
+
+@router.get(
+	"/admin/summary",
+	response_model=FeedbackSummaryResponse,
+	summary="Aggregate recent feedback signals for admin review",
+)
+def feedback_summary(
+	db: Annotated[Session, Depends(get_db)],
+	admin: Annotated[User, Depends(require_admin)],
+) -> dict:
+	_ = admin
+	total_responses = db.query(func.count(UserFeedback.id)).scalar() or 0
+	averages = (
+		db.query(
+			func.avg(UserFeedback.overall_rating),
+			func.avg(UserFeedback.weakness_analysis_rating),
+			func.avg(UserFeedback.recommendation_rating),
+			func.avg(UserFeedback.revision_rating),
+			func.avg(UserFeedback.ui_clarity_rating),
+		)
+		.first()
+	)
+
+	context_rows = (
+		db.query(UserFeedback.context_page, func.count(UserFeedback.id))
+		.group_by(UserFeedback.context_page)
+		.order_by(func.count(UserFeedback.id).desc())
+		.limit(5)
+		.all()
+	)
+
+	return {
+		"total_responses": int(total_responses),
+		"average_overall_rating": round(float(averages[0] or 0.0), 2) if averages else 0.0,
+		"average_weakness_analysis_rating": round(float(averages[1] or 0.0), 2) if averages else 0.0,
+		"average_recommendation_rating": round(float(averages[2] or 0.0), 2) if averages else 0.0,
+		"average_revision_rating": round(float(averages[3] or 0.0), 2) if averages else 0.0,
+		"average_ui_clarity_rating": round(float(averages[4] or 0.0), 2) if averages else 0.0,
+		"recent_contexts": [
+			{
+				"context_page": str(context_page or "unknown"),
+				"count": int(count or 0),
+			}
+			for context_page, count in context_rows
+		],
+	}

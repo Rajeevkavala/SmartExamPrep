@@ -6,14 +6,11 @@ import axios, {
 } from "axios";
 
 import { readAuthToken } from "@/lib/authToken";
+import { clearAuthToken } from "@/lib/authToken";
 import { toast } from "@/components/ui/use-toast";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const REQUEST_TIMEOUT_MS = 60_000;
-const TOKEN_KEY = "access_token";
-const AUTH_STORE_KEY = "auth-store";
-const AUTH_COOKIE_KEY = "access_token";
-
 type RetryableConfig = InternalAxiosRequestConfig & {
   _retried?: boolean;
 };
@@ -23,9 +20,8 @@ const clearClientAuth = () => {
     return;
   }
 
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(AUTH_STORE_KEY);
-  document.cookie = `${AUTH_COOKIE_KEY}=; path=/; max-age=0; SameSite=Lax`;
+  clearAuthToken();
+  localStorage.removeItem("auth-store");
 };
 
 const wait = (ms: number) =>
@@ -73,6 +69,18 @@ const getErrorDescription = (error: AxiosError): string => {
   }
 
   return error.message || "Unexpected error while calling the API.";
+};
+
+const getErrorRequestId = (error: AxiosError): string | null => {
+  const responseData = error.response?.data;
+  if (responseData && typeof responseData === "object") {
+    const requestId = (responseData as { request_id?: unknown }).request_id;
+    if (typeof requestId === "string" && requestId.trim()) {
+      return requestId;
+    }
+  }
+
+  return null;
 };
 
 export const api = axios.create({
@@ -147,7 +155,11 @@ export function addAuthInterceptors(instance: AxiosInstance) {
       toast({
         variant: "destructive",
         title: "Request failed",
-        description: getErrorDescription(error),
+        description: (() => {
+          const description = getErrorDescription(error);
+          const requestId = getErrorRequestId(error);
+          return requestId ? `${description} Ref: ${requestId.slice(0, 8)}.` : description;
+        })(),
       });
 
       return Promise.reject(error);
